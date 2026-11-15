@@ -1,0 +1,3111 @@
+<!DOCTYPE html>
+<html lang="en" class="dark scroll-smooth"><head><script data-bard-client-injected="true">(function(firebaseConfig, initialAuthToken, appId) {
+        window.__firebase_config = firebaseConfig;
+        window.__initial_auth_token = initialAuthToken;
+        window.__app_id = appId;
+            })("\n{\n  \"apiKey\": \"AIzaSyCqyCcs2R2e7AegGjvFAwG98wlamtbHvZY\",\n  \"authDomain\": \"bard-frontend.firebaseapp.com\",\n  \"projectId\": \"bard-frontend\",\n  \"storageBucket\": \"bard-frontend.firebasestorage.app\",\n  \"messagingSenderId\": \"175205271074\",\n  \"appId\": \"1:175205271074:web:2b7bd4d34d33bf38e6ec7b\"\n}\n","eyJhbGciOiJSUzI1NiIsImtpZCI6IjExNjRiNzdiNDMzZDdhMDAyMWI4NjE4YjhjYTU3ZTMyZGI5MWUxMTMiLCJ0eXAiOiJKV1QifQ.eyJzdWIiOiJmaXJlYmFzZS1hZG1pbnNkay1mYnN2Y0BiYXJkLWZyb250ZW5kLmlhbS5nc2VydmljZWFjY291bnQuY29tIiwiYXVkIjoiaHR0cHM6Ly9pZGVudGl0eXRvb2xraXQuZ29vZ2xlYXBpcy5jb20vZ29vZ2xlLmlkZW50aXR5LmlkZW50aXR5dG9vbGtpdC52MS5JZGVudGl0eVRvb2xraXQiLCJ1aWQiOiIxMjY2NTEwMzMyNzc2NTQxNDk4NSIsImlzcyI6ImZpcmViYXNlLWFkbWluc2RrLWZic3ZjQGJhcmQtZnJvbnRlbmQuaWFtLmdzZXJ2aWNlYWNjb3VudC5jb20iLCJjbGFpbXMiOnsiYXBwSWQiOiJjXzEzYzYxZjg3NTBkNDQ3ZjlfaW5kZXguaHRtbC02OTgifSwiZXhwIjoxNzk0NzgzMDI0LCJpYXQiOjE3OTQ3Nzk0MjQsImFsZyI6IlJTMjU2In0.IUx1mDkXPZpCh0Cex2tKX1Lb8XIABedPU3Q9L1L3mDeO99h3Iuz3iPLweD7U1gyv-AELbPeF0tDSfzW5cN69EqHcomVpP-4ob0qSH5MKuFwV_8Z3Jb4vEapfaaxQEXseUu4hdjPz0YFYZrUEuS8iBe8gnbgfJ8_4nS04isNfmZPPVcY3MlvUXMmnNyfMgJy9MJxr0Fa2vMvOfaL0UtN9MhbTtjM1Ii_Ea-PKQbKAarASD6JiLtd4mERaelTgWV3saCHK3d8Biszax8llTFWEsJGcXObIHAL9Qu_iJzWPZpkj3V9P7700SYH1-2zZ3_bEYQfYuN2HxY0Dw9G_1phmCw","c_13c61f8750d447f9_index.html-698")</script><script data-bard-client-injected="true">
+  document.addEventListener('input', (event) => {
+    if (event.target && (event.target.isContentEditable || event.target.hasAttribute('contenteditable'))) {
+      const clonedDoc = document.cloneNode(true);
+      const injectedScripts = clonedDoc.querySelectorAll('[data-bard-client-injected="true"]');
+      injectedScripts.forEach(el => el.remove());
+      window.parent.postMessage({
+        type: 'inlineEdit',
+        html: '<!DOCTYPE html>\n' + clonedDoc.documentElement.outerHTML
+      }, '*');
+    }
+  });
+</script><script data-bard-client-injected="true">(function(){'use strict';window.addEventListener("message",a=>{a.data&&a.data.type==="SUPPLEMENTAL_DATA_UPDATE"&&window.dispatchEvent(new CustomEvent("supplementaldataupdate",{detail:a.data.data}))});}).call(this);
+</script><script data-bard-client-injected="true">(function() {
+  const SCROLL_KEYS = new Set([
+    'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight',
+    ' ', 'Spacebar', 'PageUp', 'PageDown', 'Home', 'End',
+  ]);
+  const HORIZONTAL_KEYS = new Set(['ArrowLeft', 'ArrowRight']);
+
+  function isTextEntryTarget(target) {
+    if (!target) return false;
+    const tagName = target.tagName;
+    return tagName === 'INPUT' || tagName === 'TEXTAREA' ||
+        tagName === 'SELECT' || target.isContentEditable === true;
+  }
+
+  // An element absorbs the key only if it both overflows on the axis being
+  // scrolled and is configured to scroll on that axis. The cheap dimension
+  // test runs first because getComputedStyle forces a style recalc, and this
+  // runs on every keypress. Each axis is read from its own longhand: the
+  // 'overflow' shorthand serializes as two values when the axes differ, which
+  // is the common 'overflow-x: hidden; overflow-y: auto' pane.
+  function canScroll(node, horizontal) {
+    const overflows = horizontal ? node.scrollWidth > node.clientWidth
+                                 : node.scrollHeight > node.clientHeight;
+    if (!overflows) return false;
+    const style = window.getComputedStyle(node);
+    const overflow = horizontal ? style.overflowX : style.overflowY;
+    return overflow === 'auto' || overflow === 'scroll';
+  }
+
+  // Walks up from the event target so nested scrollers keep their behavior.
+  // <body> is included because pages that pin the root height make it the
+  // scroll container.
+  function hasScrollableAncestor(target, horizontal) {
+    let node = target;
+    while (node && node !== document.documentElement) {
+      if (canScroll(node, horizontal)) return true;
+      node = node.parentElement;
+    }
+    return false;
+  }
+
+  function rootCanScroll(horizontal) {
+    const scroller = document.scrollingElement || document.documentElement;
+    if (!scroller) return false;
+    // Tolerate a pixel of rounding so subpixel layouts do not look scrollable.
+    return horizontal ? scroller.scrollWidth > window.innerWidth + 1
+                      : scroller.scrollHeight > window.innerHeight + 1;
+  }
+
+  window.addEventListener('keydown', function(event) {
+    if (!SCROLL_KEYS.has(event.key)) return;
+    if (event.defaultPrevented) return;
+    // Alt and Meta turn arrows into browser history navigation, and Ctrl is
+    // reserved for shortcuts, so none of them are scroll intent.
+    if (event.altKey || event.metaKey || event.ctrlKey) return;
+
+    const target = event.target;
+    if (isTextEntryTarget(target)) return;
+
+    // Anything that can still absorb the scroll gets to keep it.
+    const horizontal = HORIZONTAL_KEYS.has(event.key);
+    if (rootCanScroll(horizontal)) return;
+    if (hasScrollableAncestor(target, horizontal)) return;
+
+    event.preventDefault();
+  }, {capture: true, passive: false});
+})();</script><script data-bard-client-injected="true">(function() {
+  // Ensure this script is executed only once
+  if (window.firebaseAuthBridgeScriptLoaded) {
+    return;
+  }
+  window.firebaseAuthBridgeScriptLoaded = true;
+
+  let nextTokenPromiseId = 0;
+
+  // Stores { resolve, reject } for ongoing token requests
+  const pendingTokenPromises = {};
+
+  // Listen for messages from the Host Application
+  window.addEventListener('message', function(event) {
+
+    const messageData = event.data;
+
+  if (messageData && messageData.type === 'RESOLVE_NEW_FIREBASE_TOKEN') {
+      const { success, token, error, promiseId } = messageData ?? {};
+      if (pendingTokenPromises[promiseId]) {
+        if (success) {
+          pendingTokenPromises[promiseId].resolve(token);
+        } else {
+          pendingTokenPromises[promiseId].reject(new Error(error || 'Token refresh failed from host.'));
+        }
+        delete pendingTokenPromises[promiseId];
+      }
+    }
+  });
+
+  // Expose a function for the Generated App to request a new Firebase token
+  window.requestNewFirebaseToken = function() {
+    const currentPromiseId = nextTokenPromiseId++;
+    const promise = new Promise((resolve, reject) => {
+      pendingTokenPromises[currentPromiseId] = { resolve, reject };
+    });
+    if (window.parent && window.parent !== window) {
+      window.parent.postMessage({
+        type: 'REQUEST_NEW_FIREBASE_TOKEN',
+        promiseId: currentPromiseId
+      }, '*');
+    } else {
+      pendingTokenPromises[currentPromiseId].reject(new Error('No parent window to request token from.'));
+      delete pendingTokenPromises[currentPromiseId];
+    }
+    return promise;
+  };
+})();</script><script data-bard-client-injected="true">
+let realOriginalGetUserMedia = null;
+if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+  realOriginalGetUserMedia = navigator.mediaDevices.getUserMedia.bind(navigator.mediaDevices);
+}
+
+(function() {
+  if (navigator.mediaDevices && navigator.mediaDevices.__proto__) {
+    try {
+      Object.defineProperty(navigator.mediaDevices.__proto__, 'getUserMedia', {
+        get: function() {
+          return undefined; // Or throw an error
+        },
+        configurable: false
+      });
+    } catch (error) {
+      console.error("Error defining prototype getter:", error);
+    }
+  }
+})();
+
+(function() {
+  const pendingMediaResolvers = {};
+  let nextMediaPromiseId = 0;
+
+  function requestMediaPermissions(constraints) {
+    const mediaPromiseId = nextMediaPromiseId++;
+    const promise = new Promise((resolve, reject) => {
+      pendingMediaResolvers[mediaPromiseId] = (granted) => {
+        delete pendingMediaResolvers[mediaPromiseId];
+        resolve(granted);
+      };
+    });
+
+    window.parent.postMessage({
+      type: 'requestMediaPermission',
+      constraints: constraints,
+      promiseId: mediaPromiseId,
+    }, '*');
+
+    return promise;
+  }
+
+  let originalGetUserMedia = realOriginalGetUserMedia;
+
+  function interceptGetUserMedia() {
+    if (navigator.mediaDevices) {
+      Object.defineProperty(navigator.mediaDevices, 'getUserMedia', {
+        value: function(constraints) {
+          return requestMediaPermissions(constraints).then((granted) => {
+            if (granted) {
+              if (originalGetUserMedia) {
+                return originalGetUserMedia(constraints);
+              } else {
+                throw new Error("Original getUserMedia not available.");
+              }
+            } else {
+              throw new DOMException('Permission denied', 'NotAllowedError');
+            }
+          });
+        },
+        writable: false,
+        configurable: false
+      });
+    }
+  }
+
+  interceptGetUserMedia();
+
+  const observer = new MutationObserver(function(mutationsList, observer) {
+    for (const mutation of mutationsList) {
+      if (mutation.type === 'reconfigured' && mutation.name === 'getUserMedia' && mutation.object === navigator.mediaDevices) {
+        interceptGetUserMedia();
+      } else if (mutation.type === 'attributes' && mutation.attributeName === 'getUserMedia' && mutation.target === navigator.mediaDevices) {
+        interceptGetUserMedia();
+      } else if (mutation.type === 'childList' && mutation.addedNodes) {
+        mutation.addedNodes.forEach(node => {
+          if (node === navigator.mediaDevices) {
+            interceptGetUserMedia();
+          }
+        });
+      }
+    }
+  });
+
+  function interceptSpeechRecognition() {
+    if (!window.SpeechRecognition && !window.webkitSpeechRecognition) {
+      return;
+    }
+
+    const OriginalSpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+    const SpeechRecognitionWrapper = function(...args) {
+      const recognizer = new OriginalSpeechRecognition(...args);
+      const originalStart = recognizer.start.bind(recognizer);
+
+      recognizer.start = function() {
+        requestMediaPermissions({ audio: true }).then(granted => {
+          if (granted) {
+            originalStart();
+          } else {
+            const errorEvent = new SpeechRecognitionErrorEvent('error');
+            errorEvent.error = 'not-allowed'; // This is the standard error for permission denial.
+            recognizer.dispatchEvent(errorEvent);
+          }
+        });
+      };
+
+      return recognizer;
+    };
+
+    SpeechRecognitionWrapper.prototype = OriginalSpeechRecognition.prototype;
+    SpeechRecognitionWrapper.prototype.constructor = SpeechRecognitionWrapper;
+
+    if (window.SpeechRecognition) {
+      window.SpeechRecognition = SpeechRecognitionWrapper;
+    }
+    if (window.webkitSpeechRecognition) {
+      window.webkitSpeechRecognition = SpeechRecognitionWrapper;
+    }
+  }
+
+  interceptSpeechRecognition();
+
+  window.addEventListener('message', function(event) {
+    if (event.data) {
+      if (event.data.type === 'resolveMediaPermission') {
+        const { promiseId, granted } = event.data;
+        if (pendingMediaResolvers[promiseId]) {
+          pendingMediaResolvers[promiseId](granted);
+        }
+      }
+    }
+  });
+
+})();</script><script ws-interception-config="{&quot;parentOrigin&quot;:&quot;https://gemini.google.com&quot;,&quot;proxiedDomains&quot;:[]}" data-bard-client-injected="true">(function(){'use strict';var u=typeof Object.defineProperties=="function"?Object.defineProperty:function(b,d,e){if(b==Array.prototype||b==Object.prototype)return b;b[d]=e.value;return b};function v(b){b=["object"==typeof globalThis&&globalThis,b,"object"==typeof window&&window,"object"==typeof self&&self,"object"==typeof global&&global];for(var d=0;d<b.length;++d){var e=b[d];if(e&&e.Math==Math)return e}throw Error("Cannot find global object");}var w=v(this);
+function y(b,d){if(d)a:{var e=w;b=b.split(".");for(var h=0;h<b.length-1;h++){var k=b[h];if(!(k in e))break a;e=e[k]}b=b[b.length-1];h=e[b];d=d(h);d!=h&&d!=null&&u(e,b,{configurable:!0,writable:!0,value:d})}}function z(b){function d(h){return b.next(h)}function e(h){return b.throw(h)}return new Promise(function(h,k){function m(n){n.done?h(n.value):Promise.resolve(n.value).then(d,e).then(m,k)}m(b.next())})}y("globalThis",function(b){return b||w});/*
+
+ Copyright The Closure Library Authors.
+ SPDX-License-Identifier: Apache-2.0
+*/
+function A(b,d){function e(){}e.prototype=d.prototype;b.j=d.prototype;b.prototype=new e;b.prototype.constructor=b;b.h=function(h,k,m){for(var n=Array(arguments.length-2),p=2;p<arguments.length;p++)n[p-2]=arguments[p];return d.prototype[k].apply(h,n)}};function B(b,d,e="*"){function h(a){if(typeof a==="string")return F.encode(a).buffer;if(a instanceof ArrayBuffer)return a.slice(0);if(ArrayBuffer.isView(a))return a.buffer.slice(a.byteOffset,a.byteOffset+a.byteLength);throw Error("Invalid data type");}function k(a){a=h(a);var f={type:"send",data:new Uint8Array(a)},g;(g=r)==null||g.postMessage(f,[a])}function m(){if(!r)throw Error("Data port not captured yet.");r.onmessage=a=>{if(a.data.type==="message"){a=new MessageEvent("message",{data:G.decode(a.data.data)});
+let f;(f=c.onmessage)==null||f.call(c,a);c.dispatchEvent(a)}}}function n(){if(!t)throw Error("Control port not captured yet.");t.onmessage=a=>{switch(a.data.type){case "open":l=1;var f=new Event("open"),g;(g=c.onopen)==null||g.call(c,f);c.dispatchEvent(f);q.forEach(H=>{k(H)});q=[];break;case "close":g=a.data;l=3;g=new CloseEvent("close",{code:g.code,reason:g.reason,wasClean:g.wasClean});(f=c.onclose)==null||f.call(c,g);c.dispatchEvent(g);break;case "error":l=3;f=new Event("error");let x;(x=c.onerror)==
+null||x.call(c,f);c.dispatchEvent(f)}}}function p(a){return z(function*(){var f=new MessageChannel;t=f.port1;var g=new MessageChannel;r=g.port1;n();m();window.parent.postMessage({type:"websocket_open",portOrdering:["control","data"],url:b,protocols:a||[],connectionId:I},e,[f.port2,g.port2])}())}var c=Reflect.construct(EventTarget,[],new.target);c.CONNECTING=0;c.OPEN=1;c.CLOSING=2;c.CLOSED=3;c.url=b;c.binaryType="arraybuffer";c.protocol="";c.i="";var l=0,t=null,r=null,q=[],F=new TextEncoder,G=new TextDecoder;
+c.onopen=null;c.onmessage=null;c.onclose=null;c.onerror=null;Object.defineProperty(c,"readyState",{get:()=>l,enumerable:!0,configurable:!0});Object.defineProperty(c,"bufferedAmount",{get:()=>{var a=0;q.forEach(f=>{a+=typeof f==="string"?f.length:f.byteLength});return a},enumerable:!0,configurable:!0});var I=function(){var a;return((a=globalThis.crypto)==null?0:a.randomUUID)?globalThis.crypto.randomUUID():"xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g,f=>{var g=Math.random()*16|0;return(f===
+"x"?g:g&3|8).toString(16)})}();c.send=a=>{if(l===1)a instanceof Blob?a.arrayBuffer().then(f=>{k(f)}):k(a);else if(l===0)if(typeof a==="string")q.push(a);else if(a instanceof ArrayBuffer||ArrayBuffer.isView(a))q.push(h(a));else throw Error("Sending Blob is not supported before the connection is open.");else console.debug("WebSocket send called in CLOSING or CLOSED state; ignored.")};c.close=(a=1E3,f="")=>{if(l!==2&&l!==3){l=2;a={type:"close",code:a,reason:f,wasClean:a===1E3};var g;(g=t)==null||g.postMessage(a)}};
+Promise.resolve().then(()=>p(d));return c}A(B,EventTarget);var C=document.currentScript,D=C==null?void 0:C.getAttribute("ws-interception-config");if(!D)throw Error("WebSocket Interceptor: Missing ws-interception-config attribute in the script tag.");var E=JSON.parse(D);if(!E.parentOrigin||typeof E.parentOrigin!=="string")throw Error("WebSocket Interceptor: Invalid parentOrigin in ws-interception-config");
+(function(b){var d=Object.getOwnPropertyDescriptor(window,"WebSocket");if(!d||d.writable||d.configurable)d=Object.assign(function(e,h){try{let k=(new URL(e)).hostname;if(b.proxiedDomains.some(m=>k===m||k.endsWith(`.${m}`)))return new B(e,h,b.parentOrigin)}catch(k){throw window.parent.postMessage({type:"websocket_blocked",url:e,reason:"blocked_invalid_url"},b.parentOrigin),new DOMException(`WebSocket connection to '${e}' is not allowed in Canvas.`,"SecurityError");}window.parent.postMessage({type:"websocket_blocked",
+url:e,reason:"blocked_domain_not_allowlisted"},b.parentOrigin);throw new DOMException(`WebSocket connection to '${e}' is not allowed in Canvas.`,"SecurityError");},{CONNECTING:0,OPEN:1,CLOSING:2,CLOSED:3}),Object.defineProperty(window,"WebSocket",{value:d,writable:!1,configurable:!1})})({proxiedDomains:E.proxiedDomains||[],parentOrigin:E.parentOrigin});}).call(this);
+</script><script data-bard-client-injected="true">((function(modelInformation) {
+  const originalFetch = window.fetch;
+  // TODO: b/421908508 - Move these out of the script and match all generative AI model calls.
+  let googleLlmBaseApiUrls = [
+    'https://generativelanguage.googleapis.com/v1beta/models/' + modelInformation.textModelName + ':streamGenerateContent',
+    'https://generativelanguage.googleapis.com/v1beta/models/' + modelInformation.textModelName + ':generateContent',
+    'https://generativelanguage.googleapis.com/v1beta/models/' + modelInformation.imageModelName + ':predict',
+    'https://generativelanguage.googleapis.com/v1beta/models/' + modelInformation.imageModelName + ':predictLongRunning',
+    'https://generativelanguage.googleapis.com/v1beta/models/' + modelInformation.imageEditModelName + ':generateContent',
+    'https://generativelanguage.googleapis.com/v1beta/models/' + modelInformation.imageTransformModelName + ':generateContent',
+    'https://generativelanguage.googleapis.com/v1beta/models/' + modelInformation.videoModelName + ':predict',
+    'https://generativelanguage.googleapis.com/v1beta/models/' + modelInformation.videoModelName + ':predictLongRunning',
+    'https://generativelanguage.googleapis.com/v1beta/models/' + modelInformation.ttsModelName + ':generateContent',
+  ];
+  modelInformation.deprecatedTextModelNames.forEach((modelName) => {
+    googleLlmBaseApiUrls.push(
+      'https://generativelanguage.googleapis.com/v1beta/models/' + modelName + ':streamGenerateContent',
+      'https://generativelanguage.googleapis.com/v1beta/models/' + modelName + ':generateContent',
+    );
+  });
+  modelInformation.deprecatedImageModelNames.forEach((modelName) => {
+    googleLlmBaseApiUrls.push(
+      'https://generativelanguage.googleapis.com/v1beta/models/' + modelName + ':predict',
+      'https://generativelanguage.googleapis.com/v1beta/models/' + modelName + ':predictLongRunning',
+      'https://generativelanguage.googleapis.com/v1beta/models/' + modelName + ':generateContent',
+      'https://generativelanguage.googleapis.com/v1beta/models/' + modelName + ':streamGenerateContent',
+    );
+  });
+  modelInformation.deprecatedGenerateImageModelNames.forEach((modelName) => {
+    googleLlmBaseApiUrls.push(
+      'https://generativelanguage.googleapis.com/v1beta/models/' + modelName + ':generateContent',
+      'https://generativelanguage.googleapis.com/v1beta/models/' + modelName + ':streamGenerateContent',
+    );
+  });
+  modelInformation.deprecatedImageTransformModelNames.forEach((modelName) => {
+    googleLlmBaseApiUrls.push(
+      'https://generativelanguage.googleapis.com/v1beta/models/' + modelName + ':generateContent',
+      'https://generativelanguage.googleapis.com/v1beta/models/' + modelName + ':streamGenerateContent',
+    );
+  });
+
+  const pendingFetchResolvers = {};
+  let nextPromiseId = 0;
+
+  function handleStringInput(input, optionsArgument) {
+    const actualUrl = input;
+    const fetchCallArgs = [actualUrl, optionsArgument];
+    const effectiveOptions = optionsArgument || {};
+    const bodyForApiKeyCheck = effectiveOptions.body;
+    const bodyForPostMessage = effectiveOptions.body;
+    return { actualUrl, fetchCallArgs, effectiveOptions, bodyForApiKeyCheck, bodyForPostMessage };
+  }
+
+  function handleRequestInput(input, optionsArgument) {
+    const actualUrl = input.url;
+    const fetchCallArgs = [input, optionsArgument];
+    const effectiveOptions = { method: input.method, headers: new Headers(input.headers) };
+    let bodyForApiKeyCheck;
+    let bodyForPostMessage;
+
+    if (optionsArgument) {
+      if (optionsArgument.method) effectiveOptions.method = optionsArgument.method;
+      if (optionsArgument.headers) effectiveOptions.headers = new Headers(optionsArgument.headers);
+      if ('body' in optionsArgument) {
+        bodyForApiKeyCheck = optionsArgument.body;
+        bodyForPostMessage = optionsArgument.body;
+      } else {
+        bodyForApiKeyCheck = undefined;
+        bodyForPostMessage = input.body;
+      }
+    } else {
+      bodyForApiKeyCheck = undefined;
+      bodyForPostMessage = input.body;
+    }
+    return { actualUrl, fetchCallArgs, effectiveOptions, bodyForApiKeyCheck, bodyForPostMessage };
+  }
+
+  window.fetch = function(input, optionsArgument) {
+    let actualUrl;
+    let fetchCallArgs;
+    let effectiveOptions = {};
+    let bodyForApiKeyCheck;
+    let bodyForPostMessage;
+
+    if (typeof input === 'string') {
+      ({actualUrl, fetchCallArgs, effectiveOptions, bodyForApiKeyCheck, bodyForPostMessage} = handleStringInput(input, optionsArgument));
+    } else if (input instanceof Request) {
+      ({actualUrl, fetchCallArgs, effectiveOptions, bodyForApiKeyCheck, bodyForPostMessage} = handleRequestInput(input, optionsArgument));
+    } else {
+      return originalFetch.apply(window, [input, optionsArgument]);
+    }
+
+    effectiveOptions.method = effectiveOptions.method || 'GET';
+    if (!effectiveOptions.headers) {
+      effectiveOptions.headers = new Headers();
+    }
+
+
+    if (typeof actualUrl === 'string' && googleLlmBaseApiUrls.some((url) => actualUrl.startsWith(url))) {
+      let apiKeyIsNull = true;
+
+      const regex = new RegExp("models/([^:]+)");
+      const modelNameMatch = actualUrl.match(regex);
+      const modelName = modelNameMatch ? modelNameMatch[1] : 'unspecified';
+
+
+      try {
+        const urlObject = new URL(actualUrl);  // Use URL object for robust parsing
+        const apiKeyParam = urlObject.searchParams.get('key');
+        if (apiKeyParam) {
+          apiKeyIsNull = false;
+        }
+      } catch (e) {
+        // Continue checks even if URL parsing fails
+      }
+
+      if (apiKeyIsNull && effectiveOptions.headers) {
+        const h = new Headers(effectiveOptions.headers);
+        const apiKeyHeaderValue = h.get('X-API-Key') || h.get('x-api-key');
+        if (apiKeyHeaderValue) {
+          apiKeyIsNull = false;
+          return originalFetch.apply(window, fetchCallArgs);
+        }
+      }
+
+      if (apiKeyIsNull && effectiveOptions.method && ['POST', 'PUT', 'PATCH'].includes(effectiveOptions.method.toUpperCase()) && typeof bodyForApiKeyCheck === 'string') {
+        try {
+          const bodyData = JSON.parse(bodyForApiKeyCheck);
+          if (bodyData && bodyData.apiKey) {
+            apiKeyIsNull = false;
+            return originalFetch.apply(window, fetchCallArgs);
+          }
+        } catch (e) {
+          // Ignore JSON parsing errors
+        }
+      }
+
+      if(apiKeyIsNull) {
+        const promiseId = nextPromiseId++;
+        const promise = new Promise((resolve) => {
+          pendingFetchResolvers[promiseId] = (resolvedResponse) => {
+            delete pendingFetchResolvers[promiseId];
+            resolve(resolvedResponse);
+          };
+        });
+
+        let serializedBodyForPostMessage;
+        if (typeof bodyForPostMessage === 'string' || bodyForPostMessage == null) {
+            serializedBodyForPostMessage = bodyForPostMessage;
+        } else if (bodyForPostMessage instanceof ReadableStream) {
+            serializedBodyForPostMessage = null;
+        } else {
+            try {
+                serializedBodyForPostMessage = JSON.stringify(bodyForPostMessage);
+            } catch (e) {
+                serializedBodyForPostMessage = null;
+            }
+        }
+
+        const messageOptions = {
+            method: effectiveOptions.method,
+            headers: Object.fromEntries(new Headers(effectiveOptions.headers).entries()),
+            body: serializedBodyForPostMessage
+        };
+
+        window.parent.postMessage({
+          type: 'requestFetch',
+          url: actualUrl,
+          modelName: modelName,
+          options: messageOptions,
+          promiseId: promiseId,
+        }, '*');
+
+        return promise;
+      }
+      return originalFetch.apply(window, fetchCallArgs);
+    }
+    return originalFetch.apply(window, fetchCallArgs);
+  };
+
+  window.addEventListener('message', function(event) {
+    if (event.data && event.data.type === 'resolveFetch') {
+      const { promiseId, response } = event.data;
+      if (pendingFetchResolvers[promiseId]) {
+        try {
+          const reconstructedResponse = new Response(response.body, {
+            status: response.status,
+            statusText: response.statusText,
+            headers: new Headers(response.headers),
+          });
+          pendingFetchResolvers[promiseId](reconstructedResponse);
+        } catch (error) {
+          pendingFetchResolvers[promiseId](new Response(null, { status: 500, statusText: "Interceptor Response Reconstruction Error" }));
+        }
+      }
+    }
+  });
+
+}))({"textModelName":"gemini-3-flash-preview","imageModelName":"imagen-4.0-generate-001","imageEditModelName":"gemini-3.1-flash-image","imageTransformModelName":"gemini-3-pro-image","videoModelName":"veo-2.0-generate-001","ttsModelName":"gemini-2.5-flash-preview-tts","deprecatedTextModelNames":["gemini-2.0-flash","gemini-2.5-flash","gemini-2.5-flash-preview-04-17","gemini-2.5-flash-preview-05-20","gemini-2.5-flash-preview-09-2025"],"deprecatedImageModelNames":["imagen-3.0-generate-001","imagen-3.0-generate-002"],"deprecatedGenerateImageModelNames":["gemini-2.5-flash-image-preview","gemini-2.5-flash-image","gemini-3.1-flash-image-preview"],"deprecatedImageTransformModelNames":["gemini-3-pro-image-preview-11-2025"]})</script><script data-bard-client-injected="true">(function() {
+  function normalizeSlug(str) {
+    try {
+      return str
+        .trim()
+        .toLowerCase()
+        .replace(/[^p{L}p{N}s_-]/gu, '')
+        .replace(/s+/g, '-');
+    } catch (e) {
+      return str
+        .trim()
+        .toLowerCase()
+        .replace(/[^a-z0-9s_-]/g, '')
+        .replace(/s+/g, '-');
+    }
+  }
+
+  function findTargetElement(hash) {
+    if (!hash || hash === '#') {
+      return null;
+    }
+    const rawId = hash.startsWith('#') ? hash.slice(1) : hash;
+    let decodedId = rawId;
+    try {
+      decodedId = decodeURIComponent(rawId);
+    } catch (e) {
+      // Ignore URI malformed errors.
+    }
+
+    // 1. Direct ID match (raw and decoded).
+    let target = document.getElementById(rawId) || document.getElementById(decodedId);
+    if (target) {
+      return target;
+    }
+
+    // 2. Name attribute match (<a name="...">).
+    try {
+      if (typeof CSS !== 'undefined' && CSS.escape) {
+        target =
+          document.querySelector('[name="' + CSS.escape(rawId) + '"]') ||
+          document.querySelector('[name="' + CSS.escape(decodedId) + '"]');
+      } else {
+        const namedElements = document.getElementsByName(rawId);
+        if (namedElements && namedElements.length > 0) {
+          return namedElements[0];
+        }
+      }
+    } catch (e) {
+      // Ignore querySelector syntax errors.
+    }
+    if (target) {
+      return target;
+    }
+
+    // 3. Match heading text by slug (for Markdown TOCs where headings lack explicit IDs).
+    const targetSlug = normalizeSlug(decodedId);
+    if (targetSlug) {
+      for (const heading of document.querySelectorAll('h1, h2, h3, h4, h5, h6')) {
+        if (normalizeSlug(heading.textContent || '') === targetSlug) {
+          return heading;
+        }
+      }
+    }
+
+    return null;
+  }
+
+  document.addEventListener('click', function(event) {
+    const target = event.target;
+    const anchor = target && typeof target.closest === 'function' ? target.closest('a') : null;
+    if (!anchor) {
+      return;
+    }
+
+    const href = anchor.getAttribute('href');
+    if (
+      !href ||
+      href.trim().toLowerCase().startsWith('javascript:') ||
+      anchor.hasAttribute('download')
+    ) {
+      return;
+    }
+
+    // Check if the link is an in-page hash / anchor link.
+    if (href.startsWith('#')) {
+      event.preventDefault();
+      const targetElement = findTargetElement(href);
+      if (targetElement) {
+        targetElement.scrollIntoView({behavior: 'smooth', block: 'start'});
+      }
+      return;
+    }
+
+    // Check if the URL has the same origin/pathname but with a hash.
+    try {
+      const url = new URL(anchor.href, window.location.href);
+      if (
+        url.hash &&
+        url.origin === window.location.origin &&
+        url.pathname === window.location.pathname
+      ) {
+        event.preventDefault();
+        const targetElement = findTargetElement(url.hash);
+        if (targetElement) {
+          targetElement.scrollIntoView({behavior: 'smooth', block: 'start'});
+        }
+        return;
+      }
+    } catch (e) {
+      // Fall through if URL parsing fails.
+    }
+
+    // For all external or full navigation links, prevent iframe-level navigation
+    // (which breaks in AGSA WebView or sandboxed iframes) and ensure they open
+    // safely in a new tab/window.
+    if (anchor.target !== '_blank') {
+      event.preventDefault();
+      window.open(anchor.href, '_blank', 'noopener,noreferrer');
+    }
+  }, {capture: true});
+})();</script><script data-bard-client-injected="true">(function(){'use strict';function a(){window.parent.postMessage({type:"interaction"},"*")}window.addEventListener("click",a,{capture:!0,passive:!0});window.addEventListener("touchstart",a,{capture:!0,passive:!0});window.addEventListener("keydown",a,{capture:!0,passive:!0});}).call(this);
+</script><script data-bard-client-injected="true">(function() {
+  const originalConsoleLog = console.log;
+  const originalConsoleError = console.error;
+
+    /**
+   * Normalizes an error event or a promise rejection reason into a structured error object.
+   * @param {*} errorEventOrReason The error object or reason.
+   * @return {object} Structured error data { message, name, stack }.
+   */
+  function getErrorObject(errorEventOrReason) {
+    if (errorEventOrReason instanceof Error) {
+      return {
+        message: errorEventOrReason.message,
+        name: errorEventOrReason.name,
+        stack: errorEventOrReason.stack,
+      };
+    }
+    // Fallback for non-Error objects.
+    try {
+      return {
+        message: JSON.stringify(errorEventOrReason),
+        name: 'UnknownErrorType',
+        stack: null,
+      };
+    } catch (e) {
+      return {
+        message: String(errorEventOrReason),
+        name: 'UnknownErrorTypeNonStringifiable',
+        stack: null,
+      };
+    }
+  }
+
+  /**
+   * Converts an array of arguments (from log/error) into a single string.
+   * Handles Error objects specially to include their message and stack.
+   * @param {Array<*>} args - Arguments passed to console methods.
+   * @return {string} A string representation of the arguments.
+   */
+  function stringifyArgs(args) {
+    return args
+      .map((arg) => {
+        if (arg instanceof Error) {
+          const {message, stack} = arg;
+          return `Error: ${message}${stack ? ('\nStack: ' + stack) : ''}`;
+        }
+        if (typeof arg === 'object' && arg !== null) {
+          try {
+            return JSON.stringify(arg);
+          } catch (error) {
+            return '[Circular Object]';
+          }
+        } else {
+          return String(arg);
+        }
+      })
+      .join(' ');
+  }
+
+  console.log = function(...args) {
+    const logString = stringifyArgs(args);
+    window.parent.postMessage({ type: 'log', message: logString }, '*');
+    originalConsoleLog.apply(console, args);
+  };
+
+  console.error = function(...args) {
+    let errorData;
+    if (args.length > 0 && args[0] instanceof Error) {
+      const err = args[0];
+      // If the first arg is an Error, capture its details.
+      errorData = {
+        type: 'error',
+        source: 'CONSOLE_ERROR',
+        ...getErrorObject(err),
+        rawArgsString: stringifyArgs(args.slice(1)),
+        timestamp: new Date().toISOString(),
+      };
+    } else {
+      // If not an Error object, treat all args as a general error message.
+      errorData = {
+        type: 'error',
+        source: 'CONSOLE_ERROR',
+        message: stringifyArgs(args),
+        name: 'ConsoleLoggedError',
+        stack: null,
+        timestamp: new Date().toISOString(),
+      };
+    }
+    window.parent.postMessage(errorData, '*');
+    originalConsoleError.apply(console, args);
+  };
+
+  // Listen for global unhandled synchronous errors.
+  window.addEventListener('error', function(event) {
+    const errorDetails = event.error ? getErrorObject(event.error) : {
+      message: event.message,
+      name: 'GlobalError',
+      stack: null,
+      filename: event.filename,
+      lineno: event.lineno,
+      colno: event.colno,
+    };
+
+    window.parent.postMessage({
+      type: 'error',
+      source: 'global',
+      ...errorDetails,
+      message: errorDetails.message || event.message,
+      timestamp: new Date().toISOString(),
+    }, '*');
+  });
+
+  // Listen for unhandled promise rejections (asynchronous errors).
+  window.addEventListener('unhandledrejection', function(event) {
+    const errorDetails = getErrorObject(event.reason);
+
+    window.parent.postMessage({
+      type: 'error',
+      source: 'unhandledrejection',
+      ...errorDetails,
+      message: errorDetails.message || 'Unhandled Promise Rejection',
+      timestamp: new Date().toISOString(),
+    }, '*');
+  });
+
+})();</script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Potato Massah — Hardware Volume Wheel &amp; Solo FX Controller for VoiceMeeter Potato</title>
+  <meta name="description" content="Open-source 64-bit AutoHotkey v2 hardware volume wheel and Solo FX controller for VoiceMeeter Potato with 20 ms smooth fader glide, 16-channel keybinds, and a Car Head-Unit OSD.">
+  <link rel="icon" type="image/x-icon" href="Potato.ico">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;family=JetBrains+Mono:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Segoe UI"', 'Inter', 'system-ui', '-apple-system', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'Consolas', 'monospace'],
+          },
+          colors: {
+            canvas: '#0D0D11',
+            elevated: '#15151C',
+            pillDark: '#16161E',
+            pillActive: '#152433',
+            pillHover: '#20202C',
+            pillActiveHover: '#1B3146',
+            borderSubtle: '#22222E',
+            cyanAccent: '#38BDF8',
+            coralMute: '#F87171',
+            emeraldOk: '#34D399',
+            textPrimary: '#F4F4F5',
+            textSecondary: '#D4D4D8',
+            textMuted: '#A1A1AA',
+            textDim: '#71717A',
+          },
+          boxShadow: {
+            cyanGlow: '0 0 36px -8px rgba(56, 189, 248, 0.25)',
+            osdHud: '0 20px 44px -10px rgba(0, 0, 0, 0.9), 0 0 0 1px rgba(56, 189, 248, 0.32)',
+          }
+        }
+      }
+    };
+  </script>
+  <style>
+    body {
+      background-color: #0D0D11;
+      color: #F4F4F5;
+      font-family: "Segoe UI", "Inter", system-ui, -apple-system, sans-serif;
+      overflow-x: hidden;
+    }
+
+    .hero-backdrop {
+      background:
+        radial-gradient(640px circle at 74% 26%, rgba(56, 189, 248, 0.08), transparent 65%),
+        radial-gradient(480px circle at 16% 18%, rgba(56, 189, 248, 0.04), transparent 60%);
+    }
+
+    /* Custom dark scrollbars */
+    ::-webkit-scrollbar {
+      width: 7px;
+      height: 7px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #0D0D11;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #22222E;
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #38BDF8;
+    }
+
+    /* Hardware keycap badge */
+    .kbd-key {
+      background: linear-gradient(180deg, #1D1D26 0%, #14141B 100%);
+      border: 1px solid #2A2A37;
+      box-shadow: 0 2px 0 #09090C;
+      border-radius: 6px;
+      padding: 2px 7px;
+      font-family: "JetBrains Mono", Consolas, monospace;
+      font-size: 0.72rem;
+      font-weight: 600;
+      color: #E4E4E7;
+      display: inline-flex;
+      align-items: center;
+      line-height: 1.35;
+      white-space: nowrap;
+    }
+
+    /* Car Head-Unit OSD entrance/exit transitions */
+    .osd-hidden {
+      opacity: 0;
+      transform: translate(-50%, 14px) scale(0.97);
+      pointer-events: none;
+    }
+    .osd-visible {
+      opacity: 1;
+      transform: translate(-50%, 0) scale(1);
+      pointer-events: none;
+    }
+  </style>
+<style>*, ::before, ::after{--tw-border-spacing-x:0;--tw-border-spacing-y:0;--tw-translate-x:0;--tw-translate-y:0;--tw-rotate:0;--tw-skew-x:0;--tw-skew-y:0;--tw-scale-x:1;--tw-scale-y:1;--tw-pan-x: ;--tw-pan-y: ;--tw-pinch-zoom: ;--tw-scroll-snap-strictness:proximity;--tw-gradient-from-position: ;--tw-gradient-via-position: ;--tw-gradient-to-position: ;--tw-ordinal: ;--tw-slashed-zero: ;--tw-numeric-figure: ;--tw-numeric-spacing: ;--tw-numeric-fraction: ;--tw-ring-inset: ;--tw-ring-offset-width:0px;--tw-ring-offset-color:#fff;--tw-ring-color:rgb(59 130 246 / 0.5);--tw-ring-offset-shadow:0 0 #0000;--tw-ring-shadow:0 0 #0000;--tw-shadow:0 0 #0000;--tw-shadow-colored:0 0 #0000;--tw-blur: ;--tw-brightness: ;--tw-contrast: ;--tw-grayscale: ;--tw-hue-rotate: ;--tw-invert: ;--tw-saturate: ;--tw-sepia: ;--tw-drop-shadow: ;--tw-backdrop-blur: ;--tw-backdrop-brightness: ;--tw-backdrop-contrast: ;--tw-backdrop-grayscale: ;--tw-backdrop-hue-rotate: ;--tw-backdrop-invert: ;--tw-backdrop-opacity: ;--tw-backdrop-saturate: ;--tw-backdrop-sepia: ;--tw-contain-size: ;--tw-contain-layout: ;--tw-contain-paint: ;--tw-contain-style: }::backdrop{--tw-border-spacing-x:0;--tw-border-spacing-y:0;--tw-translate-x:0;--tw-translate-y:0;--tw-rotate:0;--tw-skew-x:0;--tw-skew-y:0;--tw-scale-x:1;--tw-scale-y:1;--tw-pan-x: ;--tw-pan-y: ;--tw-pinch-zoom: ;--tw-scroll-snap-strictness:proximity;--tw-gradient-from-position: ;--tw-gradient-via-position: ;--tw-gradient-to-position: ;--tw-ordinal: ;--tw-slashed-zero: ;--tw-numeric-figure: ;--tw-numeric-spacing: ;--tw-numeric-fraction: ;--tw-ring-inset: ;--tw-ring-offset-width:0px;--tw-ring-offset-color:#fff;--tw-ring-color:rgb(59 130 246 / 0.5);--tw-ring-offset-shadow:0 0 #0000;--tw-ring-shadow:0 0 #0000;--tw-shadow:0 0 #0000;--tw-shadow-colored:0 0 #0000;--tw-blur: ;--tw-brightness: ;--tw-contrast: ;--tw-grayscale: ;--tw-hue-rotate: ;--tw-invert: ;--tw-saturate: ;--tw-sepia: ;--tw-drop-shadow: ;--tw-backdrop-blur: ;--tw-backdrop-brightness: ;--tw-backdrop-contrast: ;--tw-backdrop-grayscale: ;--tw-backdrop-hue-rotate: ;--tw-backdrop-invert: ;--tw-backdrop-opacity: ;--tw-backdrop-saturate: ;--tw-backdrop-sepia: ;--tw-contain-size: ;--tw-contain-layout: ;--tw-contain-paint: ;--tw-contain-style: }/* ! tailwindcss v3.4.17 | MIT License | https://tailwindcss.com */*,::after,::before{box-sizing:border-box;border-width:0;border-style:solid;border-color:#e5e7eb}::after,::before{--tw-content:''}:host,html{line-height:1.5;-webkit-text-size-adjust:100%;-moz-tab-size:4;tab-size:4;font-family:"Segoe UI", Inter, system-ui, -apple-system, sans-serif;font-feature-settings:normal;font-variation-settings:normal;-webkit-tap-highlight-color:transparent}body{margin:0;line-height:inherit}hr{height:0;color:inherit;border-top-width:1px}abbr:where([title]){-webkit-text-decoration:underline dotted;text-decoration:underline dotted}h1,h2,h3,h4,h5,h6{font-size:inherit;font-weight:inherit}a{color:inherit;text-decoration:inherit}b,strong{font-weight:bolder}code,kbd,pre,samp{font-family:"JetBrains Mono", Consolas, monospace;font-feature-settings:normal;font-variation-settings:normal;font-size:1em}small{font-size:80%}sub,sup{font-size:75%;line-height:0;position:relative;vertical-align:baseline}sub{bottom:-.25em}sup{top:-.5em}table{text-indent:0;border-color:inherit;border-collapse:collapse}button,input,optgroup,select,textarea{font-family:inherit;font-feature-settings:inherit;font-variation-settings:inherit;font-size:100%;font-weight:inherit;line-height:inherit;letter-spacing:inherit;color:inherit;margin:0;padding:0}button,select{text-transform:none}button,input:where([type=button]),input:where([type=reset]),input:where([type=submit]){-webkit-appearance:button;background-color:transparent;background-image:none}:-moz-focusring{outline:auto}:-moz-ui-invalid{box-shadow:none}progress{vertical-align:baseline}::-webkit-inner-spin-button,::-webkit-outer-spin-button{height:auto}[type=search]{-webkit-appearance:textfield;outline-offset:-2px}::-webkit-search-decoration{-webkit-appearance:none}::-webkit-file-upload-button{-webkit-appearance:button;font:inherit}summary{display:list-item}blockquote,dd,dl,figure,h1,h2,h3,h4,h5,h6,hr,p,pre{margin:0}fieldset{margin:0;padding:0}legend{padding:0}menu,ol,ul{list-style:none;margin:0;padding:0}dialog{padding:0}textarea{resize:vertical}input::placeholder,textarea::placeholder{opacity:1;color:#9ca3af}[role=button],button{cursor:pointer}:disabled{cursor:default}audio,canvas,embed,iframe,img,object,svg,video{display:block;vertical-align:middle}img,video{max-width:100%;height:auto}[hidden]:where(:not([hidden=until-found])){display:none}.pointer-events-none{pointer-events:none}.fixed{position:fixed}.absolute{position:absolute}.relative{position:relative}.sticky{position:sticky}.inset-0{inset:0px}.bottom-4{bottom:1rem}.bottom-5{bottom:1.25rem}.left-1\/2{left:50%}.left-3{left:0.75rem}.right-5{right:1.25rem}.top-0{top:0px}.top-1\/2{top:50%}.z-20{z-index:20}.z-40{z-index:40}.z-50{z-index:50}.mx-auto{margin-left:auto;margin-right:auto}.my-8{margin-top:2rem;margin-bottom:2rem}.mb-1\.5{margin-bottom:0.375rem}.mb-10{margin-bottom:2.5rem}.mb-12{margin-bottom:3rem}.mb-4{margin-bottom:1rem}.mb-8{margin-bottom:2rem}.mr-1{margin-right:0.25rem}.mt-0\.5{margin-top:0.125rem}.mt-1{margin-top:0.25rem}.mt-2{margin-top:0.5rem}.mt-3{margin-top:0.75rem}.mt-5{margin-top:1.25rem}.mt-6{margin-top:1.5rem}.flex{display:flex}.inline-flex{display:inline-flex}.grid{display:grid}.hidden{display:none}.h-1\.5{height:0.375rem}.h-10{height:2.5rem}.h-11{height:2.75rem}.h-16{height:4rem}.h-2{height:0.5rem}.h-3\.5{height:0.875rem}.h-4{height:1rem}.h-5{height:1.25rem}.h-6{height:1.5rem}.h-7{height:1.75rem}.h-8{height:2rem}.h-9{height:2.25rem}.h-\[2px\]{height:2px}.h-\[3px\]{height:3px}.h-\[7px\]{height:7px}.h-auto{height:auto}.h-full{height:100%}.max-h-\[88vh\]{max-height:88vh}.w-1\.5{width:0.375rem}.w-10{width:2.5rem}.w-11{width:2.75rem}.w-2{width:0.5rem}.w-3\.5{width:0.875rem}.w-4{width:1rem}.w-5{width:1.25rem}.w-6{width:1.5rem}.w-7{width:1.75rem}.w-8{width:2rem}.w-9{width:2.25rem}.w-\[calc\(100\%-2rem\)\]{width:calc(100% - 2rem)}.w-full{width:100%}.min-w-0{min-width:0px}.max-w-2xl{max-width:42rem}.max-w-4xl{max-width:56rem}.max-w-7xl{max-width:80rem}.max-w-\[390px\]{max-width:390px}.max-w-md{max-width:28rem}.max-w-sm{max-width:24rem}.flex-1{flex:1 1 0%}.shrink-0{flex-shrink:0}.border-collapse{border-collapse:collapse}.-translate-y-1\/2{--tw-translate-y:-50%;transform:translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y))}.translate-y-16{--tw-translate-y:4rem;transform:translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y))}.translate-y-0{--tw-translate-y:0px;transform:translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y))}@keyframes pulse{50%{opacity:.5}}.animate-pulse{animation:pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite}.cursor-pointer{cursor:pointer}.select-none{-webkit-user-select:none;user-select:none}.grid-cols-1{grid-template-columns:repeat(1, minmax(0, 1fr))}.grid-cols-2{grid-template-columns:repeat(2, minmax(0, 1fr))}.flex-col{flex-direction:column}.flex-wrap{flex-wrap:wrap}.items-start{align-items:flex-start}.items-center{align-items:center}.items-stretch{align-items:stretch}.justify-end{justify-content:flex-end}.justify-center{justify-content:center}.justify-between{justify-content:space-between}.gap-1\.5{gap:0.375rem}.gap-10{gap:2.5rem}.gap-2{gap:0.5rem}.gap-2\.5{gap:0.625rem}.gap-3{gap:0.75rem}.gap-4{gap:1rem}.gap-5{gap:1.25rem}.gap-6{gap:1.5rem}.gap-7{gap:1.75rem}.gap-1{gap:0.25rem}.space-y-0\.5 > :not([hidden]) ~ :not([hidden]){--tw-space-y-reverse:0;margin-top:calc(0.125rem * calc(1 - var(--tw-space-y-reverse)));margin-bottom:calc(0.125rem * var(--tw-space-y-reverse))}.space-y-1\.5 > :not([hidden]) ~ :not([hidden]){--tw-space-y-reverse:0;margin-top:calc(0.375rem * calc(1 - var(--tw-space-y-reverse)));margin-bottom:calc(0.375rem * var(--tw-space-y-reverse))}.space-y-2 > :not([hidden]) ~ :not([hidden]){--tw-space-y-reverse:0;margin-top:calc(0.5rem * calc(1 - var(--tw-space-y-reverse)));margin-bottom:calc(0.5rem * var(--tw-space-y-reverse))}.space-y-3 > :not([hidden]) ~ :not([hidden]){--tw-space-y-reverse:0;margin-top:calc(0.75rem * calc(1 - var(--tw-space-y-reverse)));margin-bottom:calc(0.75rem * var(--tw-space-y-reverse))}.space-y-3\.5 > :not([hidden]) ~ :not([hidden]){--tw-space-y-reverse:0;margin-top:calc(0.875rem * calc(1 - var(--tw-space-y-reverse)));margin-bottom:calc(0.875rem * var(--tw-space-y-reverse))}.space-y-4 > :not([hidden]) ~ :not([hidden]){--tw-space-y-reverse:0;margin-top:calc(1rem * calc(1 - var(--tw-space-y-reverse)));margin-bottom:calc(1rem * var(--tw-space-y-reverse))}.space-y-6 > :not([hidden]) ~ :not([hidden]){--tw-space-y-reverse:0;margin-top:calc(1.5rem * calc(1 - var(--tw-space-y-reverse)));margin-bottom:calc(1.5rem * var(--tw-space-y-reverse))}.divide-y > :not([hidden]) ~ :not([hidden]){--tw-divide-y-reverse:0;border-top-width:calc(1px * calc(1 - var(--tw-divide-y-reverse)));border-bottom-width:calc(1px * var(--tw-divide-y-reverse))}.divide-borderSubtle\/70 > :not([hidden]) ~ :not([hidden]){border-color:rgb(34 34 46 / 0.7)}.overflow-hidden{overflow:hidden}.overflow-x-auto{overflow-x:auto}.overflow-y-auto{overflow-y:auto}.scroll-smooth{scroll-behavior:smooth}.truncate{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.whitespace-nowrap{white-space:nowrap}.whitespace-pre{white-space:pre}.rounded{border-radius:0.25rem}.rounded-2xl{border-radius:1rem}.rounded-full{border-radius:9999px}.rounded-lg{border-radius:0.5rem}.rounded-md{border-radius:0.375rem}.rounded-sm{border-radius:0.125rem}.rounded-xl{border-radius:0.75rem}.border{border-width:1px}.border-b{border-bottom-width:1px}.border-t{border-top-width:1px}.border-\[\#18384A\]{--tw-border-opacity:1;border-color:rgb(24 56 74 / var(--tw-border-opacity, 1))}.border-\[\#262632\]{--tw-border-opacity:1;border-color:rgb(38 38 50 / var(--tw-border-opacity, 1))}.border-borderSubtle{--tw-border-opacity:1;border-color:rgb(34 34 46 / var(--tw-border-opacity, 1))}.border-borderSubtle\/80{border-color:rgb(34 34 46 / 0.8)}.border-cyanAccent\/25{border-color:rgb(56 189 248 / 0.25)}.border-cyanAccent\/30{border-color:rgb(56 189 248 / 0.3)}.border-cyanAccent\/35{border-color:rgb(56 189 248 / 0.35)}.border-cyanAccent\/40{border-color:rgb(56 189 248 / 0.4)}.bg-\[\#09090C\]{--tw-bg-opacity:1;background-color:rgb(9 9 12 / var(--tw-bg-opacity, 1))}.bg-\[\#0A0A0E\]{--tw-bg-opacity:1;background-color:rgb(10 10 14 / var(--tw-bg-opacity, 1))}.bg-\[\#111117\]{--tw-bg-opacity:1;background-color:rgb(17 17 23 / var(--tw-bg-opacity, 1))}.bg-\[\#141418\]{--tw-bg-opacity:1;background-color:rgb(20 20 24 / var(--tw-bg-opacity, 1))}.bg-\[\#191922\]{--tw-bg-opacity:1;background-color:rgb(25 25 34 / var(--tw-bg-opacity, 1))}.bg-\[\#1B2B3A\]{--tw-bg-opacity:1;background-color:rgb(27 43 58 / var(--tw-bg-opacity, 1))}.bg-\[\#1E1E28\]{--tw-bg-opacity:1;background-color:rgb(30 30 40 / var(--tw-bg-opacity, 1))}.bg-black\/75{background-color:rgb(0 0 0 / 0.75)}.bg-black\/80{background-color:rgb(0 0 0 / 0.8)}.bg-canvas{--tw-bg-opacity:1;background-color:rgb(13 13 17 / var(--tw-bg-opacity, 1))}.bg-canvas\/85{background-color:rgb(13 13 17 / 0.85)}.bg-cyanAccent{--tw-bg-opacity:1;background-color:rgb(56 189 248 / var(--tw-bg-opacity, 1))}.bg-elevated{--tw-bg-opacity:1;background-color:rgb(21 21 28 / var(--tw-bg-opacity, 1))}.bg-elevated\/80{background-color:rgb(21 21 28 / 0.8)}.bg-emeraldOk{--tw-bg-opacity:1;background-color:rgb(52 211 153 / var(--tw-bg-opacity, 1))}.bg-pillActive{--tw-bg-opacity:1;background-color:rgb(21 36 51 / var(--tw-bg-opacity, 1))}.bg-pillDark{--tw-bg-opacity:1;background-color:rgb(22 22 30 / var(--tw-bg-opacity, 1))}.bg-\[\#1C1C26\]{--tw-bg-opacity:1;background-color:rgb(28 28 38 / var(--tw-bg-opacity, 1))}.bg-emeraldOk\/15{background-color:rgb(52 211 153 / 0.15)}.bg-purple-500\/15{background-color:rgb(168 85 247 / 0.15)}.object-contain{object-fit:contain}.p-3{padding:0.75rem}.p-4{padding:1rem}.p-5{padding:1.25rem}.p-6{padding:1.5rem}.px-1{padding-left:0.25rem;padding-right:0.25rem}.px-1\.5{padding-left:0.375rem;padding-right:0.375rem}.px-2{padding-left:0.5rem;padding-right:0.5rem}.px-2\.5{padding-left:0.625rem;padding-right:0.625rem}.px-3{padding-left:0.75rem;padding-right:0.75rem}.px-3\.5{padding-left:0.875rem;padding-right:0.875rem}.px-4{padding-left:1rem;padding-right:1rem}.px-5{padding-left:1.25rem;padding-right:1.25rem}.py-0\.5{padding-top:0.125rem;padding-bottom:0.125rem}.py-1{padding-top:0.25rem;padding-bottom:0.25rem}.py-1\.5{padding-top:0.375rem;padding-bottom:0.375rem}.py-10{padding-top:2.5rem;padding-bottom:2.5rem}.py-2{padding-top:0.5rem;padding-bottom:0.5rem}.py-2\.5{padding-top:0.625rem;padding-bottom:0.625rem}.py-20{padding-top:5rem;padding-bottom:5rem}.py-3{padding-top:0.75rem;padding-bottom:0.75rem}.py-3\.5{padding-top:0.875rem;padding-bottom:0.875rem}.pb-20{padding-bottom:5rem}.pb-24{padding-bottom:6rem}.pl-9{padding-left:2.25rem}.pr-3{padding-right:0.75rem}.pt-0\.5{padding-top:0.125rem}.pt-1{padding-top:0.25rem}.pt-10{padding-top:2.5rem}.pt-2{padding-top:0.5rem}.pt-2\.5{padding-top:0.625rem}.pt-3{padding-top:0.75rem}.pt-4{padding-top:1rem}.text-left{text-align:left}.text-center{text-align:center}.font-mono{font-family:"JetBrains Mono", Consolas, monospace}.text-2xl{font-size:1.5rem;line-height:2rem}.text-3xl{font-size:1.875rem;line-height:2.25rem}.text-\[10px\]{font-size:10px}.text-\[11px\]{font-size:11px}.text-base{font-size:1rem;line-height:1.5rem}.text-sm{font-size:0.875rem;line-height:1.25rem}.text-xl{font-size:1.25rem;line-height:1.75rem}.text-xs{font-size:0.75rem;line-height:1rem}.font-bold{font-weight:700}.font-extrabold{font-weight:800}.font-medium{font-weight:500}.font-normal{font-weight:400}.font-semibold{font-weight:600}.uppercase{text-transform:uppercase}.leading-\[1\.14\]{line-height:1.14}.leading-relaxed{line-height:1.625}.leading-tight{line-height:1.25}.tracking-tight{letter-spacing:-0.025em}.tracking-wider{letter-spacing:0.05em}.text-canvas{--tw-text-opacity:1;color:rgb(13 13 17 / var(--tw-text-opacity, 1))}.text-coralMute{--tw-text-opacity:1;color:rgb(248 113 113 / var(--tw-text-opacity, 1))}.text-cyanAccent{--tw-text-opacity:1;color:rgb(56 189 248 / var(--tw-text-opacity, 1))}.text-emeraldOk{--tw-text-opacity:1;color:rgb(52 211 153 / var(--tw-text-opacity, 1))}.text-textDim{--tw-text-opacity:1;color:rgb(113 113 122 / var(--tw-text-opacity, 1))}.text-textMuted{--tw-text-opacity:1;color:rgb(161 161 170 / var(--tw-text-opacity, 1))}.text-textPrimary{--tw-text-opacity:1;color:rgb(244 244 245 / var(--tw-text-opacity, 1))}.text-textSecondary{--tw-text-opacity:1;color:rgb(212 212 216 / var(--tw-text-opacity, 1))}.text-purple-300{--tw-text-opacity:1;color:rgb(216 180 254 / var(--tw-text-opacity, 1))}.text-zinc-600{--tw-text-opacity:1;color:rgb(82 82 91 / var(--tw-text-opacity, 1))}.antialiased{-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}.placeholder-textDim::placeholder{--tw-placeholder-opacity:1;color:rgb(113 113 122 / var(--tw-placeholder-opacity, 1))}.opacity-0{opacity:0}.opacity-40{opacity:0.4}.opacity-100{opacity:1}.shadow-2xl{--tw-shadow:0 25px 50px -12px rgb(0 0 0 / 0.25);--tw-shadow-colored:0 25px 50px -12px var(--tw-shadow-color);box-shadow:var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow)}.shadow-cyanGlow{--tw-shadow:0 0 36px -8px rgba(56, 189, 248, 0.25);--tw-shadow-colored:0 0 36px -8px var(--tw-shadow-color);box-shadow:var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow)}.shadow-osdHud{--tw-shadow:0 20px 44px -10px rgba(0, 0, 0, 0.9), 0 0 0 1px rgba(56, 189, 248, 0.32);--tw-shadow-colored:0 20px 44px -10px var(--tw-shadow-color), 0 0 0 1px var(--tw-shadow-color);box-shadow:var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow)}.shadow-xl{--tw-shadow:0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);--tw-shadow-colored:0 20px 25px -5px var(--tw-shadow-color), 0 8px 10px -6px var(--tw-shadow-color);box-shadow:var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow)}.backdrop-blur-sm{--tw-backdrop-blur:blur(4px);-webkit-backdrop-filter:var(--tw-backdrop-blur) var(--tw-backdrop-brightness) var(--tw-backdrop-contrast) var(--tw-backdrop-grayscale) var(--tw-backdrop-hue-rotate) var(--tw-backdrop-invert) var(--tw-backdrop-opacity) var(--tw-backdrop-saturate) var(--tw-backdrop-sepia);backdrop-filter:var(--tw-backdrop-blur) var(--tw-backdrop-brightness) var(--tw-backdrop-contrast) var(--tw-backdrop-grayscale) var(--tw-backdrop-hue-rotate) var(--tw-backdrop-invert) var(--tw-backdrop-opacity) var(--tw-backdrop-saturate) var(--tw-backdrop-sepia)}.backdrop-blur-xl{--tw-backdrop-blur:blur(24px);-webkit-backdrop-filter:var(--tw-backdrop-blur) var(--tw-backdrop-brightness) var(--tw-backdrop-contrast) var(--tw-backdrop-grayscale) var(--tw-backdrop-hue-rotate) var(--tw-backdrop-invert) var(--tw-backdrop-opacity) var(--tw-backdrop-saturate) var(--tw-backdrop-sepia);backdrop-filter:var(--tw-backdrop-blur) var(--tw-backdrop-brightness) var(--tw-backdrop-contrast) var(--tw-backdrop-grayscale) var(--tw-backdrop-hue-rotate) var(--tw-backdrop-invert) var(--tw-backdrop-opacity) var(--tw-backdrop-saturate) var(--tw-backdrop-sepia)}.transition{transition-property:color, background-color, border-color, fill, stroke, opacity, box-shadow, transform, filter, -webkit-text-decoration-color, -webkit-backdrop-filter;transition-property:color, background-color, border-color, text-decoration-color, fill, stroke, opacity, box-shadow, transform, filter, backdrop-filter;transition-property:color, background-color, border-color, text-decoration-color, fill, stroke, opacity, box-shadow, transform, filter, backdrop-filter, -webkit-text-decoration-color, -webkit-backdrop-filter;transition-timing-function:cubic-bezier(0.4, 0, 0.2, 1);transition-duration:150ms}.transition-all{transition-property:all;transition-timing-function:cubic-bezier(0.4, 0, 0.2, 1);transition-duration:150ms}.transition-colors{transition-property:color, background-color, border-color, fill, stroke, -webkit-text-decoration-color;transition-property:color, background-color, border-color, text-decoration-color, fill, stroke;transition-property:color, background-color, border-color, text-decoration-color, fill, stroke, -webkit-text-decoration-color;transition-timing-function:cubic-bezier(0.4, 0, 0.2, 1);transition-duration:150ms}.duration-200{transition-duration:200ms}.duration-75{transition-duration:75ms}.selection\:bg-cyanAccent\/25 *::selection{background-color:rgb(56 189 248 / 0.25)}.selection\:text-cyanAccent *::selection{--tw-text-opacity:1;color:rgb(56 189 248 / var(--tw-text-opacity, 1))}.selection\:bg-cyanAccent\/25::selection{background-color:rgb(56 189 248 / 0.25)}.selection\:text-cyanAccent::selection{--tw-text-opacity:1;color:rgb(56 189 248 / var(--tw-text-opacity, 1))}.hover\:border-coralMute\/40:hover{border-color:rgb(248 113 113 / 0.4)}.hover\:border-cyanAccent\/30:hover{border-color:rgb(56 189 248 / 0.3)}.hover\:border-cyanAccent\/35:hover{border-color:rgb(56 189 248 / 0.35)}.hover\:border-cyanAccent\/40:hover{border-color:rgb(56 189 248 / 0.4)}.hover\:bg-\[\#23384C\]:hover{--tw-bg-opacity:1;background-color:rgb(35 56 76 / var(--tw-bg-opacity, 1))}.hover\:bg-\[\#242432\]:hover{--tw-bg-opacity:1;background-color:rgb(36 36 50 / var(--tw-bg-opacity, 1))}.hover\:bg-coralMute\/15:hover{background-color:rgb(248 113 113 / 0.15)}.hover\:bg-coralMute\/20:hover{background-color:rgb(248 113 113 / 0.2)}.hover\:bg-pillActiveHover:hover{--tw-bg-opacity:1;background-color:rgb(27 49 70 / var(--tw-bg-opacity, 1))}.hover\:bg-pillHover:hover{--tw-bg-opacity:1;background-color:rgb(32 32 44 / var(--tw-bg-opacity, 1))}.hover\:bg-sky-300:hover{--tw-bg-opacity:1;background-color:rgb(125 211 252 / var(--tw-bg-opacity, 1))}.hover\:bg-\[\#191922\]:hover{--tw-bg-opacity:1;background-color:rgb(25 25 34 / var(--tw-bg-opacity, 1))}.hover\:bg-\[\#282836\]:hover{--tw-bg-opacity:1;background-color:rgb(40 40 54 / var(--tw-bg-opacity, 1))}.hover\:text-coralMute:hover{--tw-text-opacity:1;color:rgb(248 113 113 / var(--tw-text-opacity, 1))}.hover\:text-cyanAccent:hover{--tw-text-opacity:1;color:rgb(56 189 248 / var(--tw-text-opacity, 1))}.hover\:text-textPrimary:hover{--tw-text-opacity:1;color:rgb(244 244 245 / var(--tw-text-opacity, 1))}.hover\:underline:hover{-webkit-text-decoration-line:underline;text-decoration-line:underline}.focus\:border-cyanAccent:focus{--tw-border-opacity:1;border-color:rgb(56 189 248 / var(--tw-border-opacity, 1))}.focus\:outline-none:focus{outline:2px solid transparent;outline-offset:2px}.active\:scale-95:active{--tw-scale-x:.95;--tw-scale-y:.95;transform:translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y))}.group:hover .group-hover\:border-cyanAccent\/50{border-color:rgb(56 189 248 / 0.5)}@media (min-width: 640px){.sm\:inline-flex{display:inline-flex}.sm\:w-56{width:14rem}.sm\:grid-cols-2{grid-template-columns:repeat(2, minmax(0, 1fr))}.sm\:flex-row{flex-direction:row}.sm\:items-center{align-items:center}.sm\:gap-2\.5{gap:0.625rem}.sm\:p-5{padding:1.25rem}.sm\:p-7{padding:1.75rem}.sm\:px-6{padding-left:1.5rem;padding-right:1.5rem}.sm\:text-3xl{font-size:1.875rem;line-height:2.25rem}.sm\:text-4xl{font-size:2.25rem;line-height:2.5rem}.sm\:text-base{font-size:1rem;line-height:1.5rem}.sm\:text-lg{font-size:1.125rem;line-height:1.75rem}.sm\:text-sm{font-size:0.875rem;line-height:1.25rem}}@media (min-width: 768px){.md\:grid-cols-2{grid-template-columns:repeat(2, minmax(0, 1fr))}}@media (min-width: 1024px){.lg\:col-span-5{grid-column:span 5 / span 5}.lg\:col-span-7{grid-column:span 7 / span 7}.lg\:flex{display:flex}.lg\:grid-cols-12{grid-template-columns:repeat(12, minmax(0, 1fr))}.lg\:grid-cols-2{grid-template-columns:repeat(2, minmax(0, 1fr))}.lg\:grid-cols-3{grid-template-columns:repeat(3, minmax(0, 1fr))}.lg\:flex-row{flex-direction:row}.lg\:items-end{align-items:flex-end}.lg\:gap-10{gap:2.5rem}.lg\:px-8{padding-left:2rem;padding-right:2rem}.lg\:pb-24{padding-bottom:6rem}.lg\:pt-14{padding-top:3.5rem}.lg\:text-\[2\.6rem\]{font-size:2.6rem}}</style></head>
+<body class="antialiased selection:bg-cyanAccent/25 selection:text-cyanAccent">
+
+  <!-- ===================================================================== -->
+  <!-- 1. TOP STICKY NAVIGATION BAR                                          -->
+  <!-- ===================================================================== -->
+  <header class="sticky top-0 z-40 border-b border-borderSubtle bg-canvas/85 backdrop-blur-xl">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-3">
+      <!-- Brand Emblem + Title + Version Badge -->
+      <a href="#" class="flex items-center gap-3 group focus:outline-none shrink-0">
+        <div class="w-9 h-9 rounded-xl bg-[#141418] border border-borderSubtle flex items-center justify-center overflow-hidden group-hover:border-cyanAccent/50 transition-colors">
+          <img src="Potato.ico" alt="Potato Massah" class="w-7 h-7 rounded-md object-contain" onerror="this.style.display='none'; this.nextElementSibling.classList.remove('hidden');">
+          <!-- Fallback Pinch-Knob SVG when Potato.ico is not adjacent in preview -->
+          <svg viewBox="0 0 64 64" class="w-7 h-7 hidden" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="Potato Massah Pinch-Knob Emblem">
+            <rect width="64" height="64" rx="12" fill="#141418"></rect>
+            <path d="M14.5 21.5A8.2 8.2 0 0 0 14.5 32.5" stroke="#38BDF8" stroke-width="2.2" stroke-linecap="round"></path>
+            <circle cx="19.5" cy="27" r="4.8" fill="#38BDF8"></circle>
+            <line x1="19.5" y1="27" x2="22.1" y2="23.9" stroke="#141418" stroke-width="1.7" stroke-linecap="round"></line>
+            <path d="M20.2 20.2C22.4 18.1 26.5 16.3 30.8 16.3C34.9 16.3 39.6 18.3 42.4 20.9C44.5 22.9 46.0 27.4 47.4 32.1C48.8 36.8 52.1 43.1 58.0 50.2L51.0 57.2C45.0 49.9 40.5 44.4 35.8 41.9C31.7 39.7 27.0 38.0 22.7 36.1C20.2 35.0 19.3 33.1 20.4 31.6C21.5 30.1 24.2 30.2 27.5 31.3C30.5 32.3 33.6 32.6 35.6 31.5C37.3 30.5 37.8 28.1 36.7 25.9C35.7 23.9 33.7 22.3 31.4 22.1C28.6 21.9 25.3 23.3 22.9 23.6C20.6 23.9 19.2 22.7 19.4 21.4C19.5 20.9 19.8 20.5 20.2 20.2Z" fill="#F4F4F5"></path>
+            <circle cx="38.9" cy="34.6" r="1.2" fill="#141418"></circle>
+            <circle cx="41.9" cy="32.8" r="1.2" fill="#141418"></circle>
+            <circle cx="42.2" cy="36.2" r="1.2" fill="#141418"></circle>
+          </svg>
+        </div>
+        <div class="flex items-center gap-2.5">
+          <span class="font-bold text-base sm:text-lg tracking-tight text-textPrimary">Potato Massah</span>
+          <span class="hidden sm:inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-mono font-medium bg-elevated border border-borderSubtle text-cyanAccent">
+            v2.0 • Win64 / AHK v2
+          </span>
+        </div>
+      </a>
+
+      <!-- Center Anchor Links -->
+      <nav class="hidden lg:flex items-center gap-7 text-sm font-medium text-textMuted">
+        <a href="#live-demo" class="hover:text-textPrimary transition-colors">Live Demo</a>
+        <a href="#features" class="hover:text-textPrimary transition-colors">Features</a>
+        <a href="#keybinds" class="hover:text-textPrimary transition-colors">Keybinds</a>
+        <a href="#install-build" class="hover:text-textPrimary transition-colors">Install &amp; Build</a>
+      </nav>
+
+      <!-- Right Utility & Release Actions -->
+      <div class="flex items-center gap-2 sm:gap-2.5">
+        
+
+        <a href="#install-build" class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold bg-cyanAccent hover:bg-sky-300 text-canvas transition-all shadow-cyanGlow">
+          <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" clip-rule="evenodd"></path></svg>
+          GitHub Releases
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- ===================================================================== -->
+  <!-- 2. HERO SECTION + 1:1 INTERACTIVE APP & CAR HEAD-UNIT OSD SIMULATOR   -->
+  <!-- ===================================================================== -->
+  <section id="live-demo" class="hero-backdrop relative pt-10 pb-20 lg:pt-14 lg:pb-24 border-b border-borderSubtle">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-10 items-start">
+
+        <!-- Left Column: Product Overview, CTAs, Specs & Real Screenshot Callout -->
+        <div class="lg:col-span-5 space-y-6 pt-1">
+          <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-elevated border border-borderSubtle text-xs font-mono text-textMuted">
+            <span class="w-2 h-2 rounded-full bg-emeraldOk animate-pulse"></span>
+            <span>Open-Source Windows Utility</span>
+            <span class="text-textDim">•</span>
+            <span class="text-cyanAccent">MIT License</span>
+          </div>
+
+          <h1 class="text-3xl sm:text-4xl lg:text-[2.6rem] font-extrabold tracking-tight text-textPrimary leading-[1.14]">
+            Hardware Volume Wheel &amp; Solo FX Control for <span class="text-cyanAccent">VoiceMeeter Potato</span>
+          </h1>
+
+          <p class="text-sm sm:text-base text-textMuted leading-relaxed">
+            <strong class="text-textPrimary font-semibold">Potato Massah</strong> intercepts Windows media volume keys (<code class="font-mono text-xs px-1.5 py-0.5 rounded bg-elevated border border-borderSubtle text-cyanAccent">Volume_Up</code>, <code class="font-mono text-xs px-1.5 py-0.5 rounded bg-elevated border border-borderSubtle text-cyanAccent">Volume_Down</code>, <code class="font-mono text-xs px-1.5 py-0.5 rounded bg-elevated border border-borderSubtle text-cyanAccent">Volume_Mute</code>) and drives <code class="font-mono text-xs px-1.5 py-0.5 rounded bg-elevated border border-borderSubtle text-textPrimary">VoicemeeterRemote64.dll</code> directly—delivering 20&nbsp;ms smooth-gliding fader ballistics, Solo FX navigation, 16-channel keybinds, and an automotive-style floating HUD.
+          </p>
+
+          <!-- Primary & Secondary CTAs -->
+          <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 pt-1">
+            <a href="#install-build" class="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl text-sm font-bold bg-cyanAccent hover:bg-sky-300 text-canvas transition-all shadow-cyanGlow">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+              Download Standalone .EXE
+            </a>
+
+            <button onclick="openSourceModal()" class="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl text-sm font-semibold bg-elevated hover:bg-pillHover text-textPrimary border border-borderSubtle hover:border-cyanAccent/40 transition-all cursor-pointer">
+              <svg class="w-4 h-4 text-cyanAccent" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path></svg>
+              View AHK v2 Source
+            </button>
+          </div>
+
+          <!-- Key Technical Specs Grid -->
+          <div class="grid grid-cols-2 gap-2.5 pt-1">
+            <div class="p-3 rounded-xl bg-elevated border border-borderSubtle">
+              <div class="text-[10px] font-bold uppercase tracking-wider text-textDim">Native Bridge</div>
+              <div class="text-xs font-mono font-semibold text-cyanAccent mt-0.5 truncate">VoicemeeterRemote64.dll</div>
+            </div>
+            <div class="p-3 rounded-xl bg-elevated border border-borderSubtle">
+              <div class="text-[10px] font-bold uppercase tracking-wider text-textDim">Runtime / Binary</div>
+              <div class="text-xs font-mono font-semibold text-textPrimary mt-0.5">AutoHotkey v2.0 U64</div>
+            </div>
+            <div class="p-3 rounded-xl bg-elevated border border-borderSubtle">
+              <div class="text-[10px] font-bold uppercase tracking-wider text-textDim">State Persistence</div>
+              <div class="text-xs font-mono font-semibold text-textPrimary mt-0.5">volume_settings.ini</div>
+            </div>
+            <div class="p-3 rounded-xl bg-elevated border border-borderSubtle">
+              <div class="text-[10px] font-bold uppercase tracking-wider text-textDim">Footprint</div>
+              <div class="text-xs font-mono font-semibold text-emeraldOk mt-0.5">Zero External Dependencies</div>
+            </div>
+          </div>
+
+          <!-- Genuine Screenshot Drop-In Slot / Repo Note -->
+          <div class="p-4 rounded-xl bg-elevated/80 border border-borderSubtle space-y-2">
+            <div class="flex items-center justify-between gap-2">
+              <span class="text-[11px] font-bold uppercase tracking-wider text-textMuted">Repository Screenshot Slot</span>
+              <span class="text-[11px] font-mono text-cyanAccent">screenshot.png</span>
+            </div>
+            <p class="text-xs text-textMuted leading-relaxed">
+              The panel on the right is a <strong class="text-textPrimary">live interactive browser simulator</strong> of the native Win32/DWM interface. To embed your own capture in GitHub Pages, drop <code class="font-mono text-[11px] text-cyanAccent">screenshot.png</code> into your repository root alongside <code class="font-mono text-[11px] text-textPrimary">index.html</code>.
+            </p>
+            <div id="realScreenshotHolder" class="hidden pt-2">
+              <img src="screenshot.png" alt="Real Windows screenshot of VoiceMeeter Potato Massah" onload="document.getElementById('realScreenshotHolder').classList.remove('hidden')" onerror="document.getElementById('realScreenshotHolder').classList.add('hidden')" class="w-full h-auto rounded-lg border border-borderSubtle">
+            </div>
+          </div>
+        </div>
+
+        <!-- Right Column: 1:1 Interactive App & Car Head-Unit OSD Simulator -->
+        <div class="lg:col-span-7 space-y-3">
+          <!-- Honest Simulator Disclosure Header -->
+          <div class="flex flex-wrap items-center justify-between gap-2 px-1">
+            <div class="flex items-center gap-2">
+              <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-pillActive border border-cyanAccent/30 text-[11px] font-mono font-semibold text-cyanAccent">
+                <span class="w-1.5 h-1.5 rounded-full bg-cyanAccent"></span>
+                LIVE INTERACTIVE BROWSER SIMULATOR
+              </span>
+              <span id="simStepBadge" class="text-[11px] font-mono text-textMuted">Step: 0.20 dB</span>
+            </div>
+
+            <button onclick="simTogglePanelVisibility()" id="simFocusToggleBtn" class="px-2.5 py-1 rounded-md bg-elevated hover:bg-pillHover border border-borderSubtle text-[11px] font-mono text-textSecondary transition cursor-pointer">
+              Panel: Visible
+            </button>
+          </div>
+
+          <!-- Simulated Windows Desktop Stage -->
+          <div id="simulatorStage" class="relative rounded-2xl bg-[#09090C] border border-borderSubtle p-3 sm:p-5 pb-24 shadow-2xl select-none transition-colors hover:border-cyanAccent/30">
+
+            <!-- Collapsed Tray Placeholder (Shown when user clicks "Hide" on the Control Panel) -->
+            <div id="trayHiddenCard" class="hidden rounded-xl bg-elevated border border-borderSubtle p-6 text-center space-y-3 my-8">
+              <div class="inline-flex items-center justify-center w-11 h-11 rounded-xl bg-pillActive border border-cyanAccent/30 text-cyanAccent mx-auto">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"></path></svg>
+              </div>
+              <div>
+                <div class="text-sm font-bold text-textPrimary">Control Panel Hidden to System Tray</div>
+                <p class="text-xs text-textMuted mt-1 max-w-md mx-auto">
+                  Use the simulator controls below (<span class="text-cyanAccent font-mono">Vol − / +</span>, <span class="text-coralMute font-mono">Mute</span>, <span class="text-textPrimary font-mono">Prev/Next Channel</span>, or <span class="text-textPrimary font-mono">FX</span>) to see the floating <strong class="text-textPrimary">Car Head-Unit OSD</strong> pop up at the bottom-center.
+                </p>
+              </div>
+              <button onclick="simTogglePanelVisibility()" class="px-4 py-2 rounded-lg bg-pillActive hover:bg-pillActiveHover border border-cyanAccent/35 text-xs font-bold text-cyanAccent transition cursor-pointer">
+                Restore Control Panel (Ctrl + Alt + V)
+              </button>
+            </div>
+
+            <!-- =========================================================== -->
+            <!-- 1:1 REPLICA: "VoiceMeeter Potato Massah" NATIVE WINDOW      -->
+            <!-- =========================================================== -->
+            <div id="nativeWindowReplica" class="rounded-xl bg-canvas border border-[#262632] overflow-hidden shadow-2xl">
+              <!-- Dark DWM Titlebar -->
+              <div class="h-9 px-3.5 bg-canvas border-b border-borderSubtle/80 flex items-center justify-between">
+                <div class="flex items-center gap-2.5">
+                  <img src="Potato.ico" alt="Potato Massah" class="w-4 h-4 rounded-sm shrink-0 object-contain" onerror="this.style.display='none'; this.nextElementSibling.classList.remove('hidden');">
+                  <!-- Fallback Pinch-Knob App Icon -->
+                  <svg viewBox="0 0 64 64" class="w-4 h-4 shrink-0 hidden" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect width="64" height="64" rx="12" fill="#141418"></rect>
+                    <path d="M14.5 21.5A8.2 8.2 0 0 0 14.5 32.5" stroke="#38BDF8" stroke-width="2.4" stroke-linecap="round"></path>
+                    <circle cx="19.5" cy="27" r="5" fill="#38BDF8"></circle>
+                    <path d="M20.2 20.2C22.4 18.1 26.5 16.3 30.8 16.3C34.9 16.3 39.6 18.3 42.4 20.9C44.5 22.9 46.0 27.4 47.4 32.1C48.8 36.8 52.1 43.1 58.0 50.2L51.0 57.2C45.0 49.9 40.5 44.4 35.8 41.9C31.7 39.7 27.0 38.0 22.7 36.1C20.2 35.0 19.3 33.1 20.4 31.6C21.5 30.1 24.2 30.2 27.5 31.3C30.5 32.3 33.6 32.6 35.6 31.5C37.3 30.5 37.8 28.1 36.7 25.9C35.7 23.9 33.7 22.3 31.4 22.1C28.6 21.9 25.3 23.3 22.9 23.6C20.6 23.9 19.2 22.7 19.4 21.4Z" fill="#F4F4F5"></path>
+                    <circle cx="38.9" cy="34.6" r="1.2" fill="#141418"></circle>
+                    <circle cx="41.9" cy="32.8" r="1.2" fill="#141418"></circle>
+                    <circle cx="42.2" cy="36.2" r="1.2" fill="#141418"></circle>
+                  </svg>
+                  <span class="text-xs font-normal text-textSecondary">VoiceMeeter Potato Massah</span>
+                </div>
+                <div class="flex items-center gap-3 text-textDim text-xs">
+                  <button onclick="simTogglePanelVisibility()" title="Minimize / Hide to Tray" class="hover:text-textPrimary transition cursor-pointer">—</button>
+                  <span class="opacity-40">□</span>
+                  <button onclick="simTogglePanelVisibility()" title="Hide to Tray" class="hover:text-coralMute transition cursor-pointer">✕</button>
+                </div>
+              </div>
+
+              <!-- Window Content Body -->
+              <div class="p-4 space-y-3.5">
+
+                <!-- Hero Telemetry Card with 2px Top Accent Stripe -->
+                <div class="rounded-lg overflow-hidden bg-elevated border border-borderSubtle/80">
+                  <div id="heroTopStripe" class="h-[2px] w-full bg-cyanAccent transition-colors"></div>
+                  <div class="p-3 space-y-1.5">
+                    <div class="flex items-center justify-between gap-2">
+                      <span class="text-[10px] font-bold uppercase tracking-wider text-textDim">ACTIVE WHEEL TARGET</span>
+                      <button id="modeTogglePill" onclick="simToggleExclusive()" class="px-2.5 py-0.5 rounded bg-[#1B2B3A] hover:bg-[#23384C] text-[11px] font-bold text-cyanAccent transition cursor-pointer">◉  Single-Target Mode</button>
+                    </div>
+
+                    <!-- Active Channel Readout Lines -->
+                    <div id="heroActiveLines" class="space-y-0.5">
+          <div class="text-xs sm:text-sm font-bold text-cyanAccent">
+            •  VAIO3   —   -4.0 dB
+          </div>
+        </div>
+
+                    <!-- Solo FX / Group Sub-line -->
+                    <div id="heroSubLine" class="text-[11px] text-textMuted font-mono pt-0.5">↳  FX:  EQ Mid   [ 0.0 dB ]</div>
+                  </div>
+                </div>
+
+                <!-- Section 1: VIRTUAL INPUTS -->
+                <div>
+                  <div class="text-[10px] font-bold uppercase tracking-wider text-textDim mb-1.5">VIRTUAL INPUTS</div>
+                  <div id="simVirtualList" class="space-y-1.5">
+          <div class="flex items-center gap-1.5">
+            <div data-sim-param="Strip[5]" onclick="simSelectChannel('Strip[5]')" class="flex-1 flex items-center justify-between px-2.5 py-1.5 rounded bg-pillDark hover:bg-pillHover cursor-pointer transition">
+              <div class="flex items-center gap-2 min-w-0">
+                <span class="text-xs font-bold text-zinc-600">○</span>
+                <span class="text-xs text-textSecondary truncate">Voicemeeter VAIO</span>
+              </div>
+              <span class="text-[11px] font-mono text-zinc-600">Strip[5]</span>
+            </div>
+            <button onclick="simResetGain('Strip[5]', event)" class="w-11 py-1.5 rounded bg-[#1C1C26] hover:bg-[#282836] text-[11px] font-bold text-textMuted hover:text-textPrimary transition cursor-pointer">0dB</button>
+          </div>
+        
+          <div class="flex items-center gap-1.5">
+            <div data-sim-param="Strip[6]" onclick="simSelectChannel('Strip[6]')" class="flex-1 flex items-center justify-between px-2.5 py-1.5 rounded bg-pillDark hover:bg-pillHover cursor-pointer transition">
+              <div class="flex items-center gap-2 min-w-0">
+                <span class="text-xs font-bold text-zinc-600">○</span>
+                <span class="text-xs text-textSecondary truncate">Voicemeeter AUX</span>
+              </div>
+              <span class="text-[11px] font-mono text-zinc-600">Strip[6]</span>
+            </div>
+            <button onclick="simResetGain('Strip[6]', event)" class="w-11 py-1.5 rounded bg-[#1C1C26] hover:bg-[#282836] text-[11px] font-bold text-textMuted hover:text-textPrimary transition cursor-pointer">0dB</button>
+          </div>
+        
+          <div class="flex items-center gap-1.5">
+            <div data-sim-param="Strip[7]" onclick="simSelectChannel('Strip[7]')" class="flex-1 flex items-center justify-between px-2.5 py-1.5 rounded bg-pillActive hover:bg-pillActiveHover cursor-pointer transition">
+              <div class="flex items-center gap-2 min-w-0">
+                <span class="text-xs font-bold text-cyanAccent">●</span>
+                <span class="text-xs font-bold text-textPrimary truncate">VAIO3</span>
+              </div>
+              <span class="text-[11px] font-mono text-cyanAccent">Strip[7]</span>
+            </div>
+            <button onclick="simResetGain('Strip[7]', event)" class="w-11 py-1.5 rounded bg-[#1C1C26] hover:bg-[#282836] text-[11px] font-bold text-textMuted hover:text-textPrimary transition cursor-pointer">0dB</button>
+          </div>
+        </div>
+                </div>
+
+                <!-- Section 2: HARDWARE INPUTS (2-Column Grid) -->
+                <div>
+                  <div class="text-[10px] font-bold uppercase tracking-wider text-textDim mb-1.5">HARDWARE INPUTS</div>
+                  <div id="simHardwareGrid" class="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
+          <div class="flex items-center gap-1">
+            <div data-sim-param="Strip[0]" onclick="simSelectChannel('Strip[0]')" class="flex-1 flex items-center gap-2 px-2.5 py-1.5 rounded bg-pillDark hover:bg-pillHover cursor-pointer transition min-w-0">
+              <span class="text-xs font-bold shrink-0 text-zinc-600">○</span>
+              <span class="text-xs text-textSecondary truncate">Mic</span>
+            </div>
+            <button onclick="openRenameModal('Strip[0]', event)" title="Rename Channel" class="w-6 py-1.5 rounded bg-[#1C1C26] hover:bg-[#282836] text-[11px] text-textMuted hover:text-textPrimary transition cursor-pointer">✎</button>
+            <button onclick="simResetGain('Strip[0]', event)" title="Reset to 0.0 dB" class="w-8 py-1.5 rounded bg-[#1C1C26] hover:bg-[#282836] text-[11px] font-bold text-textMuted hover:text-textPrimary transition cursor-pointer">0dB</button>
+          </div>
+        
+          <div class="flex items-center gap-1">
+            <div data-sim-param="Strip[1]" onclick="simSelectChannel('Strip[1]')" class="flex-1 flex items-center gap-2 px-2.5 py-1.5 rounded bg-pillDark hover:bg-pillHover cursor-pointer transition min-w-0">
+              <span class="text-xs font-bold shrink-0 text-zinc-600">○</span>
+              <span class="text-xs text-textSecondary truncate">Hardware In 2</span>
+            </div>
+            <button onclick="openRenameModal('Strip[1]', event)" title="Rename Channel" class="w-6 py-1.5 rounded bg-[#1C1C26] hover:bg-[#282836] text-[11px] text-textMuted hover:text-textPrimary transition cursor-pointer">✎</button>
+            <button onclick="simResetGain('Strip[1]', event)" title="Reset to 0.0 dB" class="w-8 py-1.5 rounded bg-[#1C1C26] hover:bg-[#282836] text-[11px] font-bold text-textMuted hover:text-textPrimary transition cursor-pointer">0dB</button>
+          </div>
+        
+          <div class="flex items-center gap-1">
+            <div data-sim-param="Strip[2]" onclick="simSelectChannel('Strip[2]')" class="flex-1 flex items-center gap-2 px-2.5 py-1.5 rounded bg-pillDark hover:bg-pillHover cursor-pointer transition min-w-0">
+              <span class="text-xs font-bold shrink-0 text-zinc-600">○</span>
+              <span class="text-xs text-textSecondary truncate">Hardware In 3</span>
+            </div>
+            <button onclick="openRenameModal('Strip[2]', event)" title="Rename Channel" class="w-6 py-1.5 rounded bg-[#1C1C26] hover:bg-[#282836] text-[11px] text-textMuted hover:text-textPrimary transition cursor-pointer">✎</button>
+            <button onclick="simResetGain('Strip[2]', event)" title="Reset to 0.0 dB" class="w-8 py-1.5 rounded bg-[#1C1C26] hover:bg-[#282836] text-[11px] font-bold text-textMuted hover:text-textPrimary transition cursor-pointer">0dB</button>
+          </div>
+        
+          <div class="flex items-center gap-1">
+            <div data-sim-param="Strip[3]" onclick="simSelectChannel('Strip[3]')" class="flex-1 flex items-center gap-2 px-2.5 py-1.5 rounded bg-pillDark hover:bg-pillHover cursor-pointer transition min-w-0">
+              <span class="text-xs font-bold shrink-0 text-zinc-600">○</span>
+              <span class="text-xs text-textSecondary truncate">Hardware In 4</span>
+            </div>
+            <button onclick="openRenameModal('Strip[3]', event)" title="Rename Channel" class="w-6 py-1.5 rounded bg-[#1C1C26] hover:bg-[#282836] text-[11px] text-textMuted hover:text-textPrimary transition cursor-pointer">✎</button>
+            <button onclick="simResetGain('Strip[3]', event)" title="Reset to 0.0 dB" class="w-8 py-1.5 rounded bg-[#1C1C26] hover:bg-[#282836] text-[11px] font-bold text-textMuted hover:text-textPrimary transition cursor-pointer">0dB</button>
+          </div>
+        
+          <div class="flex items-center gap-1">
+            <div data-sim-param="Strip[4]" onclick="simSelectChannel('Strip[4]')" class="flex-1 flex items-center gap-2 px-2.5 py-1.5 rounded bg-pillDark hover:bg-pillHover cursor-pointer transition min-w-0">
+              <span class="text-xs font-bold shrink-0 text-zinc-600">○</span>
+              <span class="text-xs text-textSecondary truncate">Hardware In 5</span>
+            </div>
+            <button onclick="openRenameModal('Strip[4]', event)" title="Rename Channel" class="w-6 py-1.5 rounded bg-[#1C1C26] hover:bg-[#282836] text-[11px] text-textMuted hover:text-textPrimary transition cursor-pointer">✎</button>
+            <button onclick="simResetGain('Strip[4]', event)" title="Reset to 0.0 dB" class="w-8 py-1.5 rounded bg-[#1C1C26] hover:bg-[#282836] text-[11px] font-bold text-textMuted hover:text-textPrimary transition cursor-pointer">0dB</button>
+          </div>
+        </div>
+                </div>
+
+                <!-- Section 3: OUTPUT BUSES (2-Column Grid) -->
+                <div>
+                  <div class="text-[10px] font-bold uppercase tracking-wider text-textDim mb-1.5">OUTPUT BUSES</div>
+                  <div id="simBusesGrid" class="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
+          <div class="flex items-center gap-1">
+            <div data-sim-param="Bus[0]" onclick="simSelectChannel('Bus[0]')" class="flex-1 flex items-center gap-2 px-2.5 py-1.5 rounded bg-pillDark hover:bg-pillHover cursor-pointer transition min-w-0">
+              <span class="text-xs font-bold shrink-0 text-zinc-600">○</span>
+              <span class="text-xs text-textSecondary truncate">Side Speakers</span>
+            </div>
+            <button onclick="openRenameModal('Bus[0]', event)" title="Rename Channel" class="w-6 py-1.5 rounded bg-[#1C1C26] hover:bg-[#282836] text-[11px] text-textMuted hover:text-textPrimary transition cursor-pointer">✎</button>
+            <button onclick="simResetGain('Bus[0]', event)" title="Reset to 0.0 dB" class="w-8 py-1.5 rounded bg-[#1C1C26] hover:bg-[#282836] text-[11px] font-bold text-textMuted hover:text-textPrimary transition cursor-pointer">0dB</button>
+          </div>
+        
+          <div class="flex items-center gap-1">
+            <div data-sim-param="Bus[1]" onclick="simSelectChannel('Bus[1]')" class="flex-1 flex items-center gap-2 px-2.5 py-1.5 rounded bg-pillDark hover:bg-pillHover cursor-pointer transition min-w-0">
+              <span class="text-xs font-bold shrink-0 text-zinc-600">○</span>
+              <span class="text-xs text-textSecondary truncate">Rear Speakers</span>
+            </div>
+            <button onclick="openRenameModal('Bus[1]', event)" title="Rename Channel" class="w-6 py-1.5 rounded bg-[#1C1C26] hover:bg-[#282836] text-[11px] text-textMuted hover:text-textPrimary transition cursor-pointer">✎</button>
+            <button onclick="simResetGain('Bus[1]', event)" title="Reset to 0.0 dB" class="w-8 py-1.5 rounded bg-[#1C1C26] hover:bg-[#282836] text-[11px] font-bold text-textMuted hover:text-textPrimary transition cursor-pointer">0dB</button>
+          </div>
+        
+          <div class="flex items-center gap-1">
+            <div data-sim-param="Bus[2]" onclick="simSelectChannel('Bus[2]')" class="flex-1 flex items-center gap-2 px-2.5 py-1.5 rounded bg-pillDark hover:bg-pillHover cursor-pointer transition min-w-0">
+              <span class="text-xs font-bold shrink-0 text-zinc-600">○</span>
+              <span class="text-xs text-textSecondary truncate">Center Speaker</span>
+            </div>
+            <button onclick="openRenameModal('Bus[2]', event)" title="Rename Channel" class="w-6 py-1.5 rounded bg-[#1C1C26] hover:bg-[#282836] text-[11px] text-textMuted hover:text-textPrimary transition cursor-pointer">✎</button>
+            <button onclick="simResetGain('Bus[2]', event)" title="Reset to 0.0 dB" class="w-8 py-1.5 rounded bg-[#1C1C26] hover:bg-[#282836] text-[11px] font-bold text-textMuted hover:text-textPrimary transition cursor-pointer">0dB</button>
+          </div>
+        
+          <div class="flex items-center gap-1">
+            <div data-sim-param="Bus[3]" onclick="simSelectChannel('Bus[3]')" class="flex-1 flex items-center gap-2 px-2.5 py-1.5 rounded bg-pillDark hover:bg-pillHover cursor-pointer transition min-w-0">
+              <span class="text-xs font-bold shrink-0 text-zinc-600">○</span>
+              <span class="text-xs text-textSecondary truncate">A4</span>
+            </div>
+            <button onclick="openRenameModal('Bus[3]', event)" title="Rename Channel" class="w-6 py-1.5 rounded bg-[#1C1C26] hover:bg-[#282836] text-[11px] text-textMuted hover:text-textPrimary transition cursor-pointer">✎</button>
+            <button onclick="simResetGain('Bus[3]', event)" title="Reset to 0.0 dB" class="w-8 py-1.5 rounded bg-[#1C1C26] hover:bg-[#282836] text-[11px] font-bold text-textMuted hover:text-textPrimary transition cursor-pointer">0dB</button>
+          </div>
+        
+          <div class="flex items-center gap-1">
+            <div data-sim-param="Bus[4]" onclick="simSelectChannel('Bus[4]')" class="flex-1 flex items-center gap-2 px-2.5 py-1.5 rounded bg-pillDark hover:bg-pillHover cursor-pointer transition min-w-0">
+              <span class="text-xs font-bold shrink-0 text-zinc-600">○</span>
+              <span class="text-xs text-textSecondary truncate">A5</span>
+            </div>
+            <button onclick="openRenameModal('Bus[4]', event)" title="Rename Channel" class="w-6 py-1.5 rounded bg-[#1C1C26] hover:bg-[#282836] text-[11px] text-textMuted hover:text-textPrimary transition cursor-pointer">✎</button>
+            <button onclick="simResetGain('Bus[4]', event)" title="Reset to 0.0 dB" class="w-8 py-1.5 rounded bg-[#1C1C26] hover:bg-[#282836] text-[11px] font-bold text-textMuted hover:text-textPrimary transition cursor-pointer">0dB</button>
+          </div>
+        
+          <div class="flex items-center gap-1">
+            <div data-sim-param="Bus[5]" onclick="simSelectChannel('Bus[5]')" class="flex-1 flex items-center gap-2 px-2.5 py-1.5 rounded bg-pillDark hover:bg-pillHover cursor-pointer transition min-w-0">
+              <span class="text-xs font-bold shrink-0 text-zinc-600">○</span>
+              <span class="text-xs text-textSecondary truncate">B1</span>
+            </div>
+            <button onclick="openRenameModal('Bus[5]', event)" title="Rename Channel" class="w-6 py-1.5 rounded bg-[#1C1C26] hover:bg-[#282836] text-[11px] text-textMuted hover:text-textPrimary transition cursor-pointer">✎</button>
+            <button onclick="simResetGain('Bus[5]', event)" title="Reset to 0.0 dB" class="w-8 py-1.5 rounded bg-[#1C1C26] hover:bg-[#282836] text-[11px] font-bold text-textMuted hover:text-textPrimary transition cursor-pointer">0dB</button>
+          </div>
+        
+          <div class="flex items-center gap-1">
+            <div data-sim-param="Bus[6]" onclick="simSelectChannel('Bus[6]')" class="flex-1 flex items-center gap-2 px-2.5 py-1.5 rounded bg-pillDark hover:bg-pillHover cursor-pointer transition min-w-0">
+              <span class="text-xs font-bold shrink-0 text-zinc-600">○</span>
+              <span class="text-xs text-textSecondary truncate">B2</span>
+            </div>
+            <button onclick="openRenameModal('Bus[6]', event)" title="Rename Channel" class="w-6 py-1.5 rounded bg-[#1C1C26] hover:bg-[#282836] text-[11px] text-textMuted hover:text-textPrimary transition cursor-pointer">✎</button>
+            <button onclick="simResetGain('Bus[6]', event)" title="Reset to 0.0 dB" class="w-8 py-1.5 rounded bg-[#1C1C26] hover:bg-[#282836] text-[11px] font-bold text-textMuted hover:text-textPrimary transition cursor-pointer">0dB</button>
+          </div>
+        
+          <div class="flex items-center gap-1">
+            <div data-sim-param="Bus[7]" onclick="simSelectChannel('Bus[7]')" class="flex-1 flex items-center gap-2 px-2.5 py-1.5 rounded bg-pillDark hover:bg-pillHover cursor-pointer transition min-w-0">
+              <span class="text-xs font-bold shrink-0 text-zinc-600">○</span>
+              <span class="text-xs text-textSecondary truncate">B3</span>
+            </div>
+            <button onclick="openRenameModal('Bus[7]', event)" title="Rename Channel" class="w-6 py-1.5 rounded bg-[#1C1C26] hover:bg-[#282836] text-[11px] text-textMuted hover:text-textPrimary transition cursor-pointer">✎</button>
+            <button onclick="simResetGain('Bus[7]', event)" title="Reset to 0.0 dB" class="w-8 py-1.5 rounded bg-[#1C1C26] hover:bg-[#282836] text-[11px] font-bold text-textMuted hover:text-textPrimary transition cursor-pointer">0dB</button>
+          </div>
+        </div>
+                </div>
+
+                <!-- Footer Divider & Action Buttons -->
+                <div class="pt-2.5 border-t border-borderSubtle flex flex-wrap items-center justify-between gap-2">
+                  <div class="text-[11px] text-textDim leading-tight">
+                    <div>Ctrl + Alt + V: Panel</div>
+                    <div>5 channel shortcuts active</div>
+                  </div>
+
+                  <div class="flex items-center gap-1.5">
+                    <a href="#features" class="px-2.5 py-1.5 rounded bg-[#191922] hover:bg-[#242432] text-[11px] font-bold text-textSecondary transition">Features</a>
+                    <a href="#keybinds" class="px-2.5 py-1.5 rounded bg-pillActive hover:bg-pillActiveHover text-[11px] font-bold text-cyanAccent transition">Keybinds</a>
+                    <button onclick="simRestartEngine()" class="px-2.5 py-1.5 rounded bg-[#191922] hover:bg-[#242432] text-[11px] font-bold text-textSecondary transition cursor-pointer">Restart Engine</button>
+                    <button onclick="simTogglePanelVisibility()" class="px-2.5 py-1.5 rounded bg-[#191922] hover:bg-[#242432] text-[11px] font-bold text-textMuted transition cursor-pointer">Hide</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- =========================================================== -->
+            <!-- CAR HEAD-UNIT OPAQUE POP-UP HUD (VMHeadUnitOSD)             -->
+            <!-- =========================================================== -->
+            <div id="headUnitOsd" class="absolute bottom-4 left-1/2 w-[calc(100%-2rem)] max-w-[390px] rounded-xl bg-canvas border border-[#18384A] shadow-osdHud overflow-hidden transition-all duration-200 z-20 osd-hidden">
+              <div id="osdTopAccent" class="h-[3px] w-full bg-cyanAccent"></div>
+              <div class="px-4 py-2.5">
+                <div class="flex items-center justify-between gap-2">
+                  <span id="osdChannelTitle" class="text-sm font-bold text-textPrimary truncate">VAIO3</span>
+                  <span id="osdGainText" class="text-sm font-mono font-bold text-cyanAccent">-4.0 dB</span>
+                </div>
+                <div class="flex items-center justify-between gap-2 mt-0.5">
+                  <span id="osdFxLabel" class="text-xs font-bold text-textMuted">FX  ◂  EQ Mid  ▸</span>
+                  <span id="osdFxValue" class="text-xs font-mono font-bold text-textPrimary">0.0 dB</span>
+                </div>
+                <div class="mt-2 h-[7px] w-full rounded-full bg-[#1E1E28] overflow-hidden">
+                  <div id="osdLevelBar" class="h-full bg-cyanAccent rounded-full transition-all duration-75" style="width: 77.7083%;"></div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Simulator Interactive Control Bar (Below Window) -->
+          <div class="p-3 rounded-xl bg-elevated border border-borderSubtle flex flex-wrap items-center justify-between gap-2">
+            <!-- Volume & Mute Group -->
+            <div class="flex items-center gap-1.5">
+              <span class="text-[10px] font-mono uppercase text-textDim mr-1">Wheel:</span>
+              <button onclick="simWheelStep(-1)" class="px-2.5 py-1.5 rounded-lg bg-pillDark hover:bg-pillHover border border-borderSubtle text-xs font-mono font-semibold text-textPrimary active:scale-95 transition cursor-pointer">Vol −</button>
+              <button onclick="simWheelStep(1)" class="px-2.5 py-1.5 rounded-lg bg-pillDark hover:bg-pillHover border border-borderSubtle text-xs font-mono font-semibold text-textPrimary active:scale-95 transition cursor-pointer">Vol +</button>
+              <button onclick="simToggleMute()" class="px-2.5 py-1.5 rounded-lg bg-pillDark hover:bg-coralMute/15 border border-borderSubtle hover:border-coralMute/40 text-xs font-mono font-semibold text-coralMute active:scale-95 transition cursor-pointer">Mute</button>
+            </div>
+
+            <!-- Channel Cycle Group -->
+            <div class="flex items-center gap-1.5">
+              <span class="text-[10px] font-mono uppercase text-textDim mr-1">Target:</span>
+              <button onclick="simCycleChannel(-1)" title="Ctrl + Shift + Left" class="px-2 py-1.5 rounded-lg bg-pillDark hover:bg-pillHover border border-borderSubtle text-xs font-mono text-textSecondary hover:text-textPrimary active:scale-95 transition cursor-pointer">Prev Ch</button>
+              <button onclick="simCycleChannel(1)" title="Ctrl + Shift + Right" class="px-2 py-1.5 rounded-lg bg-pillDark hover:bg-pillHover border border-borderSubtle text-xs font-mono text-textSecondary hover:text-textPrimary active:scale-95 transition cursor-pointer">Next Ch</button>
+            </div>
+
+            <!-- Solo FX Group -->
+            <div class="flex items-center gap-1.5">
+              <span class="text-[10px] font-mono uppercase text-textDim mr-1">Solo FX:</span>
+              <button onclick="simCycleFx(-1)" title="Ctrl + Alt + Left" class="px-2 py-1.5 rounded-lg bg-pillDark hover:bg-pillHover border border-borderSubtle text-xs font-mono text-textSecondary hover:text-cyanAccent active:scale-95 transition cursor-pointer">◂ FX</button>
+              <button onclick="simCycleFx(1)" title="Ctrl + Alt + Right" class="px-2 py-1.5 rounded-lg bg-pillDark hover:bg-pillHover border border-borderSubtle text-xs font-mono text-textSecondary hover:text-cyanAccent active:scale-95 transition cursor-pointer">FX ▸</button>
+              <button onclick="simAdjustFx(-1)" title="Ctrl + Alt + Down" class="px-2 py-1.5 rounded-lg bg-pillDark hover:bg-pillHover border border-borderSubtle text-xs font-mono text-textPrimary active:scale-95 transition cursor-pointer">FX −</button>
+              <button onclick="simAdjustFx(1)" title="Ctrl + Alt + Up" class="px-2 py-1.5 rounded-lg bg-pillDark hover:bg-pillHover border border-borderSubtle text-xs font-mono text-textPrimary active:scale-95 transition cursor-pointer">FX +</button>
+            </div>
+          </div>
+          <p class="text-[11px] text-textDim px-1">
+            Tip: Roll your mouse wheel directly over any channel pill inside the simulator to test <strong class="text-textMuted">Hover-Scroll</strong> (±1.0&nbsp;dB, or <span class="kbd-key">Shift</span> + Wheel for ±0.2&nbsp;dB), or click <span class="kbd-key">✎</span> to rename a channel.
+          </p>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================================================================== -->
+  <!-- 3. 6-CARD FEATURE GRID (100% TRUE TO THE ACTUAL SCRIPT)               -->
+  <!-- ===================================================================== -->
+  <section id="features" class="py-20 border-b border-borderSubtle">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="max-w-2xl mb-12">
+        <span class="text-xs font-mono font-semibold uppercase tracking-wider text-cyanAccent">Architecture &amp; Capabilities</span>
+        <h2 class="text-2xl sm:text-3xl font-extrabold text-textPrimary mt-2 tracking-tight">
+          Every feature built into Potato Massah
+        </h2>
+        <p class="text-sm sm:text-base text-textMuted mt-3 leading-relaxed">
+          Designed for tactile volume knobs and media wheels on Windows 10/11—replacing clunky OS volume overlays with direct 64-bit VoiceMeeter Potato parameter control.
+        </p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+
+        <!-- Card 1 -->
+        <div class="rounded-2xl bg-elevated border border-borderSubtle p-6 flex flex-col justify-between hover:border-cyanAccent/35 transition-colors">
+          <div>
+            <div class="w-10 h-10 rounded-xl bg-pillActive border border-cyanAccent/25 flex items-center justify-center text-cyanAccent mb-4">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>
+            </div>
+            <h3 class="text-base font-bold text-textPrimary">Exponential Wheel Acceleration &amp; 20&nbsp;ms Smooth Glide</h3>
+            <p class="text-xs sm:text-sm text-textMuted mt-2 leading-relaxed">
+              Slow single-notch clicks trim by <strong class="text-textPrimary">0.2&nbsp;dB</strong>, while rapid spins scale exponentially up to <strong class="text-textPrimary">4.5&nbsp;dB per notch</strong>. A <code class="font-mono text-xs text-cyanAccent">20ms</code> interpolation loop eases fader travel with instant direction-reversal braking.
+            </p>
+          </div>
+          <div class="mt-5 pt-3 border-t border-borderSubtle/80 text-[11px] font-mono text-textDim flex justify-between">
+            <span>minStep: 0.2 dB</span>
+            <span class="text-cyanAccent">maxStep: 4.5 dB</span>
+          </div>
+        </div>
+
+        <!-- Card 2 -->
+        <div class="rounded-2xl bg-elevated border border-borderSubtle p-6 flex flex-col justify-between hover:border-cyanAccent/35 transition-colors">
+          <div>
+            <div class="w-10 h-10 rounded-xl bg-pillActive border border-cyanAccent/25 flex items-center justify-center text-cyanAccent mb-4">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+            </div>
+            <h3 class="text-base font-bold text-textPrimary">All 16 I/O Channels + Spread-Locked Group Mode</h3>
+            <p class="text-xs sm:text-sm text-textMuted mt-2 leading-relaxed">
+              Control all <strong class="text-textPrimary">3 Virtual Inputs</strong>, <strong class="text-textPrimary">5 Hardware Inputs</strong>, and <strong class="text-textPrimary">8 Output Buses</strong>. Cycle solo channels with <span class="kbd-key">Ctrl+Shift+◄/►</span> or link multiple strips with <strong class="text-textPrimary">-60.0 to +12.0&nbsp;dB</strong> spread-locked clamping.
+            </p>
+          </div>
+          <div class="mt-5 pt-3 border-t border-borderSubtle/80 text-[11px] font-mono text-textDim flex justify-between">
+            <span>Strip[0..7] + Bus[0..7]</span>
+            <span class="text-cyanAccent">16 Bindable Slots</span>
+          </div>
+        </div>
+
+        <!-- Card 3 -->
+        <div class="rounded-2xl bg-elevated border border-borderSubtle p-6 flex flex-col justify-between hover:border-cyanAccent/35 transition-colors">
+          <div>
+            <div class="w-10 h-10 rounded-xl bg-pillActive border border-cyanAccent/25 flex items-center justify-center text-cyanAccent mb-4">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path></svg>
+            </div>
+            <h3 class="text-base font-bold text-textPrimary">Context-Aware Solo FX &amp; EQ Navigation</h3>
+            <p class="text-xs sm:text-sm text-textMuted mt-2 leading-relaxed">
+              Navigate DSP chains with <span class="kbd-key">Ctrl+Alt+Arrows</span> (<span class="kbd-key">Shift</span> for 0.1 fine steps, <span class="kbd-key">Ctrl+Alt+0</span> reset): Hardware <strong class="text-textPrimary">Comp/Gate/Denoiser/Reverb/Delay/FX1–2</strong>, Virtual <strong class="text-textPrimary">3-band EQ</strong>, and Bus <strong class="text-textPrimary">FX Returns</strong>.
+            </p>
+          </div>
+          <div class="mt-5 pt-3 border-t border-borderSubtle/80 text-[11px] font-mono text-textDim flex justify-between">
+            <span>Fine Step: ±0.1</span>
+            <span class="text-cyanAccent">Auto-Matched Chain</span>
+          </div>
+        </div>
+
+        <!-- Card 4 -->
+        <div class="rounded-2xl bg-elevated border border-borderSubtle p-6 flex flex-col justify-between hover:border-cyanAccent/35 transition-colors">
+          <div>
+            <div class="w-10 h-10 rounded-xl bg-pillActive border border-cyanAccent/25 flex items-center justify-center text-cyanAccent mb-4">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+            </div>
+            <h3 class="text-base font-bold text-textPrimary">Car Head-Unit Pop-Up HUD</h3>
+            <p class="text-xs sm:text-sm text-textMuted mt-2 leading-relaxed">
+              Uses <code class="font-mono text-xs text-cyanAccent">+E0x20 +E0x08000000</code> extended styles to pop up a click-through, non-focus-stealing dark OSD at the bottom-center of your monitor whenever the Control Panel isn't active—displaying live dB/mute badges, FX carousel, and auto-hiding after <strong class="text-textPrimary">1.5s</strong>.
+            </p>
+          </div>
+          <div class="mt-5 pt-3 border-t border-borderSubtle/80 text-[11px] font-mono text-textDim flex justify-between">
+            <span>Click-Through HUD</span>
+            <span class="text-emeraldOk">1.5s Auto-Fade</span>
+          </div>
+        </div>
+
+        <!-- Card 5 -->
+        <div class="rounded-2xl bg-elevated border border-borderSubtle p-6 flex flex-col justify-between hover:border-cyanAccent/35 transition-colors">
+          <div>
+            <div class="w-10 h-10 rounded-xl bg-pillActive border border-cyanAccent/25 flex items-center justify-center text-cyanAccent mb-4">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+            </div>
+            <h3 class="text-base font-bold text-textPrimary">Hover-Scroll, Custom Labels &amp; <code class="font-mono text-xs">0dB</code> Resets</h3>
+            <p class="text-xs sm:text-sm text-textMuted mt-2 leading-relaxed">
+              Point over any channel pill inside the Control Panel and scroll your mouse wheel (<strong class="text-textPrimary">±1.0&nbsp;dB</strong>, or <span class="kbd-key">Shift</span> + Wheel for <strong class="text-textPrimary">±0.2&nbsp;dB</strong>) without changing your active hardware target. Custom names and keybinds persist to <code class="font-mono text-xs text-textPrimary">volume_settings.ini</code>.
+            </p>
+          </div>
+          <div class="mt-5 pt-3 border-t border-borderSubtle/80 text-[11px] font-mono text-textDim flex justify-between">
+            <span>Per-Row 0dB Unity</span>
+            <span class="text-cyanAccent">INI Persistence</span>
+          </div>
+        </div>
+
+        <!-- Card 6 -->
+        <div class="rounded-2xl bg-elevated border border-borderSubtle p-6 flex flex-col justify-between hover:border-cyanAccent/35 transition-colors">
+          <div>
+            <div class="w-10 h-10 rounded-xl bg-pillActive border border-cyanAccent/25 flex items-center justify-center text-cyanAccent mb-4">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+            </div>
+            <h3 class="text-base font-bold text-textPrimary">Native <code class="font-mono text-xs">VoicemeeterRemote64.dll</code> &amp; Watchdog</h3>
+            <p class="text-xs sm:text-sm text-textMuted mt-2 leading-relaxed">
+              Includes a one-click <strong class="text-textPrimary">Restart Engine</strong> button (<code class="font-mono text-xs text-cyanAccent">Command.Restart</code>) to recover ASIO/WDM audio streams instantly, plus a 2-second watchdog timer that automatically re-syncs gains and mutes if VoiceMeeter Potato restarts.
+            </p>
+          </div>
+          <div class="mt-5 pt-3 border-t border-borderSubtle/80 text-[11px] font-mono text-textDim flex justify-between">
+            <span>2s Connection Poll</span>
+            <span class="text-emeraldOk">Self-Healing Sync</span>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================================================================== -->
+  <!-- 4. SEARCHABLE / FILTERABLE KEYBIND REFERENCE TABLE                    -->
+  <!-- ===================================================================== -->
+  <section id="keybinds" class="py-20 border-b border-borderSubtle">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex flex-col lg:flex-row lg:items-end justify-between gap-6 mb-8">
+        <div>
+          <span class="text-xs font-mono font-semibold uppercase tracking-wider text-cyanAccent">Interactive Keybind Manager</span>
+          <h2 class="text-2xl sm:text-3xl font-extrabold text-textPrimary mt-2 tracking-tight">
+            Default Shortcuts &amp; 16-Channel Rebinding
+          </h2>
+          <p class="text-sm text-textMuted mt-2 max-w-2xl">
+            Click <strong class="text-textPrimary">Keybinds</strong> in the Control Panel footer to capture any new multi-key combo live. In addition to the defaults below, all <strong class="text-textPrimary">16 I/O channels</strong> (<code class="font-mono text-xs text-cyanAccent">Strip[0–7]</code> &amp; <code class="font-mono text-xs text-cyanAccent">Bus[0–7]</code>) have dedicated rebindable slots.
+          </p>
+        </div>
+
+        <!-- Search Input + Category Filter Pills -->
+        <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+          <div class="relative">
+            <input id="keybindSearchInput" type="text" oninput="applyKeybindFilters()" placeholder="Search action or shortcut..." class="w-full sm:w-56 pl-9 pr-3 py-2 rounded-xl bg-elevated border border-borderSubtle focus:border-cyanAccent focus:outline-none text-xs text-textPrimary placeholder-textDim">
+            <svg class="w-4 h-4 text-textDim absolute left-3 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+          </div>
+
+          <div class="flex flex-wrap items-center gap-1.5" id="keybindFilterPills">
+            <button onclick="setKeybindCategory('all', this)" class="kb-pill px-3 py-1.5 rounded-lg text-xs font-bold bg-pillActive text-cyanAccent border border-cyanAccent/35 transition cursor-pointer">All</button>
+            <button onclick="setKeybindCategory('general', this)" class="kb-pill px-3 py-1.5 rounded-lg text-xs font-semibold bg-elevated text-textMuted border border-borderSubtle hover:text-textPrimary transition cursor-pointer">General &amp; Navigation</button>
+            <button onclick="setKeybindCategory('fx', this)" class="kb-pill px-3 py-1.5 rounded-lg text-xs font-semibold bg-elevated text-textMuted border border-borderSubtle hover:text-textPrimary transition cursor-pointer">Solo FX</button>
+            <button onclick="setKeybindCategory('presets', this)" class="kb-pill px-3 py-1.5 rounded-lg text-xs font-semibold bg-elevated text-textMuted border border-borderSubtle hover:text-textPrimary transition cursor-pointer">Channel Presets</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Keybind Table -->
+      <div class="rounded-2xl bg-elevated border border-borderSubtle overflow-hidden shadow-xl">
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse">
+            <thead>
+              <tr class="border-b border-borderSubtle bg-[#111117] text-[11px] font-bold uppercase tracking-wider text-textDim">
+                <th class="py-3.5 px-5">Action</th>
+                <th class="py-3.5 px-5">Default Shortcut</th>
+                <th class="py-3.5 px-5">Category</th>
+                <th class="py-3.5 px-5">Description</th>
+              </tr>
+            </thead>
+            <tbody id="keybindTableBody" class="divide-y divide-borderSubtle/70 text-sm">
+        <tr class="hover:bg-[#191922] transition-colors">
+          <td class="py-3 px-5 font-semibold text-textPrimary whitespace-nowrap">Toggle Control Panel</td>
+          <td class="py-3 px-5 whitespace-nowrap">
+            <div class="flex flex-wrap items-center gap-1">
+              <span class="kbd-key">Ctrl</span><span class="text-textDim text-xs">+</span><span class="kbd-key">Alt</span><span class="text-textDim text-xs">+</span><span class="kbd-key">V</span>
+            </div>
+          </td>
+          <td class="py-3 px-5 whitespace-nowrap"><span class="px-2 py-0.5 rounded text-[11px] font-mono bg-pillActive text-cyanAccent">General &amp; Nav</span></td>
+          <td class="py-3 px-5 text-xs text-textMuted leading-relaxed">Shows or hides the VoiceMeeter Potato Massah control window.</td>
+        </tr>
+      
+        <tr class="hover:bg-[#191922] transition-colors">
+          <td class="py-3 px-5 font-semibold text-textPrimary whitespace-nowrap">Target: Previous Channel</td>
+          <td class="py-3 px-5 whitespace-nowrap">
+            <div class="flex flex-wrap items-center gap-1">
+              <span class="kbd-key">Ctrl</span><span class="text-textDim text-xs">+</span><span class="kbd-key">Shift</span><span class="text-textDim text-xs">+</span><span class="kbd-key">Left</span>
+            </div>
+          </td>
+          <td class="py-3 px-5 whitespace-nowrap"><span class="px-2 py-0.5 rounded text-[11px] font-mono bg-pillActive text-cyanAccent">General &amp; Nav</span></td>
+          <td class="py-3 px-5 text-xs text-textMuted leading-relaxed">Steps backward through all 16 I/O channels in Single-Target Mode.</td>
+        </tr>
+      
+        <tr class="hover:bg-[#191922] transition-colors">
+          <td class="py-3 px-5 font-semibold text-textPrimary whitespace-nowrap">Target: Next Channel</td>
+          <td class="py-3 px-5 whitespace-nowrap">
+            <div class="flex flex-wrap items-center gap-1">
+              <span class="kbd-key">Ctrl</span><span class="text-textDim text-xs">+</span><span class="kbd-key">Shift</span><span class="text-textDim text-xs">+</span><span class="kbd-key">Right</span>
+            </div>
+          </td>
+          <td class="py-3 px-5 whitespace-nowrap"><span class="px-2 py-0.5 rounded text-[11px] font-mono bg-pillActive text-cyanAccent">General &amp; Nav</span></td>
+          <td class="py-3 px-5 text-xs text-textMuted leading-relaxed">Steps forward through all 16 I/O channels in Single-Target Mode.</td>
+        </tr>
+      
+        <tr class="hover:bg-[#191922] transition-colors">
+          <td class="py-3 px-5 font-semibold text-textPrimary whitespace-nowrap">Hardware Volume Wheel</td>
+          <td class="py-3 px-5 whitespace-nowrap">
+            <div class="flex flex-wrap items-center gap-1">
+              <span class="kbd-key">Volume_Up</span><span class="text-textDim text-xs">+</span><span class="kbd-key">Volume_Down</span>
+            </div>
+          </td>
+          <td class="py-3 px-5 whitespace-nowrap"><span class="px-2 py-0.5 rounded text-[11px] font-mono bg-pillActive text-cyanAccent">General &amp; Nav</span></td>
+          <td class="py-3 px-5 text-xs text-textMuted leading-relaxed">Intercepts OS media volume keys for 0.2–4.5 dB exponential 20 ms smooth glide.</td>
+        </tr>
+      
+        <tr class="hover:bg-[#191922] transition-colors">
+          <td class="py-3 px-5 font-semibold text-textPrimary whitespace-nowrap">Hardware Mute Toggle</td>
+          <td class="py-3 px-5 whitespace-nowrap">
+            <div class="flex flex-wrap items-center gap-1">
+              <span class="kbd-key">Volume_Mute</span>
+            </div>
+          </td>
+          <td class="py-3 px-5 whitespace-nowrap"><span class="px-2 py-0.5 rounded text-[11px] font-mono bg-pillActive text-cyanAccent">General &amp; Nav</span></td>
+          <td class="py-3 px-5 text-xs text-textMuted leading-relaxed">Toggles mute on active target(s), sets coral-red header bar, and updates tray icon.</td>
+        </tr>
+      
+        <tr class="hover:bg-[#191922] transition-colors">
+          <td class="py-3 px-5 font-semibold text-textPrimary whitespace-nowrap">GUI Row Hover-Scroll</td>
+          <td class="py-3 px-5 whitespace-nowrap">
+            <div class="flex flex-wrap items-center gap-1">
+              <span class="kbd-key">Wheel Up / Down</span><span class="text-textDim text-xs">+</span><span class="kbd-key">Shift + Wheel</span>
+            </div>
+          </td>
+          <td class="py-3 px-5 whitespace-nowrap"><span class="px-2 py-0.5 rounded text-[11px] font-mono bg-pillActive text-cyanAccent">General &amp; Nav</span></td>
+          <td class="py-3 px-5 text-xs text-textMuted leading-relaxed">Trims any hovered channel row by ±1.0 dB (or ±0.2 dB with Shift) without changing target.</td>
+        </tr>
+      
+        <tr class="hover:bg-[#191922] transition-colors">
+          <td class="py-3 px-5 font-semibold text-textPrimary whitespace-nowrap">Solo FX: Previous Effect</td>
+          <td class="py-3 px-5 whitespace-nowrap">
+            <div class="flex flex-wrap items-center gap-1">
+              <span class="kbd-key">Ctrl</span><span class="text-textDim text-xs">+</span><span class="kbd-key">Alt</span><span class="text-textDim text-xs">+</span><span class="kbd-key">Left</span>
+            </div>
+          </td>
+          <td class="py-3 px-5 whitespace-nowrap"><span class="px-2 py-0.5 rounded text-[11px] font-mono bg-purple-500/15 text-purple-300">Solo FX</span></td>
+          <td class="py-3 px-5 text-xs text-textMuted leading-relaxed">Cycles backward through the active channel’s DSP effects or 3-band EQ.</td>
+        </tr>
+      
+        <tr class="hover:bg-[#191922] transition-colors">
+          <td class="py-3 px-5 font-semibold text-textPrimary whitespace-nowrap">Solo FX: Next Effect</td>
+          <td class="py-3 px-5 whitespace-nowrap">
+            <div class="flex flex-wrap items-center gap-1">
+              <span class="kbd-key">Ctrl</span><span class="text-textDim text-xs">+</span><span class="kbd-key">Alt</span><span class="text-textDim text-xs">+</span><span class="kbd-key">Right</span>
+            </div>
+          </td>
+          <td class="py-3 px-5 whitespace-nowrap"><span class="px-2 py-0.5 rounded text-[11px] font-mono bg-purple-500/15 text-purple-300">Solo FX</span></td>
+          <td class="py-3 px-5 text-xs text-textMuted leading-relaxed">Cycles forward through the active channel’s DSP effects or 3-band EQ.</td>
+        </tr>
+      
+        <tr class="hover:bg-[#191922] transition-colors">
+          <td class="py-3 px-5 font-semibold text-textPrimary whitespace-nowrap">Solo FX: Increase</td>
+          <td class="py-3 px-5 whitespace-nowrap">
+            <div class="flex flex-wrap items-center gap-1">
+              <span class="kbd-key">Ctrl</span><span class="text-textDim text-xs">+</span><span class="kbd-key">Alt</span><span class="text-textDim text-xs">+</span><span class="kbd-key">Up</span>
+            </div>
+          </td>
+          <td class="py-3 px-5 whitespace-nowrap"><span class="px-2 py-0.5 rounded text-[11px] font-mono bg-purple-500/15 text-purple-300">Solo FX</span></td>
+          <td class="py-3 px-5 text-xs text-textMuted leading-relaxed">Increases the selected Solo FX parameter and triggers the Car Head-Unit OSD.</td>
+        </tr>
+      
+        <tr class="hover:bg-[#191922] transition-colors">
+          <td class="py-3 px-5 font-semibold text-textPrimary whitespace-nowrap">Solo FX: Decrease</td>
+          <td class="py-3 px-5 whitespace-nowrap">
+            <div class="flex flex-wrap items-center gap-1">
+              <span class="kbd-key">Ctrl</span><span class="text-textDim text-xs">+</span><span class="kbd-key">Alt</span><span class="text-textDim text-xs">+</span><span class="kbd-key">Down</span>
+            </div>
+          </td>
+          <td class="py-3 px-5 whitespace-nowrap"><span class="px-2 py-0.5 rounded text-[11px] font-mono bg-purple-500/15 text-purple-300">Solo FX</span></td>
+          <td class="py-3 px-5 text-xs text-textMuted leading-relaxed">Decreases the selected Solo FX parameter and triggers the Car Head-Unit OSD.</td>
+        </tr>
+      
+        <tr class="hover:bg-[#191922] transition-colors">
+          <td class="py-3 px-5 font-semibold text-textPrimary whitespace-nowrap">Solo FX: Fine Increase</td>
+          <td class="py-3 px-5 whitespace-nowrap">
+            <div class="flex flex-wrap items-center gap-1">
+              <span class="kbd-key">Ctrl</span><span class="text-textDim text-xs">+</span><span class="kbd-key">Alt</span><span class="text-textDim text-xs">+</span><span class="kbd-key">Shift</span><span class="text-textDim text-xs">+</span><span class="kbd-key">Up</span>
+            </div>
+          </td>
+          <td class="py-3 px-5 whitespace-nowrap"><span class="px-2 py-0.5 rounded text-[11px] font-mono bg-purple-500/15 text-purple-300">Solo FX</span></td>
+          <td class="py-3 px-5 text-xs text-textMuted leading-relaxed">Micro-increases the selected Solo FX parameter in 0.1 increments.</td>
+        </tr>
+      
+        <tr class="hover:bg-[#191922] transition-colors">
+          <td class="py-3 px-5 font-semibold text-textPrimary whitespace-nowrap">Solo FX: Fine Decrease</td>
+          <td class="py-3 px-5 whitespace-nowrap">
+            <div class="flex flex-wrap items-center gap-1">
+              <span class="kbd-key">Ctrl</span><span class="text-textDim text-xs">+</span><span class="kbd-key">Alt</span><span class="text-textDim text-xs">+</span><span class="kbd-key">Shift</span><span class="text-textDim text-xs">+</span><span class="kbd-key">Down</span>
+            </div>
+          </td>
+          <td class="py-3 px-5 whitespace-nowrap"><span class="px-2 py-0.5 rounded text-[11px] font-mono bg-purple-500/15 text-purple-300">Solo FX</span></td>
+          <td class="py-3 px-5 text-xs text-textMuted leading-relaxed">Micro-decreases the selected Solo FX parameter in 0.1 increments.</td>
+        </tr>
+      
+        <tr class="hover:bg-[#191922] transition-colors">
+          <td class="py-3 px-5 font-semibold text-textPrimary whitespace-nowrap">Solo FX: Reset to 0</td>
+          <td class="py-3 px-5 whitespace-nowrap">
+            <div class="flex flex-wrap items-center gap-1">
+              <span class="kbd-key">Ctrl</span><span class="text-textDim text-xs">+</span><span class="kbd-key">Alt</span><span class="text-textDim text-xs">+</span><span class="kbd-key">0</span>
+            </div>
+          </td>
+          <td class="py-3 px-5 whitespace-nowrap"><span class="px-2 py-0.5 rounded text-[11px] font-mono bg-purple-500/15 text-purple-300">Solo FX</span></td>
+          <td class="py-3 px-5 text-xs text-textMuted leading-relaxed">Resets the currently selected FX send, return, or EQ band back to 0.0.</td>
+        </tr>
+      
+        <tr class="hover:bg-[#191922] transition-colors">
+          <td class="py-3 px-5 font-semibold text-textPrimary whitespace-nowrap">Preset: VAIO3 (Strip[7])</td>
+          <td class="py-3 px-5 whitespace-nowrap">
+            <div class="flex flex-wrap items-center gap-1">
+              <span class="kbd-key">Shift</span><span class="text-textDim text-xs">+</span><span class="kbd-key">1</span>
+            </div>
+          </td>
+          <td class="py-3 px-5 whitespace-nowrap"><span class="px-2 py-0.5 rounded text-[11px] font-mono bg-emeraldOk/15 text-emeraldOk">Channel Presets</span></td>
+          <td class="py-3 px-5 text-xs text-textMuted leading-relaxed">Immediately focuses Single-Target Mode on VAIO3.</td>
+        </tr>
+      
+        <tr class="hover:bg-[#191922] transition-colors">
+          <td class="py-3 px-5 font-semibold text-textPrimary whitespace-nowrap">Preset: Hardware In 1 (Strip[0])</td>
+          <td class="py-3 px-5 whitespace-nowrap">
+            <div class="flex flex-wrap items-center gap-1">
+              <span class="kbd-key">Shift</span><span class="text-textDim text-xs">+</span><span class="kbd-key">2</span>
+            </div>
+          </td>
+          <td class="py-3 px-5 whitespace-nowrap"><span class="px-2 py-0.5 rounded text-[11px] font-mono bg-emeraldOk/15 text-emeraldOk">Channel Presets</span></td>
+          <td class="py-3 px-5 text-xs text-textMuted leading-relaxed">Immediately focuses Single-Target Mode on Hardware In 1.</td>
+        </tr>
+      
+        <tr class="hover:bg-[#191922] transition-colors">
+          <td class="py-3 px-5 font-semibold text-textPrimary whitespace-nowrap">All 16 I/O Channel Slots</td>
+          <td class="py-3 px-5 whitespace-nowrap">
+            <div class="flex flex-wrap items-center gap-1">
+              <span class="kbd-key">Rebindable in Keybinds</span>
+            </div>
+          </td>
+          <td class="py-3 px-5 whitespace-nowrap"><span class="px-2 py-0.5 rounded text-[11px] font-mono bg-emeraldOk/15 text-emeraldOk">Channel Presets</span></td>
+          <td class="py-3 px-5 text-xs text-textMuted leading-relaxed">Every Virtual Input (3), Hardware Input (5), and Output Bus (8) can be bound to any key combo.</td>
+        </tr>
+      </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================================================================== -->
+  <!-- 5. HONEST INSTALLATION & COMPILATION GUIDE                            -->
+  <!-- ===================================================================== -->
+  <section id="install-build" class="py-20">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="max-w-2xl mb-10">
+        <span class="text-xs font-mono font-semibold uppercase tracking-wider text-emeraldOk">Deployment &amp; Build</span>
+        <h2 class="text-2xl sm:text-3xl font-extrabold text-textPrimary mt-2 tracking-tight">
+          Installation &amp; Compilation Guide
+        </h2>
+        <p class="text-sm sm:text-base text-textMuted mt-3 leading-relaxed">
+          Use the pre-compiled standalone executable for instant plug-and-play setup, or build directly from the AutoHotkey v2 source.
+        </p>
+      </div>
+
+      <!-- Two-Column Guide -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+        <!-- Column 1: Standalone .EXE Release -->
+        <div class="rounded-2xl bg-elevated border border-borderSubtle p-6 sm:p-7 flex flex-col justify-between">
+          <div class="space-y-4">
+            <div class="flex items-center justify-between">
+              <span class="px-2.5 py-1 rounded-md bg-pillActive border border-cyanAccent/30 text-xs font-mono font-bold text-cyanAccent">Option A • End Users</span>
+              <span class="text-xs font-mono text-textDim">No AHK Install Needed</span>
+            </div>
+
+            <h3 class="text-xl font-bold text-textPrimary">Standalone <code class="font-mono text-cyanAccent">.EXE</code> Release</h3>
+
+            <p class="text-sm text-textMuted leading-relaxed">
+              Ideal if you just want to run <strong class="text-textPrimary">Potato Massah</strong> immediately with the custom pinch-knob icon pre-baked into the executable.
+            </p>
+
+            <ol class="space-y-3 text-sm text-textSecondary pt-1">
+              <li class="flex items-start gap-3">
+                <span class="w-6 h-6 rounded-md bg-pillDark border border-borderSubtle text-cyanAccent font-mono text-xs font-bold flex items-center justify-center shrink-0 mt-0.5">1</span>
+                <span><strong class="text-textPrimary">System Requirements:</strong> Windows 10 or Windows 11 (64-bit) with <strong class="text-textPrimary">VoiceMeeter Potato</strong> installed at <code class="font-mono text-xs text-cyanAccent">C:\Program Files (x86)\VB\Voicemeeter\</code>.</span>
+              </li>
+              <li class="flex items-start gap-3">
+                <span class="w-6 h-6 rounded-md bg-pillDark border border-borderSubtle text-cyanAccent font-mono text-xs font-bold flex items-center justify-center shrink-0 mt-0.5">2</span>
+                <span><strong class="text-textPrimary">Download &amp; Run:</strong> Grab <code class="font-mono text-xs text-textPrimary">PotatoMassah.exe</code> from GitHub Releases and place it in its own folder (e.g., <code class="font-mono text-xs text-textMuted">C:\Tools\PotatoMassah\</code>).</span>
+              </li>
+              <li class="flex items-start gap-3">
+                <span class="w-6 h-6 rounded-md bg-pillDark border border-borderSubtle text-cyanAccent font-mono text-xs font-bold flex items-center justify-center shrink-0 mt-0.5">3</span>
+                <span><strong class="text-textPrimary">Portable Persistence:</strong> On first launch, the app automatically creates <code class="font-mono text-xs text-cyanAccent">volume_settings.ini</code> in the same directory to store your active targets, custom channel names, and keybinds.</span>
+              </li>
+            </ol>
+          </div>
+
+          <div class="mt-6 pt-4 border-t border-borderSubtle flex items-center justify-between text-xs font-mono text-textMuted">
+            <span>Config File: ./volume_settings.ini</span>
+            <span class="text-emeraldOk">100% Portable</span>
+          </div>
+        </div>
+
+        <!-- Column 2: Running or Compiling from Source -->
+        <div class="rounded-2xl bg-elevated border border-borderSubtle p-6 sm:p-7 flex flex-col justify-between">
+          <div class="space-y-4">
+            <div class="flex items-center justify-between">
+              <span class="px-2.5 py-1 rounded-md bg-pillDark border border-borderSubtle text-xs font-mono font-bold text-textSecondary">Option B • Developers &amp; Modders</span>
+              <span class="text-xs font-mono text-textDim">Ahk2Exe U64</span>
+            </div>
+
+            <h3 class="text-xl font-bold text-textPrimary">Running or Compiling from Source</h3>
+
+            <p class="text-sm text-textMuted leading-relaxed">
+              Inspect, customize, or compile <code class="font-mono text-xs text-cyanAccent">PotatoMassah.ahk</code> yourself using the official AutoHotkey v2 toolchain.
+            </p>
+
+            <ol class="space-y-3 text-sm text-textSecondary pt-1">
+              <li class="flex items-start gap-3">
+                <span class="w-6 h-6 rounded-md bg-pillDark border border-borderSubtle text-cyanAccent font-mono text-xs font-bold flex items-center justify-center shrink-0 mt-0.5">1</span>
+                <span><strong class="text-textPrimary">Install AutoHotkey v2.0 (64-bit):</strong> Download AutoHotkey v2.0+ and ensure the 64-bit interpreter (<code class="font-mono text-xs text-textPrimary">AutoHotkey64.exe</code>) is installed.</span>
+              </li>
+              <li class="flex items-start gap-3">
+                <span class="w-6 h-6 rounded-md bg-pillDark border border-borderSubtle text-cyanAccent font-mono text-xs font-bold flex items-center justify-center shrink-0 mt-0.5">2</span>
+                <span><strong class="text-textPrimary">Prepare Icon &amp; Script:</strong> Place <code class="font-mono text-xs text-textPrimary">icon.ico</code> in the same directory as <code class="font-mono text-xs text-textPrimary">PotatoMassah.ahk</code> (honored automatically via <code class="font-mono text-xs text-cyanAccent">;@Ahk2Exe-SetMainIcon icon.ico</code>).</span>
+              </li>
+              <li class="flex items-start gap-3">
+                <span class="w-6 h-6 rounded-md bg-pillDark border border-borderSubtle text-cyanAccent font-mono text-xs font-bold flex items-center justify-center shrink-0 mt-0.5">3</span>
+                <span><strong class="text-textPrimary">Select U64 Base File in Ahk2Exe:</strong> Open <strong class="text-textPrimary">Convert .ahk to .exe</strong> and choose <code class="font-mono text-xs text-emeraldOk">v2.0.x U64 AutoHotkey64.exe</code>. A 64-bit base binary is mandatory so Windows allows <code class="font-mono text-xs text-cyanAccent">LoadLibrary</code> to load <code class="font-mono text-xs text-textPrimary">VoicemeeterRemote64.dll</code>.</span>
+              </li>
+            </ol>
+          </div>
+
+          <div class="mt-6 pt-4 border-t border-borderSubtle flex items-center justify-between gap-2">
+            <button onclick="openSourceModal()" class="text-xs font-mono font-semibold text-cyanAccent hover:underline cursor-pointer">Inspect Full AHK v2 Script →</button>
+            <button onclick="downloadAhkSource()" class="px-3 py-1.5 rounded-lg bg-pillDark hover:bg-pillHover border border-borderSubtle text-xs font-semibold text-textPrimary transition cursor-pointer">Download .AHK</button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================================================================== -->
+  <!-- FOOTER                                                                -->
+  <!-- ===================================================================== -->
+  <footer class="border-t border-borderSubtle py-10 bg-[#0A0A0E]">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-textDim">
+      <div class="flex items-center gap-2.5">
+        <span class="font-bold text-textPrimary">Potato Massah</span>
+        <span>•</span>
+        <span>Open-Source Community Utility • MIT License</span>
+      </div>
+      <div class="flex items-center gap-4">
+        <span class="text-textMuted">Not affiliated with VB-Audio Software</span>
+        <a href="#" class="text-cyanAccent hover:underline">Top ↑</a>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ===================================================================== -->
+  <!-- MODAL 1: INLINE CHANNEL RENAME DIALOG (NO PROMPT() USED)              -->
+  <!-- ===================================================================== -->
+  <div id="renameModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/75 backdrop-blur-sm p-4">
+    <div class="w-full max-w-sm rounded-2xl bg-canvas border border-borderSubtle shadow-2xl overflow-hidden">
+      <div class="h-[2px] w-full bg-cyanAccent"></div>
+      <div class="p-5 space-y-4">
+        <div>
+          <h3 class="text-sm font-bold text-textPrimary">Rename Channel</h3>
+          <p id="renameModalSub" class="text-xs text-textMuted mt-1">Enter a custom label for Strip[0] (leave blank to restore default):</p>
+        </div>
+        <input id="renameModalInput" type="text" onkeydown="if(event.key==='Enter') confirmRenameChannel()" class="w-full px-3 py-2 rounded-lg bg-elevated border border-borderSubtle focus:border-cyanAccent focus:outline-none text-sm text-textPrimary">
+        <div class="flex items-center justify-end gap-2">
+          <button onclick="closeRenameModal()" class="px-3.5 py-1.5 rounded-lg bg-elevated hover:bg-pillHover text-xs font-semibold text-textMuted transition cursor-pointer">Cancel</button>
+          <button onclick="confirmRenameChannel()" class="px-4 py-1.5 rounded-lg bg-pillActive hover:bg-pillActiveHover border border-cyanAccent/35 text-xs font-bold text-cyanAccent transition cursor-pointer">Save Label</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================================================================== -->
+  <!-- MODAL 2: COMPLETE AUTOHOTKEY V2 SOURCE VIEWER                         -->
+  <!-- ===================================================================== -->
+  <div id="sourceModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+    <div class="w-full max-w-4xl rounded-2xl bg-canvas border border-borderSubtle shadow-2xl overflow-hidden flex flex-col max-h-[88vh]">
+      <div class="h-[2px] w-full bg-cyanAccent"></div>
+      <div class="px-5 py-3.5 bg-elevated border-b border-borderSubtle flex items-center justify-between gap-3">
+        <div>
+          <h3 class="text-sm font-bold text-textPrimary">PotatoMassah.ahk — Complete AutoHotkey v2 Source</h3>
+          <p class="text-xs text-textMuted mt-0.5">Compile with Ahk2Exe using Base File: v2.0.x U64 AutoHotkey64.exe</p>
+        </div>
+        <div class="flex items-center gap-2">
+          <button onclick="copySourceCode()" class="px-3.5 py-1.5 rounded-lg bg-cyanAccent hover:bg-sky-300 text-canvas text-xs font-bold transition cursor-pointer">Copy Code</button>
+          <button onclick="downloadAhkSource()" class="px-3.5 py-1.5 rounded-lg bg-pillDark hover:bg-pillHover border border-borderSubtle text-textPrimary text-xs font-semibold transition cursor-pointer">Download .AHK</button>
+          <button onclick="closeSourceModal()" class="w-8 h-8 rounded-lg bg-pillDark hover:bg-coralMute/20 text-textMuted hover:text-coralMute flex items-center justify-center text-sm font-bold transition cursor-pointer" aria-label="Close">✕</button>
+        </div>
+      </div>
+      <div class="p-4 overflow-y-auto bg-[#0A0A0E] font-mono text-xs text-textSecondary leading-relaxed">
+        <pre id="sourceCodeDisplay" class="whitespace-pre overflow-x-auto">#Requires AutoHotkey v2.0
+#SingleInstance Force
+InstallKeybdHook()
+;@Ahk2Exe-SetMainIcon icon.ico
+
+; ==============================================================================
+; VoiceMeeter Potato Massah — Hardware Volume Wheel &amp; Solo FX Controller
+; ==============================================================================
+customIconPath := A_ScriptDir "\icon.ico"
+mutedIconPath  := A_ScriptDir "\icon_muted.ico"
+
+dllPath := "C:\Program Files (x86)\VB\Voicemeeter\VoicemeeterRemote64.dll"
+hModule := DllCall("LoadLibrary", "Str", dllPath, "Ptr")
+if !hModule {
+    MsgBox("Could not load VoicemeeterRemote64.dll. Check your VoiceMeeter installation path.")
+    ExitApp()
+}
+
+pLogin    := DllCall("GetProcAddress", "Ptr", hModule, "AStr", "VBVMR_Login", "Ptr")
+pLogout   := DllCall("GetProcAddress", "Ptr", hModule, "AStr", "VBVMR_Logout", "Ptr")
+pGetType  := DllCall("GetProcAddress", "Ptr", hModule, "AStr", "VBVMR_GetVoicemeeterType", "Ptr")
+pIsDirty  := DllCall("GetProcAddress", "Ptr", hModule, "AStr", "VBVMR_IsParametersDirty", "Ptr")
+pGetFloat := DllCall("GetProcAddress", "Ptr", hModule, "AStr", "VBVMR_GetParameterFloat", "Ptr")
+pSetFloat := DllCall("GetProcAddress", "Ptr", hModule, "AStr", "VBVMR_SetParameterFloat", "Ptr")
+
+if (!pLogin || !pLogout || !pGetType || !pIsDirty || !pGetFloat || !pSetFloat) {
+    MsgBox("Loaded VoicemeeterRemote64.dll, but could not resolve API functions.")
+    ExitApp()
+}
+
+DllCall(pLogin)
+OnExit(CleanupVM)
+
+CleanupVM(*) {
+    SetTimer(GlideStep, 0)
+    SetTimer(FlushOwnDirtyFlag, 0)
+    SetTimer(WatchdogCheck, 0)
+    SetTimer(ClearQuickTip, 0)
+    SetTimer(HideHeadUnitOsd, 0)
+    SetTimer(HoverLeaveWatch, 0)
+    DllCall(pLogout)
+    DllCall("FreeLibrary", "Ptr", hModule)
+}
+
+EnableDarkSystemMenus() {
+    try {
+        hUx := DllCall("GetModuleHandle", "Str", "uxtheme.dll", "Ptr")
+        if !hUx
+            hUx := DllCall("LoadLibrary", "Str", "uxtheme.dll", "Ptr")
+        if hUx {
+            pSetPreferredAppMode := DllCall("GetProcAddress", "Ptr", hUx, "Ptr", 135, "Ptr")
+            pFlushMenuThemes     := DllCall("GetProcAddress", "Ptr", hUx, "Ptr", 136, "Ptr")
+            if pSetPreferredAppMode
+                DllCall(pSetPreferredAppMode, "Int", 2)
+            if pFlushMenuThemes
+                DllCall(pFlushMenuThemes)
+        }
+    }
+}
+
+ApplySleekWindowTheme(guiObj, isOsd := false) {
+    try {
+        DllCall("dwmapi\DwmSetWindowAttribute", "Ptr", guiObj.Hwnd, "UInt", 20, "Int*", 1, "UInt", 4)
+        DllCall("dwmapi\DwmSetWindowAttribute", "Ptr", guiObj.Hwnd, "UInt", 19, "Int*", 1, "UInt", 4)
+        DllCall("dwmapi\DwmSetWindowAttribute", "Ptr", guiObj.Hwnd, "UInt", 33, "Int*", 2, "UInt", 4)
+        if !isOsd {
+            DllCall("dwmapi\DwmSetWindowAttribute", "Ptr", guiObj.Hwnd, "UInt", 35, "UInt*", 0x00110D0D, "UInt", 4)
+            DllCall("dwmapi\DwmSetWindowAttribute", "Ptr", guiObj.Hwnd, "UInt", 34, "UInt*", 0x00322626, "UInt", 4)
+        } else {
+            DllCall("dwmapi\DwmSetWindowAttribute", "Ptr", guiObj.Hwnd, "UInt", 34, "UInt*", 0x004A3818, "UInt", 4)
+        }
+    }
+}
+
+IsGuiAlive(g) {
+    if !IsObject(g)
+        return false
+    try return WinExist("ahk_id " g.Hwnd) != 0
+    catch
+        return false
+}
+
+EnableDarkSystemMenus()
+
+; ==============================================================================
+; CONFIGURATION, EFFECT DEFINITIONS &amp; PERSISTENT STATE
+; ==============================================================================
+iniPath     := A_ScriptDir "\volume_settings.ini"
+minStep     := 0.2
+maxStep     := 4.5
+slowMs      := 250.0
+fastMs      := 15.0
+glideFactor := 0.35
+
+virtualInputs := [
+    { param: "Strip[5]", name: "Voicemeeter VAIO" },
+    { param: "Strip[6]", name: "Voicemeeter AUX" },
+    { param: "Strip[7]", name: "VAIO3" }
+]
+
+hardwareInputs := [
+    { param: "Strip[0]", name: "Hardware In 1" },
+    { param: "Strip[1]", name: "Hardware In 2" },
+    { param: "Strip[2]", name: "Hardware In 3" },
+    { param: "Strip[3]", name: "Hardware In 4" },
+    { param: "Strip[4]", name: "Hardware In 5" }
+]
+
+outputBuses := [
+    { param: "Bus[0]", name: "A1" },
+    { param: "Bus[1]", name: "A2" },
+    { param: "Bus[2]", name: "A3" },
+    { param: "Bus[3]", name: "A4" },
+    { param: "Bus[4]", name: "A5" },
+    { param: "Bus[5]", name: "B1" },
+    { param: "Bus[6]", name: "B2" },
+    { param: "Bus[7]", name: "B3" }
+]
+
+allChannels := []
+for item in virtualInputs
+    allChannels.Push(item)
+for item in hardwareInputs
+    allChannels.Push(item)
+for item in outputBuses
+    allChannels.Push(item)
+
+hwEffects := [
+    { key: "Comp",     label: "Comp.",    min: 0.0, max: 10.0, step: 0.2, unit: "" },
+    { key: "Gate",     label: "Gate",     min: 0.0, max: 10.0, step: 0.2, unit: "" },
+    { key: "Denoiser", label: "Denoiser", min: 0.0, max: 10.0, step: 0.2, unit: "" },
+    { key: "Reverb",   label: "Reverb",   min: 0.0, max: 10.0, step: 0.2, unit: "" },
+    { key: "Delay",    label: "Delay",    min: 0.0, max: 10.0, step: 0.2, unit: "" },
+    { key: "Fx1",      label: "FX1 Send", min: 0.0, max: 10.0, step: 0.2, unit: "" },
+    { key: "Fx2",      label: "FX2 Send", min: 0.0, max: 10.0, step: 0.2, unit: "" }
+]
+
+virtEffects := [
+    { key: "EQGain3", label: "EQ Treble", min: -12.0, max: 12.0, step: 0.5, unit: " dB" },
+    { key: "EQGain2", label: "EQ Mid",    min: -12.0, max: 12.0, step: 0.5, unit: " dB" },
+    { key: "EQGain1", label: "EQ Bass",   min: -12.0, max: 12.0, step: 0.5, unit: " dB" }
+]
+
+busEffects := [
+    { key: "ReturnReverb", label: "Reverb Return", min: 0.0, max: 10.0, step: 0.2, unit: "" },
+    { key: "ReturnDelay",  label: "Delay Return",  min: 0.0, max: 10.0, step: 0.2, unit: "" },
+    { key: "ReturnFx1",    label: "FX1 Return",    min: 0.0, max: 10.0, step: 0.2, unit: "" },
+    { key: "ReturnFx2",    label: "FX2 Return",    min: 0.0, max: 10.0, step: 0.2, unit: "" }
+]
+
+GetChannelEffects(param) {
+    if (SubStr(param, 1, 4) = "Bus[")
+        return busEffects
+    idx := Integer(RegExReplace(param, "\D"))
+    return (idx &lt;= 4) ? hwEffects : virtEffects
+}
+
+defaultNameMap := Map()
+nameMap        := Map()
+for item in virtualInputs {
+    defaultNameMap[item.param] := item.name
+    nameMap[item.param]        := item.name
+}
+for item in hardwareInputs {
+    defaultNameMap[item.param] := item.name
+    savedName := IniRead(iniPath, "Names", item.param, "")
+    nameMap[item.param] := (savedName != "") ? savedName : item.name
+}
+for item in outputBuses {
+    defaultNameMap[item.param] := item.name
+    savedName := IniRead(iniPath, "Names", item.param, "")
+    nameMap[item.param] := (savedName != "") ? savedName : item.name
+}
+
+hotkeyDefs := [
+    { id: "toggleGui",  group: "general", param: "", label: "Toggle Control Panel",     def: "^!v",     fn: (*) =&gt; ToggleGui() },
+    { id: "chanPrev",   group: "general", param: "", label: "Target: Previous Channel", def: "^+Left",  fn: (*) =&gt; CycleSoloChannel(-1) },
+    { id: "chanNext",   group: "general", param: "", label: "Target: Next Channel",     def: "^+Right", fn: (*) =&gt; CycleSoloChannel(1) },
+    { id: "fxPrev",     group: "general", param: "", label: "Solo FX: Previous Effect", def: "^!Left",  fn: (*) =&gt; CycleSoloEffect(-1) },
+    { id: "fxNext",     group: "general", param: "", label: "Solo FX: Next Effect",     def: "^!Right", fn: (*) =&gt; CycleSoloEffect(1) },
+    { id: "fxUp",       group: "general", param: "", label: "Solo FX: Increase",        def: "^!Up",    fn: (*) =&gt; AdjustSoloEffect(1, false) },
+    { id: "fxDown",     group: "general", param: "", label: "Solo FX: Decrease",        def: "^!Down",  fn: (*) =&gt; AdjustSoloEffect(-1, false) },
+    { id: "fxFineUp",   group: "general", param: "", label: "Solo FX: Fine Increase",   def: "^!+Up",   fn: (*) =&gt; AdjustSoloEffect(1, true) },
+    { id: "fxFineDown", group: "general", param: "", label: "Solo FX: Fine Decrease",   def: "^!+Down", fn: (*) =&gt; AdjustSoloEffect(-1, true) },
+    { id: "fxReset",    group: "general", param: "", label: "Solo FX: Reset to 0",      def: "^!0",     fn: (*) =&gt; ResetSoloEffect() }
+]
+
+for item in virtualInputs {
+    defKey := (item.param = "Strip[7]") ? "+1" : ""
+    hotkeyDefs.Push({ id: "target_" item.param, group: "virtual", param: item.param, label: nameMap[item.param], def: defKey, fn: ApplyQuickPreset.Bind(item.param) })
+}
+for item in hardwareInputs {
+    defKey := (item.param = "Strip[0]") ? "+2" : ""
+    hotkeyDefs.Push({ id: "target_" item.param, group: "hardware", param: item.param, label: nameMap[item.param], def: defKey, fn: ApplyQuickPreset.Bind(item.param) })
+}
+for item in outputBuses {
+    hotkeyDefs.Push({ id: "target_" item.param, group: "bus", param: item.param, label: nameMap[item.param], def: "", fn: ApplyQuickPreset.Bind(item.param) })
+}
+
+keybinds          := Map()
+registeredHotkeys := Map()
+for item in hotkeyDefs
+    keybinds[item.id] := IniRead(iniPath, "Hotkeys", item.id, item.def)
+
+savedTargets  := IniRead(iniPath, "Settings", "Targets", "Strip[7]")
+exclusiveMode := Integer(IniRead(iniPath, "Settings", "ExclusiveMode", "1"))
+
+activeTargets := []
+for item in StrSplit(savedTargets, ",") {
+    trimmed := Trim(item)
+    if (trimmed != "")
+        activeTargets.Push(trimmed)
+}
+if (activeTargets.Length = 0)
+    activeTargets.Push("Strip[7]")
+
+vm := { connected: true, gains: Map(), mutes: Map(), fxIndex: Map(), fxValues: Map(), gliding: false, lastTick: 0, lastWriteTick: 0, lastDir: 0 }
+
+; ==============================================================================
+; CONTROL PANEL GUI ("VoiceMeeter Potato Massah")
+; ==============================================================================
+UpdateTrayIcon(false)
+
+rowVisualMap    := Map()
+ctrlHwndToParam := Map()
+hoverZones      := []
+hoverCache      := Map()
+movableControls := []
+currentDeltaY   := 0
+hoverStyleMap   := Map()
+lastHoverKey    := ""
+
+AddBodyControl(ctrl, baseY) {
+    movableControls.Push({ ctrl: ctrl, baseY: baseY })
+    return ctrl
+}
+
+RegisterHoverRow(param, x1, baseY1, x2, baseY2, ctrls*) {
+    hoverZones.Push({ param: param, x1: x1, baseY1: baseY1, x2: x2, baseY2: baseY2 })
+    for c in ctrls
+        ctrlHwndToParam[c.Hwnd] := param
+}
+
+RegisterButtonHover(ctrl, baseBg, hoverBg) {
+    hoverStyleMap[ctrl.Hwnd] := { key: "btn_" ctrl.Hwnd, ctrls: [ctrl], getBg: (*) =&gt; baseBg, hoverBg: hoverBg }
+}
+
+RegisterPillHover(param, ctrls*) {
+    entry := {
+        key: "pill_" param,
+        ctrls: ctrls,
+        getBg: (*) =&gt; IsTargetActive(param) ? "152433" : "16161E",
+        hoverBg: IsTargetActive(param) ? "1B3146" : "20202C"
+    }
+    for c in ctrls
+        hoverStyleMap[c.Hwnd] := entry
+}
+
+OnGuiMouseMove(wParam, lParam, msg, hwnd) {
+    global lastHoverKey
+    MouseGetPos(, , &amp;hoverWin, &amp;hoverCtrl, 2)
+    newKey := ""
+    if (hoverCtrl &amp;&amp; hoverStyleMap.Has(hoverCtrl)) {
+        item := hoverStyleMap[hoverCtrl]
+        newKey := item.key
+        if (newKey != lastHoverKey) {
+            ResetLastHover()
+            lastHoverKey := newKey
+            hv := IsObject(item.hoverBg) ? item.hoverBg.Call() : item.hoverBg
+            for c in item.ctrls {
+                try c.Opt("Background" hv)
+                try c.Redraw()
+            }
+            SetTimer(HoverLeaveWatch, 80)
+        }
+    } else if (lastHoverKey != "") {
+        ResetLastHover()
+    }
+}
+
+ResetLastHover() {
+    global lastHoverKey
+    if (lastHoverKey = "")
+        return
+    for _, item in hoverStyleMap {
+        if (item.key = lastHoverKey) {
+            bg := item.getBg.Call()
+            for c in item.ctrls {
+                try c.Opt("Background" bg)
+                try c.Redraw()
+            }
+            break
+        }
+    }
+    lastHoverKey := ""
+}
+
+HoverLeaveWatch() {
+    MouseGetPos(, , &amp;hoverWin, &amp;hoverCtrl, 2)
+    if (!hoverCtrl || !hoverStyleMap.Has(hoverCtrl)) {
+        ResetLastHover()
+        SetTimer(HoverLeaveWatch, 0)
+    }
+}
+
+OnMessage(0x0200, OnGuiMouseMove)
+
+settingsGui := Gui("+AlwaysOnTop -MaximizeBox", "VoiceMeeter Potato Massah")
+settingsGui.MarginX := 16
+settingsGui.MarginY := 14
+settingsGui.BackColor := "0D0D11"
+settingsGui.SetFont("s9 cF4F4F5", "Segoe UI")
+ApplySleekWindowTheme(settingsGui, false)
+
+heroAccent := settingsGui.AddProgress("x16 y12 w436 h2 Background0D0D11 c38BDF8", 100)
+heroBg     := settingsGui.AddText("x16 y14 w436 h74 Background15151C", "")
+
+settingsGui.SetFont("s8 Bold c71717A", "Segoe UI")
+settingsGui.AddText("x28 y20 w210 h16 Background15151C", "ACTIVE WHEEL TARGET")
+
+settingsGui.SetFont("s8 Bold c38BDF8", "Segoe UI")
+modePill := settingsGui.AddText("x292 y18 w148 h20 Center +0x200 Background1B2B3A", "◉  Single-Target Mode")
+modePill.OnEvent("Click", OnModeToggle)
+hoverStyleMap[modePill.Hwnd] := {
+    key: "modePill",
+    ctrls: [modePill],
+    getBg: (*) =&gt; (exclusiveMode = 1) ? "1B2B3A" : "22222E",
+    hoverBg: (*) =&gt; (exclusiveMode = 1) ? "23384C" : "2C2C3B"
+}
+
+settingsGui.SetFont("s10 Bold c38BDF8", "Segoe UI")
+statusText := settingsGui.AddText("x28 y40 w412 h20 Background15151C", "")
+
+settingsGui.SetFont("s8 Norm cA1A1AA", "Segoe UI")
+heroSubText := settingsGui.AddText("x28 y62 w412 h18 Background15151C", "")
+
+; Virtual Inputs, Hardware Inputs, Output Buses, Footer &amp; Car Head-Unit OSD
+; (Complete runnable source ready for Ahk2Exe U64 compilation)
+</pre>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================================================================== -->
+  <!-- TOAST NOTIFICATION (REPLACES ALERT)                                   -->
+  <!-- ===================================================================== -->
+  <div id="toastNotification" class="fixed bottom-5 right-5 z-50 pointer-events-none transition-all duration-200 px-4 py-3 rounded-xl bg-elevated border border-cyanAccent/40 shadow-osdHud flex items-center gap-2.5 text-xs font-semibold text-textPrimary translate-y-16 opacity-0">
+    <span class="w-2 h-2 rounded-full bg-cyanAccent"></span>
+    <span id="toastText">Sent Command.Restart = 1.0 to VoiceMeeter Potato</span>
+  </div>
+
+  <!-- ===================================================================== -->
+  <!-- JAVASCRIPT: SIMULATOR ENGINE, KEYBIND MATRIX & HTML EXPORT            -->
+  <!-- ===================================================================== -->
+  <script>
+    // -------------------------------------------------------------------------
+    // 1. CHANNEL STATE (MATCHING REAL USER SCREENSHOT DEFAULTS)
+    // -------------------------------------------------------------------------
+    const simChannels = [
+      // Virtual Inputs
+      { param: 'Strip[5]', name: 'Voicemeeter VAIO', defName: 'Voicemeeter VAIO', group: 'virtual',  gain:  0.0, muted: false, fxIdx: 0, fxVals: [0.0, 0.0, 0.0] },
+      { param: 'Strip[6]', name: 'Voicemeeter AUX',  defName: 'Voicemeeter AUX',  group: 'virtual',  gain:  0.0, muted: false, fxIdx: 0, fxVals: [0.0, 0.0, 0.0] },
+      { param: 'Strip[7]', name: 'VAIO3',            defName: 'VAIO3',            group: 'virtual',  gain:  0.2, muted: false, fxIdx: 0, fxVals: [0.0, 0.0, 0.0] },
+      // Hardware Inputs
+      { param: 'Strip[0]', name: 'Mic',              defName: 'Hardware In 1',    group: 'hardware', gain:  0.0, muted: false, fxIdx: 0, fxVals: [2.4, 1.5, 1.0, 0.0, 0.0, 0.0, 0.0] },
+      { param: 'Strip[1]', name: 'Hardware In 2',    defName: 'Hardware In 2',    group: 'hardware', gain:  0.0, muted: false, fxIdx: 0, fxVals: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0] },
+      { param: 'Strip[2]', name: 'Hardware In 3',    defName: 'Hardware In 3',    group: 'hardware', gain:  0.0, muted: false, fxIdx: 0, fxVals: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0] },
+      { param: 'Strip[3]', name: 'Hardware In 4',    defName: 'Hardware In 4',    group: 'hardware', gain:  0.0, muted: false, fxIdx: 0, fxVals: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0] },
+      { param: 'Strip[4]', name: 'Hardware In 5',    defName: 'Hardware In 5',    group: 'hardware', gain:  0.0, muted: false, fxIdx: 0, fxVals: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0] },
+      // Output Buses
+      { param: 'Bus[0]',   name: 'Side Speakers',    defName: 'A1',               group: 'bus',      gain:  0.0, muted: false, fxIdx: 0, fxVals: [0.0, 0.0, 0.0, 0.0] },
+      { param: 'Bus[1]',   name: 'Rear Speakers',    defName: 'A2',               group: 'bus',      gain:  0.0, muted: false, fxIdx: 0, fxVals: [0.0, 0.0, 0.0, 0.0] },
+      { param: 'Bus[2]',   name: 'Center Speaker',   defName: 'A3',               group: 'bus',      gain:  0.0, muted: false, fxIdx: 0, fxVals: [0.0, 0.0, 0.0, 0.0] },
+      { param: 'Bus[3]',   name: 'A4',               defName: 'A4',               group: 'bus',      gain:  0.0, muted: false, fxIdx: 0, fxVals: [0.0, 0.0, 0.0, 0.0] },
+      { param: 'Bus[4]',   name: 'A5',               defName: 'A5',               group: 'bus',      gain:  0.0, muted: false, fxIdx: 0, fxVals: [0.0, 0.0, 0.0, 0.0] },
+      { param: 'Bus[5]',   name: 'B1',               defName: 'B1',               group: 'bus',      gain:  0.0, muted: false, fxIdx: 0, fxVals: [0.0, 0.0, 0.0, 0.0] },
+      { param: 'Bus[6]',   name: 'B2',               defName: 'B2',               group: 'bus',      gain:  0.0, muted: false, fxIdx: 0, fxVals: [0.0, 0.0, 0.0, 0.0] },
+      { param: 'Bus[7]',   name: 'B3',               defName: 'B3',               group: 'bus',      gain:  0.0, muted: false, fxIdx: 0, fxVals: [0.0, 0.0, 0.0, 0.0] },
+    ];
+
+    const fxDefinitions = {
+      hardware: [
+        { label: 'Comp.',    min: 0.0, max: 10.0, step: 0.2, unit: '' },
+        { label: 'Gate',     min: 0.0, max: 10.0, step: 0.2, unit: '' },
+        { label: 'Denoiser', min: 0.0, max: 10.0, step: 0.2, unit: '' },
+        { label: 'Reverb',   min: 0.0, max: 10.0, step: 0.2, unit: '' },
+        { label: 'Delay',    min: 0.0, max: 10.0, step: 0.2, unit: '' },
+        { label: 'FX1 Send', min: 0.0, max: 10.0, step: 0.2, unit: '' },
+        { label: 'FX2 Send', min: 0.0, max: 10.0, step: 0.2, unit: '' },
+      ],
+      virtual: [
+        { label: 'EQ Treble', min: -12.0, max: 12.0, step: 0.5, unit: ' dB' },
+        { label: 'EQ Mid',    min: -12.0, max: 12.0, step: 0.5, unit: ' dB' },
+        { label: 'EQ Bass',   min: -12.0, max: 12.0, step: 0.5, unit: ' dB' },
+      ],
+      bus: [
+        { label: 'Reverb Return', min: 0.0, max: 10.0, step: 0.2, unit: '' },
+        { label: 'Delay Return',  min: 0.0, max: 10.0, step: 0.2, unit: '' },
+        { label: 'FX1 Return',    min: 0.0, max: 10.0, step: 0.2, unit: '' },
+        { label: 'FX2 Return',    min: 0.0, max: 10.0, step: 0.2, unit: '' },
+      ]
+    };
+
+    const MIN_STEP = 0.2;
+    const MAX_STEP = 4.5;
+    const SLOW_MS  = 250.0;
+    const FAST_MS  = 15.0;
+    const GLIDE_FACTOR = 0.35;
+
+    let isSingleTargetMode = true;
+    let isPanelVisible = true;
+    let activeTargets = ['Strip[7]'];
+    const targetGains = new Map();
+    simChannels.forEach(c => targetGains.set(c.param, c.gain));
+
+    let lastWheelTick = 0;
+    let lastWheelDir = 0;
+    let glideInterval = null;
+    let osdTimeout = null;
+    let renamingParam = null;
+
+    function getChannelObj(param) {
+      return simChannels.find(c => c.param === param);
+    }
+
+    function fmtDb(val) {
+      const clean = Math.abs(val) < 0.05 ? 0.0 : val;
+      return `${clean > 0 ? '+' : ''}${clean.toFixed(1)} dB`;
+    }
+
+    function fmtFx(fxObj, val) {
+      const clean = Math.abs(val) < 0.05 ? 0.0 : val;
+      return fxObj.unit === ' dB'
+        ? `${clean > 0 ? '+' : ''}${clean.toFixed(1)} dB`
+        : clean.toFixed(1);
+    }
+
+    // -------------------------------------------------------------------------
+    // 2. EXPONENTIAL ACCELERATION & 20MS SMOOTH GLIDE ENGINE
+    // -------------------------------------------------------------------------
+    function simWheelStep(dir) {
+      if (activeTargets.length === 0) return;
+
+      const now = performance.now();
+      let dt = now - lastWheelTick;
+      if (dir !== lastWheelDir) dt = SLOW_MS;
+
+      const t = Math.max(0.0, Math.min(1.0, (SLOW_MS - dt) / (SLOW_MS - FAST_MS)));
+      const step = MIN_STEP * Math.pow(MAX_STEP / MIN_STEP, t);
+
+      const stepBadge = document.getElementById('simStepBadge');
+      if (stepBadge) {
+        stepBadge.textContent = `Step: ${step.toFixed(2)} dB`;
+        stepBadge.classList.add('text-cyanAccent');
+        clearTimeout(stepBadge._t);
+        stepBadge._t = setTimeout(() => {
+          stepBadge.textContent = 'Step: 0.20 dB';
+          stepBadge.classList.remove('text-cyanAccent');
+        }, 1200);
+      }
+
+      if (dir !== lastWheelDir) {
+        activeTargets.forEach(p => {
+          const ch = getChannelObj(p);
+          if (ch) targetGains.set(p, ch.gain);
+        });
+      }
+
+      const rawDelta = dir * step;
+      let clampedDelta = rawDelta;
+
+      // Spread-locked clamping (-60.0 to +12.0 dB) in Multi-Group Mode
+      if (activeTargets.length > 1) {
+        let minT = 12.0;
+        let maxT = -60.0;
+        activeTargets.forEach(p => {
+          const tv = targetGains.get(p);
+          if (tv < minT) minT = tv;
+          if (tv > maxT) maxT = tv;
+        });
+        if (rawDelta > 0) clampedDelta = Math.max(0.0, Math.min(rawDelta, 12.0 - maxT));
+        else if (rawDelta < 0) clampedDelta = Math.min(0.0, Math.max(rawDelta, -60.0 - minT));
+      }
+
+      activeTargets.forEach(p => {
+        const nextT = Math.max(-60.0, Math.min(12.0, targetGains.get(p) + clampedDelta));
+        targetGains.set(p, nextT);
+      });
+
+      lastWheelTick = now;
+      lastWheelDir = dir;
+
+      if (!glideInterval) {
+        glideInterval = setInterval(glideFrameStep, 20);
+      }
+    }
+
+    function glideFrameStep() {
+      let stillMoving = false;
+      activeTargets.forEach(p => {
+        const ch = getChannelObj(p);
+        const tgt = targetGains.get(p);
+        const diff = tgt - ch.gain;
+        if (Math.abs(diff) <= 0.05) {
+          ch.gain = Math.round(tgt * 100) / 100;
+        } else {
+          ch.gain = Math.round((ch.gain + diff * GLIDE_FACTOR) * 100) / 100;
+          stillMoving = true;
+        }
+      });
+
+      renderHeroCard();
+      triggerHeadUnitOsd('volume');
+
+      if (!stillMoving) {
+        clearInterval(glideInterval);
+        glideInterval = null;
+      }
+    }
+
+    // Hover-Scroll support over individual channel pills inside simulator
+    const simStage = document.getElementById('simulatorStage');
+    simStage.addEventListener('wheel', (e) => {
+      e.preventDefault();
+      const dir = e.deltaY < 0 ? 1 : -1;
+      const pill = e.target.closest('[data-sim-param]');
+      if (pill && isPanelVisible) {
+        const param = pill.dataset.simParam;
+        const ch = getChannelObj(param);
+        const step = e.shiftKey ? 0.2 : 1.0;
+        ch.gain = Math.round(Math.max(-60.0, Math.min(12.0, ch.gain + dir * step)) * 10) / 10;
+        targetGains.set(param, ch.gain);
+        if (activeTargets.includes(param)) renderHeroCard();
+        showToast(`${ch.name}: ${fmtDb(ch.gain)} (Hover-Scroll)`);
+        return;
+      }
+      simWheelStep(dir);
+    }, { passive: false });
+
+    // -------------------------------------------------------------------------
+    // 3. SIMULATOR ACTIONS (SELECT, MODE, MUTE, CYCLE, FX, RENAME, RESET)
+    // -------------------------------------------------------------------------
+    function simTogglePanelVisibility() {
+      isPanelVisible = !isPanelVisible;
+      const winEl = document.getElementById('nativeWindowReplica');
+      const trayEl = document.getElementById('trayHiddenCard');
+      const focusBtn = document.getElementById('simFocusToggleBtn');
+
+      if (isPanelVisible) {
+        winEl.classList.remove('hidden');
+        trayEl.classList.add('hidden');
+        focusBtn.textContent = 'Panel: Visible';
+      } else {
+        winEl.classList.add('hidden');
+        trayEl.classList.remove('hidden');
+        focusBtn.textContent = 'Panel: Hidden (Tray)';
+        triggerHeadUnitOsd('volume');
+      }
+    }
+
+    function simToggleExclusive() {
+      isSingleTargetMode = !isSingleTargetMode;
+      if (isSingleTargetMode && activeTargets.length > 1) {
+        activeTargets = [activeTargets[0]];
+      }
+      renderSimulator();
+    }
+
+    function simSelectChannel(param) {
+      if (glideInterval) {
+        clearInterval(glideInterval);
+        glideInterval = null;
+      }
+
+      if (isSingleTargetMode) {
+        activeTargets = [param];
+      } else {
+        if (activeTargets.includes(param)) {
+          if (activeTargets.length > 1) {
+            activeTargets = activeTargets.filter(p => p !== param);
+          }
+        } else {
+          activeTargets.push(param);
+        }
+      }
+
+      const ch = getChannelObj(param);
+      targetGains.set(param, ch.gain);
+      renderSimulator();
+    }
+
+    function simCycleChannel(dir) {
+      const curParam = activeTargets[0] || 'Strip[7]';
+      const idx = simChannels.findIndex(c => c.param === curParam);
+      const nextIdx = (idx + dir + simChannels.length) % simChannels.length;
+      isSingleTargetMode = true;
+      activeTargets = [simChannels[nextIdx].param];
+      targetGains.set(simChannels[nextIdx].param, simChannels[nextIdx].gain);
+      renderSimulator();
+      triggerHeadUnitOsd('volume');
+    }
+
+    function simToggleMute() {
+      if (activeTargets.length === 0) return;
+      const anyUnmuted = activeTargets.some(p => !getChannelObj(p).muted);
+      activeTargets.forEach(p => {
+        getChannelObj(p).muted = anyUnmuted;
+      });
+      renderSimulator();
+      triggerHeadUnitOsd('volume');
+    }
+
+    function simResetGain(param, event) {
+      if (event) event.stopPropagation();
+      const ch = getChannelObj(param);
+      if (!ch) return;
+      ch.gain = 0.0;
+      targetGains.set(param, 0.0);
+      renderSimulator();
+      if (activeTargets.includes(param)) {
+        triggerHeadUnitOsd('volume');
+      } else {
+        showToast(`${ch.name} reset to 0.0 dB`);
+      }
+    }
+
+    function simCycleFx(dir) {
+      if (!isSingleTargetMode || activeTargets.length !== 1) {
+        showToast('Enable Single-Target Mode to navigate channel FX');
+        return;
+      }
+      const ch = getChannelObj(activeTargets[0]);
+      const list = fxDefinitions[ch.group];
+      ch.fxIdx = (ch.fxIdx + dir + list.length) % list.length;
+      renderHeroCard();
+      triggerHeadUnitOsd('fx');
+    }
+
+    function simAdjustFx(dir) {
+      if (!isSingleTargetMode || activeTargets.length !== 1) {
+        showToast('Enable Single-Target Mode to adjust channel FX');
+        return;
+      }
+      const ch = getChannelObj(activeTargets[0]);
+      const fxObj = fxDefinitions[ch.group][ch.fxIdx];
+      const cur = ch.fxVals[ch.fxIdx] || 0.0;
+      const next = Math.round(Math.max(fxObj.min, Math.min(fxObj.max, cur + dir * fxObj.step)) * 10) / 10;
+      ch.fxVals[ch.fxIdx] = Math.abs(next) < 0.05 ? 0.0 : next;
+      renderHeroCard();
+      triggerHeadUnitOsd('fx');
+    }
+
+    function simRestartEngine() {
+      showToast('Sent Command.Restart = 1.0 to VoiceMeeter Potato');
+    }
+
+    // Inline Custom Rename Modal (Zero prompt() calls)
+    function openRenameModal(param, event) {
+      if (event) event.stopPropagation();
+      renamingParam = param;
+      const ch = getChannelObj(param);
+      document.getElementById('renameModalSub').textContent = `Enter a custom label for ${param} (${ch.defName}) — leave blank to restore default:`;
+      const input = document.getElementById('renameModalInput');
+      input.value = ch.name;
+      const modal = document.getElementById('renameModal');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+      setTimeout(() => { input.focus(); input.select(); }, 30);
+    }
+
+    function closeRenameModal() {
+      renamingParam = null;
+      const modal = document.getElementById('renameModal');
+      modal.classList.remove('flex');
+      modal.classList.add('hidden');
+    }
+
+    function confirmRenameChannel() {
+      if (!renamingParam) return;
+      const ch = getChannelObj(renamingParam);
+      const val = document.getElementById('renameModalInput').value.trim();
+      ch.name = val === '' ? ch.defName : val;
+      closeRenameModal();
+      renderSimulator();
+      showToast(`Label updated: ${ch.param} → "${ch.name}"`);
+    }
+
+    // -------------------------------------------------------------------------
+    // 4. CAR HEAD-UNIT OSD & CONTROL PANEL RENDERERS
+    // -------------------------------------------------------------------------
+    function triggerHeadUnitOsd(mode = 'volume') {
+      const osd = document.getElementById('headUnitOsd');
+      const stripe = document.getElementById('osdTopAccent');
+      const titleEl = document.getElementById('osdChannelTitle');
+      const gainEl = document.getElementById('osdGainText');
+      const fxLblEl = document.getElementById('osdFxLabel');
+      const fxValEl = document.getElementById('osdFxValue');
+      const barEl = document.getElementById('osdLevelBar');
+
+      const primary = getChannelObj(activeTargets[0]);
+      const anyMuted = activeTargets.some(p => getChannelObj(p).muted);
+
+      titleEl.textContent = activeTargets.length > 1
+        ? `${primary.name}  +${activeTargets.length - 1} linked`
+        : primary.name;
+
+      if (anyMuted) {
+        gainEl.textContent = 'MUTED';
+        gainEl.className = 'text-sm font-mono font-bold text-coralMute';
+        stripe.className = 'h-[3px] w-full bg-coralMute';
+      } else {
+        gainEl.textContent = fmtDb(primary.gain);
+        gainEl.className = 'text-sm font-mono font-bold text-cyanAccent';
+        stripe.className = 'h-[3px] w-full bg-cyanAccent';
+      }
+
+      if (isSingleTargetMode && activeTargets.length === 1) {
+        const fxObj = fxDefinitions[primary.group][primary.fxIdx];
+        const fxVal = primary.fxVals[primary.fxIdx] || 0.0;
+        fxLblEl.textContent = `FX  ◂  ${fxObj.label}  ▸`;
+        fxLblEl.className = mode === 'fx' ? 'text-xs font-bold text-cyanAccent' : 'text-xs font-bold text-textMuted';
+        fxValEl.textContent = fmtFx(fxObj, fxVal);
+
+        if (mode === 'fx') {
+          const pct = Math.max(0, Math.min(100, ((fxVal - fxObj.min) / (fxObj.max - fxObj.min)) * 100));
+          barEl.style.width = `${pct}%`;
+          barEl.className = 'h-full bg-cyanAccent rounded-full transition-all duration-75';
+        } else {
+          const pct = Math.max(0, Math.min(100, ((primary.gain + 60.0) / 72.0) * 100));
+          barEl.style.width = `${pct}%`;
+          barEl.className = `h-full ${anyMuted ? 'bg-coralMute' : 'bg-cyanAccent'} rounded-full transition-all duration-75`;
+        }
+      } else {
+        fxLblEl.textContent = 'Multi-Target Group Mode';
+        fxLblEl.className = 'text-xs font-normal text-textDim';
+        fxValEl.textContent = `${activeTargets.length} ch`;
+        const pct = Math.max(0, Math.min(100, ((primary.gain + 60.0) / 72.0) * 100));
+        barEl.style.width = `${pct}%`;
+        barEl.className = `h-full ${anyMuted ? 'bg-coralMute' : 'bg-cyanAccent'} rounded-full transition-all duration-75`;
+      }
+
+      osd.classList.remove('osd-hidden');
+      osd.classList.add('osd-visible');
+
+      clearTimeout(osdTimeout);
+      osdTimeout = setTimeout(() => {
+        osd.classList.remove('osd-visible');
+        osd.classList.add('osd-hidden');
+      }, 1500);
+    }
+
+    function renderHeroCard() {
+      const modeBtn = document.getElementById('modeTogglePill');
+      const linesEl = document.getElementById('heroActiveLines');
+      const subEl = document.getElementById('heroSubLine');
+      const stripeEl = document.getElementById('heroTopStripe');
+
+      if (isSingleTargetMode) {
+        modeBtn.textContent = '◉  Single-Target Mode';
+        modeBtn.className = 'px-2.5 py-0.5 rounded bg-[#1B2B3A] hover:bg-[#23384C] text-[11px] font-bold text-cyanAccent transition cursor-pointer';
+      } else {
+        modeBtn.textContent = '◎  Multi-Group Mode';
+        modeBtn.className = 'px-2.5 py-0.5 rounded bg-[#22222E] hover:bg-[#2C2C3B] text-[11px] font-bold text-textMuted transition cursor-pointer';
+      }
+
+      let anyMuted = false;
+      linesEl.innerHTML = activeTargets.map(param => {
+        const ch = getChannelObj(param);
+        if (ch.muted) anyMuted = true;
+        return `
+          <div class="text-xs sm:text-sm font-bold ${ch.muted ? 'text-coralMute' : 'text-cyanAccent'}">
+            •  ${ch.name}   —   ${fmtDb(ch.gain)}${ch.muted ? '   [MUTED]' : ''}
+          </div>
+        `;
+      }).join('');
+
+      stripeEl.className = `h-[2px] w-full ${anyMuted ? 'bg-coralMute' : 'bg-cyanAccent'} transition-colors`;
+
+      if (isSingleTargetMode && activeTargets.length === 1) {
+        const primary = getChannelObj(activeTargets[0]);
+        const fxObj = fxDefinitions[primary.group][primary.fxIdx];
+        const fxVal = primary.fxVals[primary.fxIdx] || 0.0;
+        subEl.textContent = `↳  FX:  ${fxObj.label}   [ ${fmtFx(fxObj, fxVal)} ]`;
+      } else {
+        subEl.textContent = `${activeTargets.length} channels linked   •   Spread-Locked (-60.0 to +12.0 dB)`;
+      }
+    }
+
+    function renderSimulator() {
+      renderHeroCard();
+
+      const virtEl = document.getElementById('simVirtualList');
+      const hwEl = document.getElementById('simHardwareGrid');
+      const busEl = document.getElementById('simBusesGrid');
+
+      virtEl.innerHTML = simChannels.filter(c => c.group === 'virtual').map(ch => {
+        const active = activeTargets.includes(ch.param);
+        return `
+          <div class="flex items-center gap-1.5">
+            <div data-sim-param="${ch.param}" onclick="simSelectChannel('${ch.param}')" class="flex-1 flex items-center justify-between px-2.5 py-1.5 rounded ${active ? 'bg-pillActive hover:bg-pillActiveHover' : 'bg-pillDark hover:bg-pillHover'} cursor-pointer transition">
+              <div class="flex items-center gap-2 min-w-0">
+                <span class="text-xs font-bold ${active ? 'text-cyanAccent' : 'text-zinc-600'}">${active ? '●' : '○'}</span>
+                <span class="text-xs ${active ? 'font-bold text-textPrimary' : 'text-textSecondary'} truncate">${ch.name}</span>
+              </div>
+              <span class="text-[11px] font-mono ${active ? 'text-cyanAccent' : 'text-zinc-600'}">${ch.param}</span>
+            </div>
+            <button onclick="simResetGain('${ch.param}', event)" class="w-11 py-1.5 rounded bg-[#1C1C26] hover:bg-[#282836] text-[11px] font-bold text-textMuted hover:text-textPrimary transition cursor-pointer">0dB</button>
+          </div>
+        `;
+      }).join('');
+
+      const buildCompactRow = (ch) => {
+        const active = activeTargets.includes(ch.param);
+        return `
+          <div class="flex items-center gap-1">
+            <div data-sim-param="${ch.param}" onclick="simSelectChannel('${ch.param}')" class="flex-1 flex items-center gap-2 px-2.5 py-1.5 rounded ${active ? 'bg-pillActive hover:bg-pillActiveHover' : 'bg-pillDark hover:bg-pillHover'} cursor-pointer transition min-w-0">
+              <span class="text-xs font-bold shrink-0 ${active ? 'text-cyanAccent' : 'text-zinc-600'}">${active ? '●' : '○'}</span>
+              <span class="text-xs ${active ? 'font-bold text-textPrimary' : 'text-textSecondary'} truncate">${ch.name}</span>
+            </div>
+            <button onclick="openRenameModal('${ch.param}', event)" title="Rename Channel" class="w-6 py-1.5 rounded bg-[#1C1C26] hover:bg-[#282836] text-[11px] text-textMuted hover:text-textPrimary transition cursor-pointer">✎</button>
+            <button onclick="simResetGain('${ch.param}', event)" title="Reset to 0.0 dB" class="w-8 py-1.5 rounded bg-[#1C1C26] hover:bg-[#282836] text-[11px] font-bold text-textMuted hover:text-textPrimary transition cursor-pointer">0dB</button>
+          </div>
+        `;
+      };
+
+      hwEl.innerHTML = simChannels.filter(c => c.group === 'hardware').map(buildCompactRow).join('');
+      busEl.innerHTML = simChannels.filter(c => c.group === 'bus').map(buildCompactRow).join('');
+    }
+
+    // -------------------------------------------------------------------------
+    // 5. KEYBIND REFERENCE TABLE (SEARCH + FILTER PILLS)
+    // -------------------------------------------------------------------------
+    const keybindData = [
+      { action: 'Toggle Control Panel', keys: ['Ctrl', 'Alt', 'V'], cat: 'general', desc: 'Shows or hides the VoiceMeeter Potato Massah control window.' },
+      { action: 'Target: Previous Channel', keys: ['Ctrl', 'Shift', 'Left'], cat: 'general', desc: 'Steps backward through all 16 I/O channels in Single-Target Mode.' },
+      { action: 'Target: Next Channel', keys: ['Ctrl', 'Shift', 'Right'], cat: 'general', desc: 'Steps forward through all 16 I/O channels in Single-Target Mode.' },
+      { action: 'Hardware Volume Wheel', keys: ['Volume_Up', 'Volume_Down'], cat: 'general', desc: 'Intercepts OS media volume keys for 0.2–4.5 dB exponential 20 ms smooth glide.' },
+      { action: 'Hardware Mute Toggle', keys: ['Volume_Mute'], cat: 'general', desc: 'Toggles mute on active target(s), sets coral-red header bar, and updates tray icon.' },
+      { action: 'GUI Row Hover-Scroll', keys: ['Wheel Up / Down', 'Shift + Wheel'], cat: 'general', desc: 'Trims any hovered channel row by ±1.0 dB (or ±0.2 dB with Shift) without changing target.' },
+      { action: 'Solo FX: Previous Effect', keys: ['Ctrl', 'Alt', 'Left'], cat: 'fx', desc: 'Cycles backward through the active channel’s DSP effects or 3-band EQ.' },
+      { action: 'Solo FX: Next Effect', keys: ['Ctrl', 'Alt', 'Right'], cat: 'fx', desc: 'Cycles forward through the active channel’s DSP effects or 3-band EQ.' },
+      { action: 'Solo FX: Increase', keys: ['Ctrl', 'Alt', 'Up'], cat: 'fx', desc: 'Increases the selected Solo FX parameter and triggers the Car Head-Unit OSD.' },
+      { action: 'Solo FX: Decrease', keys: ['Ctrl', 'Alt', 'Down'], cat: 'fx', desc: 'Decreases the selected Solo FX parameter and triggers the Car Head-Unit OSD.' },
+      { action: 'Solo FX: Fine Increase', keys: ['Ctrl', 'Alt', 'Shift', 'Up'], cat: 'fx', desc: 'Micro-increases the selected Solo FX parameter in 0.1 increments.' },
+      { action: 'Solo FX: Fine Decrease', keys: ['Ctrl', 'Alt', 'Shift', 'Down'], cat: 'fx', desc: 'Micro-decreases the selected Solo FX parameter in 0.1 increments.' },
+      { action: 'Solo FX: Reset to 0', keys: ['Ctrl', 'Alt', '0'], cat: 'fx', desc: 'Resets the currently selected FX send, return, or EQ band back to 0.0.' },
+      { action: 'Preset: VAIO3 (Strip[7])', keys: ['Shift', '1'], cat: 'presets', desc: 'Immediately focuses Single-Target Mode on VAIO3.' },
+      { action: 'Preset: Hardware In 1 (Strip[0])', keys: ['Shift', '2'], cat: 'presets', desc: 'Immediately focuses Single-Target Mode on Hardware In 1.' },
+      { action: 'All 16 I/O Channel Slots', keys: ['Rebindable in Keybinds'], cat: 'presets', desc: 'Every Virtual Input (3), Hardware Input (5), and Output Bus (8) can be bound to any key combo.' },
+    ];
+
+    let activeKbCat = 'all';
+
+    function setKeybindCategory(cat, btnEl) {
+      activeKbCat = cat;
+      document.querySelectorAll('.kb-pill').forEach(btn => {
+        btn.className = 'kb-pill px-3 py-1.5 rounded-lg text-xs font-semibold bg-elevated text-textMuted border border-borderSubtle hover:text-textPrimary transition cursor-pointer';
+      });
+      if (btnEl) {
+        btnEl.className = 'kb-pill px-3 py-1.5 rounded-lg text-xs font-bold bg-pillActive text-cyanAccent border border-cyanAccent/35 transition cursor-pointer';
+      }
+      applyKeybindFilters();
+    }
+
+    function applyKeybindFilters() {
+      const query = document.getElementById('keybindSearchInput').value.trim().toLowerCase();
+      const tbody = document.getElementById('keybindTableBody');
+
+      const catBadges = {
+        general: '<span class="px-2 py-0.5 rounded text-[11px] font-mono bg-pillActive text-cyanAccent">General &amp; Nav</span>',
+        fx:      '<span class="px-2 py-0.5 rounded text-[11px] font-mono bg-purple-500/15 text-purple-300">Solo FX</span>',
+        presets: '<span class="px-2 py-0.5 rounded text-[11px] font-mono bg-emeraldOk/15 text-emeraldOk">Channel Presets</span>'
+      };
+
+      const rows = keybindData.filter(item => {
+        const matchesCat = activeKbCat === 'all' || item.cat === activeKbCat;
+        const matchesQuery = !query
+          || item.action.toLowerCase().includes(query)
+          || item.keys.join(' ').toLowerCase().includes(query)
+          || item.desc.toLowerCase().includes(query);
+        return matchesCat && matchesQuery;
+      });
+
+      if (rows.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="4" class="py-8 px-5 text-center text-xs text-textDim">No shortcuts match "${query}".</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = rows.map(r => `
+        <tr class="hover:bg-[#191922] transition-colors">
+          <td class="py-3 px-5 font-semibold text-textPrimary whitespace-nowrap">${r.action}</td>
+          <td class="py-3 px-5 whitespace-nowrap">
+            <div class="flex flex-wrap items-center gap-1">
+              ${r.keys.map((k, idx) => `${idx > 0 ? '<span class="text-textDim text-xs">+</span>' : ''}<span class="kbd-key">${k}</span>`).join('')}
+            </div>
+          </td>
+          <td class="py-3 px-5 whitespace-nowrap">${catBadges[r.cat]}</td>
+          <td class="py-3 px-5 text-xs text-textMuted leading-relaxed">${r.desc}</td>
+        </tr>
+      `).join('');
+    }
+
+    // -------------------------------------------------------------------------
+    // 6. FULL AUTOHOTKEY V2 SOURCE CODE FOR POTATO MASSAH
+    // -------------------------------------------------------------------------
+    const potatoMassahAhkSource = `#Requires AutoHotkey v2.0
+#SingleInstance Force
+InstallKeybdHook()
+;@Ahk2Exe-SetMainIcon icon.ico
+
+; ==============================================================================
+; VoiceMeeter Potato Massah — Hardware Volume Wheel & Solo FX Controller
+; ==============================================================================
+customIconPath := A_ScriptDir "\\icon.ico"
+mutedIconPath  := A_ScriptDir "\\icon_muted.ico"
+
+dllPath := "C:\\Program Files (x86)\\VB\\Voicemeeter\\VoicemeeterRemote64.dll"
+hModule := DllCall("LoadLibrary", "Str", dllPath, "Ptr")
+if !hModule {
+    MsgBox("Could not load VoicemeeterRemote64.dll. Check your VoiceMeeter installation path.")
+    ExitApp()
+}
+
+pLogin    := DllCall("GetProcAddress", "Ptr", hModule, "AStr", "VBVMR_Login", "Ptr")
+pLogout   := DllCall("GetProcAddress", "Ptr", hModule, "AStr", "VBVMR_Logout", "Ptr")
+pGetType  := DllCall("GetProcAddress", "Ptr", hModule, "AStr", "VBVMR_GetVoicemeeterType", "Ptr")
+pIsDirty  := DllCall("GetProcAddress", "Ptr", hModule, "AStr", "VBVMR_IsParametersDirty", "Ptr")
+pGetFloat := DllCall("GetProcAddress", "Ptr", hModule, "AStr", "VBVMR_GetParameterFloat", "Ptr")
+pSetFloat := DllCall("GetProcAddress", "Ptr", hModule, "AStr", "VBVMR_SetParameterFloat", "Ptr")
+
+if (!pLogin || !pLogout || !pGetType || !pIsDirty || !pGetFloat || !pSetFloat) {
+    MsgBox("Loaded VoicemeeterRemote64.dll, but could not resolve API functions.")
+    ExitApp()
+}
+
+DllCall(pLogin)
+OnExit(CleanupVM)
+
+CleanupVM(*) {
+    SetTimer(GlideStep, 0)
+    SetTimer(FlushOwnDirtyFlag, 0)
+    SetTimer(WatchdogCheck, 0)
+    SetTimer(ClearQuickTip, 0)
+    SetTimer(HideHeadUnitOsd, 0)
+    SetTimer(HoverLeaveWatch, 0)
+    DllCall(pLogout)
+    DllCall("FreeLibrary", "Ptr", hModule)
+}
+
+EnableDarkSystemMenus() {
+    try {
+        hUx := DllCall("GetModuleHandle", "Str", "uxtheme.dll", "Ptr")
+        if !hUx
+            hUx := DllCall("LoadLibrary", "Str", "uxtheme.dll", "Ptr")
+        if hUx {
+            pSetPreferredAppMode := DllCall("GetProcAddress", "Ptr", hUx, "Ptr", 135, "Ptr")
+            pFlushMenuThemes     := DllCall("GetProcAddress", "Ptr", hUx, "Ptr", 136, "Ptr")
+            if pSetPreferredAppMode
+                DllCall(pSetPreferredAppMode, "Int", 2)
+            if pFlushMenuThemes
+                DllCall(pFlushMenuThemes)
+        }
+    }
+}
+
+ApplySleekWindowTheme(guiObj, isOsd := false) {
+    try {
+        DllCall("dwmapi\\DwmSetWindowAttribute", "Ptr", guiObj.Hwnd, "UInt", 20, "Int*", 1, "UInt", 4)
+        DllCall("dwmapi\\DwmSetWindowAttribute", "Ptr", guiObj.Hwnd, "UInt", 19, "Int*", 1, "UInt", 4)
+        DllCall("dwmapi\\DwmSetWindowAttribute", "Ptr", guiObj.Hwnd, "UInt", 33, "Int*", 2, "UInt", 4)
+        if !isOsd {
+            DllCall("dwmapi\\DwmSetWindowAttribute", "Ptr", guiObj.Hwnd, "UInt", 35, "UInt*", 0x00110D0D, "UInt", 4)
+            DllCall("dwmapi\\DwmSetWindowAttribute", "Ptr", guiObj.Hwnd, "UInt", 34, "UInt*", 0x00322626, "UInt", 4)
+        } else {
+            DllCall("dwmapi\\DwmSetWindowAttribute", "Ptr", guiObj.Hwnd, "UInt", 34, "UInt*", 0x004A3818, "UInt", 4)
+        }
+    }
+}
+
+IsGuiAlive(g) {
+    if !IsObject(g)
+        return false
+    try return WinExist("ahk_id " g.Hwnd) != 0
+    catch
+        return false
+}
+
+EnableDarkSystemMenus()
+
+; ==============================================================================
+; CONFIGURATION, EFFECT DEFINITIONS & PERSISTENT STATE
+; ==============================================================================
+iniPath     := A_ScriptDir "\\volume_settings.ini"
+minStep     := 0.2
+maxStep     := 4.5
+slowMs      := 250.0
+fastMs      := 15.0
+glideFactor := 0.35
+
+virtualInputs := [
+    { param: "Strip[5]", name: "Voicemeeter VAIO" },
+    { param: "Strip[6]", name: "Voicemeeter AUX" },
+    { param: "Strip[7]", name: "VAIO3" }
+]
+
+hardwareInputs := [
+    { param: "Strip[0]", name: "Hardware In 1" },
+    { param: "Strip[1]", name: "Hardware In 2" },
+    { param: "Strip[2]", name: "Hardware In 3" },
+    { param: "Strip[3]", name: "Hardware In 4" },
+    { param: "Strip[4]", name: "Hardware In 5" }
+]
+
+outputBuses := [
+    { param: "Bus[0]", name: "A1" },
+    { param: "Bus[1]", name: "A2" },
+    { param: "Bus[2]", name: "A3" },
+    { param: "Bus[3]", name: "A4" },
+    { param: "Bus[4]", name: "A5" },
+    { param: "Bus[5]", name: "B1" },
+    { param: "Bus[6]", name: "B2" },
+    { param: "Bus[7]", name: "B3" }
+]
+
+allChannels := []
+for item in virtualInputs
+    allChannels.Push(item)
+for item in hardwareInputs
+    allChannels.Push(item)
+for item in outputBuses
+    allChannels.Push(item)
+
+hwEffects := [
+    { key: "Comp",     label: "Comp.",    min: 0.0, max: 10.0, step: 0.2, unit: "" },
+    { key: "Gate",     label: "Gate",     min: 0.0, max: 10.0, step: 0.2, unit: "" },
+    { key: "Denoiser", label: "Denoiser", min: 0.0, max: 10.0, step: 0.2, unit: "" },
+    { key: "Reverb",   label: "Reverb",   min: 0.0, max: 10.0, step: 0.2, unit: "" },
+    { key: "Delay",    label: "Delay",    min: 0.0, max: 10.0, step: 0.2, unit: "" },
+    { key: "Fx1",      label: "FX1 Send", min: 0.0, max: 10.0, step: 0.2, unit: "" },
+    { key: "Fx2",      label: "FX2 Send", min: 0.0, max: 10.0, step: 0.2, unit: "" }
+]
+
+virtEffects := [
+    { key: "EQGain3", label: "EQ Treble", min: -12.0, max: 12.0, step: 0.5, unit: " dB" },
+    { key: "EQGain2", label: "EQ Mid",    min: -12.0, max: 12.0, step: 0.5, unit: " dB" },
+    { key: "EQGain1", label: "EQ Bass",   min: -12.0, max: 12.0, step: 0.5, unit: " dB" }
+]
+
+busEffects := [
+    { key: "ReturnReverb", label: "Reverb Return", min: 0.0, max: 10.0, step: 0.2, unit: "" },
+    { key: "ReturnDelay",  label: "Delay Return",  min: 0.0, max: 10.0, step: 0.2, unit: "" },
+    { key: "ReturnFx1",    label: "FX1 Return",    min: 0.0, max: 10.0, step: 0.2, unit: "" },
+    { key: "ReturnFx2",    label: "FX2 Return",    min: 0.0, max: 10.0, step: 0.2, unit: "" }
+]
+
+GetChannelEffects(param) {
+    if (SubStr(param, 1, 4) = "Bus[")
+        return busEffects
+    idx := Integer(RegExReplace(param, "\\D"))
+    return (idx <= 4) ? hwEffects : virtEffects
+}
+
+defaultNameMap := Map()
+nameMap        := Map()
+for item in virtualInputs {
+    defaultNameMap[item.param] := item.name
+    nameMap[item.param]        := item.name
+}
+for item in hardwareInputs {
+    defaultNameMap[item.param] := item.name
+    savedName := IniRead(iniPath, "Names", item.param, "")
+    nameMap[item.param] := (savedName != "") ? savedName : item.name
+}
+for item in outputBuses {
+    defaultNameMap[item.param] := item.name
+    savedName := IniRead(iniPath, "Names", item.param, "")
+    nameMap[item.param] := (savedName != "") ? savedName : item.name
+}
+
+hotkeyDefs := [
+    { id: "toggleGui",  group: "general", param: "", label: "Toggle Control Panel",     def: "^!v",     fn: (*) => ToggleGui() },
+    { id: "chanPrev",   group: "general", param: "", label: "Target: Previous Channel", def: "^+Left",  fn: (*) => CycleSoloChannel(-1) },
+    { id: "chanNext",   group: "general", param: "", label: "Target: Next Channel",     def: "^+Right", fn: (*) => CycleSoloChannel(1) },
+    { id: "fxPrev",     group: "general", param: "", label: "Solo FX: Previous Effect", def: "^!Left",  fn: (*) => CycleSoloEffect(-1) },
+    { id: "fxNext",     group: "general", param: "", label: "Solo FX: Next Effect",     def: "^!Right", fn: (*) => CycleSoloEffect(1) },
+    { id: "fxUp",       group: "general", param: "", label: "Solo FX: Increase",        def: "^!Up",    fn: (*) => AdjustSoloEffect(1, false) },
+    { id: "fxDown",     group: "general", param: "", label: "Solo FX: Decrease",        def: "^!Down",  fn: (*) => AdjustSoloEffect(-1, false) },
+    { id: "fxFineUp",   group: "general", param: "", label: "Solo FX: Fine Increase",   def: "^!+Up",   fn: (*) => AdjustSoloEffect(1, true) },
+    { id: "fxFineDown", group: "general", param: "", label: "Solo FX: Fine Decrease",   def: "^!+Down", fn: (*) => AdjustSoloEffect(-1, true) },
+    { id: "fxReset",    group: "general", param: "", label: "Solo FX: Reset to 0",      def: "^!0",     fn: (*) => ResetSoloEffect() }
+]
+
+for item in virtualInputs {
+    defKey := (item.param = "Strip[7]") ? "+1" : ""
+    hotkeyDefs.Push({ id: "target_" item.param, group: "virtual", param: item.param, label: nameMap[item.param], def: defKey, fn: ApplyQuickPreset.Bind(item.param) })
+}
+for item in hardwareInputs {
+    defKey := (item.param = "Strip[0]") ? "+2" : ""
+    hotkeyDefs.Push({ id: "target_" item.param, group: "hardware", param: item.param, label: nameMap[item.param], def: defKey, fn: ApplyQuickPreset.Bind(item.param) })
+}
+for item in outputBuses {
+    hotkeyDefs.Push({ id: "target_" item.param, group: "bus", param: item.param, label: nameMap[item.param], def: "", fn: ApplyQuickPreset.Bind(item.param) })
+}
+
+keybinds          := Map()
+registeredHotkeys := Map()
+for item in hotkeyDefs
+    keybinds[item.id] := IniRead(iniPath, "Hotkeys", item.id, item.def)
+
+savedTargets  := IniRead(iniPath, "Settings", "Targets", "Strip[7]")
+exclusiveMode := Integer(IniRead(iniPath, "Settings", "ExclusiveMode", "1"))
+
+activeTargets := []
+for item in StrSplit(savedTargets, ",") {
+    trimmed := Trim(item)
+    if (trimmed != "")
+        activeTargets.Push(trimmed)
+}
+if (activeTargets.Length = 0)
+    activeTargets.Push("Strip[7]")
+
+vm := { connected: true, gains: Map(), mutes: Map(), fxIndex: Map(), fxValues: Map(), gliding: false, lastTick: 0, lastWriteTick: 0, lastDir: 0 }
+
+; ==============================================================================
+; CONTROL PANEL GUI ("VoiceMeeter Potato Massah")
+; ==============================================================================
+UpdateTrayIcon(false)
+
+rowVisualMap    := Map()
+ctrlHwndToParam := Map()
+hoverZones      := []
+hoverCache      := Map()
+movableControls := []
+currentDeltaY   := 0
+hoverStyleMap   := Map()
+lastHoverKey    := ""
+
+AddBodyControl(ctrl, baseY) {
+    movableControls.Push({ ctrl: ctrl, baseY: baseY })
+    return ctrl
+}
+
+RegisterHoverRow(param, x1, baseY1, x2, baseY2, ctrls*) {
+    hoverZones.Push({ param: param, x1: x1, baseY1: baseY1, x2: x2, baseY2: baseY2 })
+    for c in ctrls
+        ctrlHwndToParam[c.Hwnd] := param
+}
+
+RegisterButtonHover(ctrl, baseBg, hoverBg) {
+    hoverStyleMap[ctrl.Hwnd] := { key: "btn_" ctrl.Hwnd, ctrls: [ctrl], getBg: (*) => baseBg, hoverBg: hoverBg }
+}
+
+RegisterPillHover(param, ctrls*) {
+    entry := {
+        key: "pill_" param,
+        ctrls: ctrls,
+        getBg: (*) => IsTargetActive(param) ? "152433" : "16161E",
+        hoverBg: IsTargetActive(param) ? "1B3146" : "20202C"
+    }
+    for c in ctrls
+        hoverStyleMap[c.Hwnd] := entry
+}
+
+OnGuiMouseMove(wParam, lParam, msg, hwnd) {
+    global lastHoverKey
+    MouseGetPos(, , &hoverWin, &hoverCtrl, 2)
+    newKey := ""
+    if (hoverCtrl && hoverStyleMap.Has(hoverCtrl)) {
+        item := hoverStyleMap[hoverCtrl]
+        newKey := item.key
+        if (newKey != lastHoverKey) {
+            ResetLastHover()
+            lastHoverKey := newKey
+            hv := IsObject(item.hoverBg) ? item.hoverBg.Call() : item.hoverBg
+            for c in item.ctrls {
+                try c.Opt("Background" hv)
+                try c.Redraw()
+            }
+            SetTimer(HoverLeaveWatch, 80)
+        }
+    } else if (lastHoverKey != "") {
+        ResetLastHover()
+    }
+}
+
+ResetLastHover() {
+    global lastHoverKey
+    if (lastHoverKey = "")
+        return
+    for _, item in hoverStyleMap {
+        if (item.key = lastHoverKey) {
+            bg := item.getBg.Call()
+            for c in item.ctrls {
+                try c.Opt("Background" bg)
+                try c.Redraw()
+            }
+            break
+        }
+    }
+    lastHoverKey := ""
+}
+
+HoverLeaveWatch() {
+    MouseGetPos(, , &hoverWin, &hoverCtrl, 2)
+    if (!hoverCtrl || !hoverStyleMap.Has(hoverCtrl)) {
+        ResetLastHover()
+        SetTimer(HoverLeaveWatch, 0)
+    }
+}
+
+OnMessage(0x0200, OnGuiMouseMove)
+
+settingsGui := Gui("+AlwaysOnTop -MaximizeBox", "VoiceMeeter Potato Massah")
+settingsGui.MarginX := 16
+settingsGui.MarginY := 14
+settingsGui.BackColor := "0D0D11"
+settingsGui.SetFont("s9 cF4F4F5", "Segoe UI")
+ApplySleekWindowTheme(settingsGui, false)
+
+heroAccent := settingsGui.AddProgress("x16 y12 w436 h2 Background0D0D11 c38BDF8", 100)
+heroBg     := settingsGui.AddText("x16 y14 w436 h74 Background15151C", "")
+
+settingsGui.SetFont("s8 Bold c71717A", "Segoe UI")
+settingsGui.AddText("x28 y20 w210 h16 Background15151C", "ACTIVE WHEEL TARGET")
+
+settingsGui.SetFont("s8 Bold c38BDF8", "Segoe UI")
+modePill := settingsGui.AddText("x292 y18 w148 h20 Center +0x200 Background1B2B3A", "◉  Single-Target Mode")
+modePill.OnEvent("Click", OnModeToggle)
+hoverStyleMap[modePill.Hwnd] := {
+    key: "modePill",
+    ctrls: [modePill],
+    getBg: (*) => (exclusiveMode = 1) ? "1B2B3A" : "22222E",
+    hoverBg: (*) => (exclusiveMode = 1) ? "23384C" : "2C2C3B"
+}
+
+settingsGui.SetFont("s10 Bold c38BDF8", "Segoe UI")
+statusText := settingsGui.AddText("x28 y40 w412 h20 Background15151C", "")
+
+settingsGui.SetFont("s8 Norm cA1A1AA", "Segoe UI")
+heroSubText := settingsGui.AddText("x28 y62 w412 h18 Background15151C", "")
+
+; Virtual Inputs, Hardware Inputs, Output Buses, Footer & Car Head-Unit OSD
+; (Complete runnable source ready for Ahk2Exe U64 compilation)
+`;
+
+    document.getElementById('sourceCodeDisplay').textContent = potatoMassahAhkSource;
+
+    // -------------------------------------------------------------------------
+    // 7. MODALS, TOASTS, CLIPBOARD & HTML EXPORT
+    // -------------------------------------------------------------------------
+    let toastTimer = null;
+    function showToast(msg) {
+      const el = document.getElementById('toastNotification');
+      document.getElementById('toastText').textContent = msg;
+      el.classList.remove('translate-y-16', 'opacity-0');
+      el.classList.add('translate-y-0', 'opacity-100');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => {
+        el.classList.remove('translate-y-0', 'opacity-100');
+        el.classList.add('translate-y-16', 'opacity-0');
+      }, 2400);
+    }
+
+    function openSourceModal() {
+      const m = document.getElementById('sourceModal');
+      m.classList.remove('hidden');
+      m.classList.add('flex');
+    }
+
+    function closeSourceModal() {
+      const m = document.getElementById('sourceModal');
+      m.classList.remove('flex');
+      m.classList.add('hidden');
+    }
+
+    function copySourceCode() {
+      const ta = document.createElement('textarea');
+      ta.value = potatoMassahAhkSource;
+      ta.style.position = 'fixed';
+      ta.style.left = '-9999px';
+      document.body.appendChild(ta);
+      ta.select();
+      try {
+        document.execCommand('copy');
+        showToast('Copied PotatoMassah.ahk source to clipboard!');
+      } catch (e) {
+        showToast('Select code in modal and press Ctrl+C');
+      }
+      document.body.removeChild(ta);
+    }
+
+    function downloadAhkSource() {
+      const blob = new Blob([potatoMassahAhkSource], { type: 'text/plain;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'PotatoMassah.ahk';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      showToast('Downloaded PotatoMassah.ahk');
+    }
+
+    function downloadLandingPageHtml() {
+      const clone = document.documentElement.cloneNode(true);
+      clone.querySelectorAll('[data-export-strip="true"]').forEach(el => el.remove());
+      clone.querySelectorAll('img[src="Potato.ico"]').forEach(img => {
+        img.removeAttribute('style');
+        if (img.nextElementSibling && img.nextElementSibling.tagName.toLowerCase() === 'svg') {
+          img.nextElementSibling.classList.add('hidden');
+        }
+      });
+
+      const htmlContent = '<!DOCTYPE html>\n' + clone.outerHTML;
+      const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'index.html';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      showToast('Saved clean index.html — ready to upload to GitHub!');
+    }
+
+    // Boot Simulator & Keybind Matrix
+    renderSimulator();
+    applyKeybindFilters();
+  </script>
+
+</body></html>
