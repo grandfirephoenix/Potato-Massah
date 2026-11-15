@@ -1,4 +1,3 @@
-# Potato Massah
 <div align="center">
   <img src="Potato.ico" alt="Potato Massah" width="84" height="84" />
   <h1>Potato Massah</h1>
