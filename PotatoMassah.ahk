@@ -1,12 +1,14 @@
 #Requires AutoHotkey v2.0
 #SingleInstance Force
 InstallKeybdHook()
-;@Ahk2Exe-SetMainIcon icon.ico
+;@Ahk2Exe-SetMainIcon Potato.ico
 
 ; ==============================================================================
-; 1. VOICEMEETER REMOTE API, DARK THEME & ICON INITIALIZATION
+; 1. VERSION, VOICEMEETER REMOTE API, DARK THEME & ICON INITIALIZATION
 ; ==============================================================================
-customIconPath := A_ScriptDir "\icon.ico"
+APP_VERSION    := "v1.2.2"
+GITHUB_REPO    := "grandfirephoenix/Potato-Massah"
+customIconPath := A_ScriptDir "\Potato.ico"
 mutedIconPath  := A_ScriptDir "\icon_muted.ico"
 
 dllPath := "C:\Program Files (x86)\VB\Voicemeeter\VoicemeeterRemote64.dll"
@@ -22,6 +24,7 @@ pGetType  := DllCall("GetProcAddress", "Ptr", hModule, "AStr", "VBVMR_GetVoiceme
 pIsDirty  := DllCall("GetProcAddress", "Ptr", hModule, "AStr", "VBVMR_IsParametersDirty", "Ptr")
 pGetFloat := DllCall("GetProcAddress", "Ptr", hModule, "AStr", "VBVMR_GetParameterFloat", "Ptr")
 pSetFloat := DllCall("GetProcAddress", "Ptr", hModule, "AStr", "VBVMR_SetParameterFloat", "Ptr")
+pGetLevel := DllCall("GetProcAddress", "Ptr", hModule, "AStr", "VBVMR_GetLevel", "Ptr")
 
 if (!pLogin || !pLogout || !pGetType || !pIsDirty || !pGetFloat || !pSetFloat) {
     MsgBox("Loaded VoicemeeterRemote64.dll, but could not resolve API functions.")
@@ -35,9 +38,18 @@ CleanupVM(*) {
     SetTimer(GlideStep, 0)
     SetTimer(FlushOwnDirtyFlag, 0)
     SetTimer(WatchdogCheck, 0)
+    SetTimer(GuiLiveSyncTick, 0)
     SetTimer(ClearQuickTip, 0)
     SetTimer(HideHeadUnitOsd, 0)
     SetTimer(HoverLeaveWatch, 0)
+    SetTimer(AutoResetEngineCallback, 0)
+    SetTimer(AutoDuckTick, 0)
+    SetTimer(UpdateDuckLiveMeter, 0)
+    SetTimer(EnforceDefaultDevicesSilent, 0)
+    SetTimer(EnforceDefaultDevicesLoud, 0)
+    RestoreAllDuckedChannels()
+    if (hDevNotify)
+        DllCall("UnregisterDeviceNotification", "Ptr", hDevNotify)
     DllCall(pLogout)
     DllCall("FreeLibrary", "Ptr", hModule)
 }
@@ -51,7 +63,7 @@ EnableDarkSystemMenus() {
             pSetPreferredAppMode := DllCall("GetProcAddress", "Ptr", hUx, "Ptr", 135, "Ptr")
             pFlushMenuThemes     := DllCall("GetProcAddress", "Ptr", hUx, "Ptr", 136, "Ptr")
             if pSetPreferredAppMode
-                DllCall(pSetPreferredAppMode, "Int", 2)  ; ForceDark
+                DllCall(pSetPreferredAppMode, "Int", 2)
             if pFlushMenuThemes
                 DllCall(pFlushMenuThemes)
         }
@@ -60,17 +72,13 @@ EnableDarkSystemMenus() {
 
 ApplySleekWindowTheme(guiObj, isOsd := false) {
     try {
-        ; Immersive Dark Mode (Win11 22H2+ attr 20, Win10 fallback attr 19)
         DllCall("dwmapi\DwmSetWindowAttribute", "Ptr", guiObj.Hwnd, "UInt", 20, "Int*", 1, "UInt", 4)
         DllCall("dwmapi\DwmSetWindowAttribute", "Ptr", guiObj.Hwnd, "UInt", 19, "Int*", 1, "UInt", 4)
-        ; Rounded Window Corners (DWMWCP_ROUND = 2)
         DllCall("dwmapi\DwmSetWindowAttribute", "Ptr", guiObj.Hwnd, "UInt", 33, "Int*", 2, "UInt", 4)
         if !isOsd {
-            ; Seamless #0D0D11 Titlebar Caption (BGR: 0x00110D0D) & Subtle #262632 Border
             DllCall("dwmapi\DwmSetWindowAttribute", "Ptr", guiObj.Hwnd, "UInt", 35, "UInt*", 0x00110D0D, "UInt", 4)
             DllCall("dwmapi\DwmSetWindowAttribute", "Ptr", guiObj.Hwnd, "UInt", 34, "UInt*", 0x00322626, "UInt", 4)
         } else {
-            ; Crisp Cyan-Tinted Border on Floating Head-Unit HUD
             DllCall("dwmapi\DwmSetWindowAttribute", "Ptr", guiObj.Hwnd, "UInt", 34, "UInt*", 0x004A3818, "UInt", 4)
         }
     }
@@ -91,12 +99,14 @@ EnableDarkSystemMenus()
 ; ==============================================================================
 ; 2. CONFIGURATION, EFFECT DEFINITIONS & PERSISTENT STATE
 ; ==============================================================================
-iniPath     := A_ScriptDir "\volume_settings.ini"
-minStep     := 0.2    ; Starting dB step for slow, single-click adjustments
-maxStep     := 4.5    ; Maximum dB step per notch during a fast spin
-slowMs      := 250.0  ; Tick interval (ms) at or above which step stays at minStep
-fastMs      := 15.0   ; Tick interval (ms) at or below which step reaches maxStep
-glideFactor := 0.35   ; Smoothing factor per 20 ms frame
+iniPath    := A_ScriptDir "\volume_settings.ini"
+isFirstRun := !FileExist(iniPath)
+
+minStep     := 0.2
+maxStep     := 4.5
+slowMs      := 250.0
+fastMs      := 15.0
+glideFactor := 0.35
 
 virtualInputs := [
     { param: "Strip[5]", name: "Voicemeeter VAIO" },
@@ -112,15 +122,18 @@ hardwareInputs := [
     { param: "Strip[4]", name: "Hardware In 5" }
 ]
 
+inputStrips := [
+    { param: "Strip[0]", idx: 0 }, { param: "Strip[1]", idx: 1 },
+    { param: "Strip[2]", idx: 2 }, { param: "Strip[3]", idx: 3 },
+    { param: "Strip[4]", idx: 4 }, { param: "Strip[5]", idx: 5 },
+    { param: "Strip[6]", idx: 6 }, { param: "Strip[7]", idx: 7 }
+]
+
 outputBuses := [
-    { param: "Bus[0]", name: "A1" },
-    { param: "Bus[1]", name: "A2" },
-    { param: "Bus[2]", name: "A3" },
-    { param: "Bus[3]", name: "A4" },
-    { param: "Bus[4]", name: "A5" },
-    { param: "Bus[5]", name: "B1" },
-    { param: "Bus[6]", name: "B2" },
-    { param: "Bus[7]", name: "B3" }
+    { param: "Bus[0]", name: "A1" }, { param: "Bus[1]", name: "A2" },
+    { param: "Bus[2]", name: "A3" }, { param: "Bus[3]", name: "A4" },
+    { param: "Bus[4]", name: "A5" }, { param: "Bus[5]", name: "B1" },
+    { param: "Bus[6]", name: "B2" }, { param: "Bus[7]", name: "B3" }
 ]
 
 allChannels := []
@@ -131,7 +144,6 @@ for item in hardwareInputs
 for item in outputBuses
     allChannels.Push(item)
 
-; Per-channel-type effect definitions matching VoiceMeeter Potato
 hwEffects := [
     { key: "Comp",     label: "Comp.",    min: 0.0, max: 10.0, step: 0.2, unit: "" },
     { key: "Gate",     label: "Gate",     min: 0.0, max: 10.0, step: 0.2, unit: "" },
@@ -162,37 +174,37 @@ GetChannelEffects(param) {
     return (idx <= 4) ? hwEffects : virtEffects
 }
 
-; Populate default and custom channel names from INI
+IsInputStrip(param) {
+    return (SubStr(param, 1, 6) = "Strip[")
+}
+
 defaultNameMap := Map()
 nameMap        := Map()
 
-for item in virtualInputs {
-    defaultNameMap[item.param] := item.name
-    nameMap[item.param]        := item.name
-}
-for item in hardwareInputs {
-    defaultNameMap[item.param] := item.name
-    savedName := IniRead(iniPath, "Names", item.param, "")
-    nameMap[item.param] := (savedName != "") ? savedName : item.name
-}
-for item in outputBuses {
+for item in allChannels {
     defaultNameMap[item.param] := item.name
     savedName := IniRead(iniPath, "Names", item.param, "")
     nameMap[item.param] := (savedName != "") ? savedName : item.name
 }
 
-; Build full list of customizable hotkeys (General/Channel/FX + all 16 I/O channels)
 hotkeyDefs := [
-    { id: "toggleGui",  group: "general", param: "", label: "Toggle Control Panel",     def: "^!v",     fn: (*) => ToggleGui() },
-    { id: "chanPrev",   group: "general", param: "", label: "Target: Previous Channel", def: "^+Left",  fn: (*) => CycleSoloChannel(-1) },
-    { id: "chanNext",   group: "general", param: "", label: "Target: Next Channel",     def: "^+Right", fn: (*) => CycleSoloChannel(1) },
-    { id: "fxPrev",     group: "general", param: "", label: "Solo FX: Previous Effect", def: "^!Left",  fn: (*) => CycleSoloEffect(-1) },
-    { id: "fxNext",     group: "general", param: "", label: "Solo FX: Next Effect",     def: "^!Right", fn: (*) => CycleSoloEffect(1) },
-    { id: "fxUp",       group: "general", param: "", label: "Solo FX: Increase",        def: "^!Up",    fn: (*) => AdjustSoloEffect(1, false) },
-    { id: "fxDown",     group: "general", param: "", label: "Solo FX: Decrease",        def: "^!Down",  fn: (*) => AdjustSoloEffect(-1, false) },
-    { id: "fxFineUp",   group: "general", param: "", label: "Solo FX: Fine Increase",   def: "^!+Up",   fn: (*) => AdjustSoloEffect(1, true) },
-    { id: "fxFineDown", group: "general", param: "", label: "Solo FX: Fine Decrease",   def: "^!+Down", fn: (*) => AdjustSoloEffect(-1, true) },
-    { id: "fxReset",    group: "general", param: "", label: "Solo FX: Reset to 0",      def: "^!0",     fn: (*) => ResetSoloEffect() }
+    { id: "toggleGui",   group: "general", param: "", label: "Toggle Control Panel",     def: "^!v",     fn: (*) => ToggleGui() },
+    { id: "chanPrev",    group: "general", param: "", label: "Target: Previous Channel", def: "^+Left",  fn: (*) => CycleSoloChannel(-1) },
+    { id: "chanNext",    group: "general", param: "", label: "Target: Next Channel",     def: "^+Right", fn: (*) => CycleSoloChannel(1) },
+    { id: "layerPrev",   group: "general", param: "", label: "Bus Layer: Previous",      def: "^+Up",    fn: (*) => CycleGainLayer(-1) },
+    { id: "layerNext",   group: "general", param: "", label: "Bus Layer: Next",          def: "^+Down",  fn: (*) => CycleGainLayer(1) },
+    { id: "fxPrev",      group: "general", param: "", label: "Solo FX: Previous Effect", def: "^!Left",  fn: (*) => CycleSoloEffect(-1) },
+    { id: "fxNext",      group: "general", param: "", label: "Solo FX: Next Effect",     def: "^!Right", fn: (*) => CycleSoloEffect(1) },
+    { id: "fxUp",        group: "general", param: "", label: "Solo FX: Increase",        def: "^!Up",    fn: (*) => AdjustSoloEffect(1, false) },
+    { id: "fxDown",      group: "general", param: "", label: "Solo FX: Decrease",        def: "^!Down",  fn: (*) => AdjustSoloEffect(-1, false) },
+    { id: "fxFineUp",    group: "general", param: "", label: "Solo FX: Fine Increase",   def: "^!+Up",   fn: (*) => AdjustSoloEffect(1, true) },
+    { id: "fxFineDown",  group: "general", param: "", label: "Solo FX: Fine Decrease",   def: "^!+Down", fn: (*) => AdjustSoloEffect(-1, true) },
+    { id: "fxReset",     group: "general", param: "", label: "Solo FX: Reset to 0",      def: "^!0",     fn: (*) => ResetSoloEffect() },
+    { id: "toggleDuck",  group: "general", param: "", label: "Toggle Auto-Ducking",      def: "",        fn: (*) => ToggleAutoDuck() },
+    { id: "toggleLock",  group: "general", param: "", label: "Toggle Device Anti-Hijack",def: "",        fn: (*) => ToggleDeviceLock() },
+    { id: "snap1",       group: "general", param: "", label: "Load Snapshot P1",         def: "",        fn: (*) => LoadMixerSnapshot(1) },
+    { id: "snap2",       group: "general", param: "", label: "Load Snapshot P2",         def: "",        fn: (*) => LoadMixerSnapshot(2) },
+    { id: "snap3",       group: "general", param: "", label: "Load Snapshot P3",         def: "",        fn: (*) => LoadMixerSnapshot(3) }
 ]
 
 for item in virtualInputs {
@@ -223,9 +235,48 @@ for item in hotkeyDefs {
     keybinds[item.id] := rawVal
 }
 
-; Load saved target selections (defaults to Strip[7] / VAIO3 in Single-Target mode)
-savedTargets  := IniRead(iniPath, "Settings", "Targets", "Strip[7]")
-exclusiveMode := Integer(IniRead(iniPath, "Settings", "ExclusiveMode", "1"))
+savedTargets      := IniRead(iniPath, "Settings", "Targets", "Strip[7]")
+exclusiveMode     := Integer(IniRead(iniPath, "Settings", "ExclusiveMode", "1"))
+autoResetDevice   := Integer(IniRead(iniPath, "Settings", "AutoResetDevice", "1"))
+showWelcomeBanner := Integer(IniRead(iniPath, "Settings", "ShowWelcome", isFirstRun ? "1" : "0"))
+showAdvancedPanel := Integer(IniRead(iniPath, "Settings", "ShowAdvanced", "0"))
+
+deviceLockEnabled := Integer(IniRead(iniPath, "DeviceLock", "Enabled", "0"))
+lockedPlaybackId  := IniRead(iniPath, "DeviceLock", "PlaybackId", "")
+lockedPlaybackName:= IniRead(iniPath, "DeviceLock", "PlaybackName", "Not Set")
+lockedRecordId    := IniRead(iniPath, "DeviceLock", "RecordId", "")
+lockedRecordName  := IniRead(iniPath, "DeviceLock", "RecordName", "Not Set")
+
+duckEnabled       := Integer(IniRead(iniPath, "AutoDuck", "Enabled", "0"))
+duckTriggerStrip  := IniRead(iniPath, "AutoDuck", "TriggerStrip", "Strip[0]")
+duckTargetsRaw    := IniRead(iniPath, "AutoDuck", "Targets", "Strip[7]")
+duckBusLayer      := Integer(IniRead(iniPath, "AutoDuck", "BusLayer", "0"))
+duckAmountDb      := Float(IniRead(iniPath, "AutoDuck", "AmountDb", "12.0"))
+duckThresholdDb   := Float(IniRead(iniPath, "AutoDuck", "ThresholdDb", "-28.0"))
+duckAttackMs      := Integer(IniRead(iniPath, "AutoDuck", "AttackMs", "80"))
+duckHoldMs        := Integer(IniRead(iniPath, "AutoDuck", "HoldMs", "400"))
+duckReleaseMs     := Integer(IniRead(iniPath, "AutoDuck", "ReleaseMs", "350"))
+duckIgnoreMuted   := Integer(IniRead(iniPath, "AutoDuck", "IgnoreMuted", "1"))
+
+duckTargets := []
+for item in StrSplit(duckTargetsRaw, ",") {
+    t := Trim(item)
+    if (t != "")
+        duckTargets.Push(t)
+}
+
+autoLaunchVM      := Integer(IniRead(iniPath, "Startup", "AutoLaunchVM", "0"))
+hideVMOnLaunch    := Integer(IniRead(iniPath, "Startup", "HideVMOnLaunch", "0"))
+checkUpdatesStart := Integer(IniRead(iniPath, "Startup", "CheckUpdatesOnStart", "1"))
+
+lastAutoReset     := 0
+hDevNotify        := 0
+duckCurrentOffset := 0.0
+duckTargetOffset  := 0.0
+duckLastLoudTick  := 0
+duckTestUntilTick := 0
+duckStageLabel    := "IDLE"
+duckBaseGains     := Map()
 
 activeTargets := []
 for item in StrSplit(savedTargets, ",") {
@@ -240,6 +291,7 @@ vm := {
     connected:     true,
     gains:         Map(),
     mutes:         Map(),
+    layerIndex:    Map(),
     fxIndex:       Map(),
     fxValues:      Map(),
     gliding:       false,
@@ -249,55 +301,107 @@ vm := {
 }
 
 ; ==============================================================================
-; 3. SLEEK DARK-MODE CONTROL PANEL GUI & TRAY MENU
+; 3. SLEEK DARK-MODE CONTROL PANEL GUI, COLOR-CODED PRO DRAWER & TRAY MENU
 ; ==============================================================================
 UpdateTrayIcon(false)
 
-rowVisualMap    := Map()
-ctrlHwndToParam := Map()
-hoverZones      := []
-hoverCache      := Map()
-movableControls := []
-currentDeltaY   := 0
+rowVisualMap       := Map()
+rowBadgeCache      := Map()
+ctrlHwndToParam    := Map()
+hoverZones         := []
+hoverCache         := Map()
+bodyControls       := []
+welcomeControls    := []
+advControls        := []
+routeBtnMap        := Map()
+routeStateCache    := Map()
+snapBtnMap         := Map()
+currentBodyStartY  := 0
+defaultFooterHint  := ""
 
-; Interactive hover registry for flat custom buttons & channel pills
-hoverStyleMap   := Map()
-lastHoverKey    := ""
+hoverStyleMap      := Map()
+hoverHintMap       := Map()
+lastHoverKey       := ""
+popupTipActive     := false
 
-AddBodyControl(ctrl, baseY) {
-    movableControls.Push({ ctrl: ctrl, baseY: baseY })
+AddBodyControl(ctrl, relY) {
+    bodyControls.Push({ ctrl: ctrl, relY: relY })
     return ctrl
 }
 
-RegisterHoverRow(param, x1, baseY1, x2, baseY2, ctrls*) {
-    hoverZones.Push({ param: param, x1: x1, baseY1: baseY1, x2: x2, baseY2: baseY2 })
+RegisterHoverRow(param, x1, relY1, x2, relY2, ctrls*) {
+    hoverZones.Push({ param: param, x1: x1, relY1: relY1, x2: x2, relY2: relY2 })
     for c in ctrls
         ctrlHwndToParam[c.Hwnd] := param
 }
 
-RegisterButtonHover(ctrl, baseBg, hoverBg) {
+RegisterButtonHover(ctrl, baseBg, hoverBg, tipText := "", isMainPanel := true) {
+    key := "btn_" ctrl.Hwnd
     hoverStyleMap[ctrl.Hwnd] := {
-        key: "btn_" ctrl.Hwnd,
+        key: key,
         ctrls: [ctrl],
+        isMain: isMainPanel,
         getBg: (*) => baseBg,
         hoverBg: hoverBg
     }
+    if (tipText != "")
+        hoverHintMap[key] := tipText
 }
 
 RegisterPillHover(param, ctrls*) {
+    key := "pill_" param
     entry := {
-        key: "pill_" param,
+        key: key,
         ctrls: ctrls,
+        isMain: true,
         getBg: (*) => IsTargetActive(param) ? "152433" : "16161E",
-        hoverBg: IsTargetActive(param) ? "1B3146" : "20202C"
+        hoverBg: (*) => IsTargetActive(param) ? "1B3146" : "20202C"
     }
     for c in ctrls
         hoverStyleMap[c.Hwnd] := entry
+    hoverHintMap[key] := "Click: Target wheel  •  Scroll: ±1.0 dB (Shift + Scroll: ±0.2 dB)  •  Middle-click: Mute  •  Right-click: Rename"
+}
+
+RegisterRouteButtonHover(rBtn, busName, busDesc) {
+    rKey := "route_" busName
+    hoverStyleMap[rBtn.Hwnd] := {
+        key: rKey,
+        ctrls: [rBtn],
+        isMain: true,
+        getBg: (*) => (routeStateCache.Has(busName) && routeStateCache[busName]) ? "332614" : "1A1A22",
+        hoverBg: (*) => (routeStateCache.Has(busName) && routeStateCache[busName]) ? "45331B" : "242430"
+    }
+    hoverHintMap[rKey] := "Click to toggle sending selected strip to " busName " (" busDesc ")  •  Amber = ON, Grey = OFF"
+}
+
+RegisterSnapshotButtonHover(sBtn, snapIdx) {
+    sKey := "snap_" snapIdx
+    hoverStyleMap[sBtn.Hwnd] := {
+        key: sKey,
+        ctrls: [sBtn],
+        isMain: true,
+        getBg: (*) => (IniRead(iniPath, "Snapshot" snapIdx, "Saved", "0") = "1") ? "261E12" : "1E1E28",
+        hoverBg: (*) => (IniRead(iniPath, "Snapshot" snapIdx, "Saved", "0") = "1") ? "382B19" : "282836"
+    }
+    hoverHintMap[sKey] := "Snapshot P" snapIdx "  •  Left-click: Load mixer faders && routes  •  Right-click: Save current state"
+}
+
+UpdateSmartFooterHint(hoverKey) {
+    if (hoverKey != "" && hoverHintMap.Has(hoverKey)) {
+        footerHintText.SetFont("s8 Norm c38BDF8")
+        footerHintText.Value := hoverHintMap[hoverKey]
+    } else {
+        footerHintText.SetFont("s8 Norm c71717A")
+        footerHintText.Value := defaultFooterHint
+    }
 }
 
 OnGuiMouseMove(wParam, lParam, msg, hwnd) {
-    global lastHoverKey
+    global lastHoverKey, popupTipActive
     MouseGetPos(, , &hoverWin, &hoverCtrl, 2)
+
+    if (hoverWin && WinGetClass("ahk_id " hoverWin) = "tooltips_class32")
+        return
 
     newKey := ""
     if (hoverCtrl && hoverStyleMap.Has(hoverCtrl)) {
@@ -311,6 +415,12 @@ OnGuiMouseMove(wParam, lParam, msg, hwnd) {
                 try c.Opt("Background" hv)
                 try c.Redraw()
             }
+            if item.isMain {
+                UpdateSmartFooterHint(newKey)
+            } else if hoverHintMap.Has(newKey) {
+                ToolTip(hoverHintMap[newKey])
+                popupTipActive := true
+            }
             SetTimer(HoverLeaveWatch, 80)
         }
     } else if (lastHoverKey != "") {
@@ -319,7 +429,7 @@ OnGuiMouseMove(wParam, lParam, msg, hwnd) {
 }
 
 ResetLastHover() {
-    global lastHoverKey
+    global lastHoverKey, popupTipActive
     if (lastHoverKey = "")
         return
     for _, item in hoverStyleMap {
@@ -333,17 +443,35 @@ ResetLastHover() {
         }
     }
     lastHoverKey := ""
+    if popupTipActive {
+        ToolTip()
+        popupTipActive := false
+    }
+    UpdateSmartFooterHint("")
 }
 
 HoverLeaveWatch() {
     MouseGetPos(, , &hoverWin, &hoverCtrl, 2)
+    if (hoverWin && WinGetClass("ahk_id " hoverWin) = "tooltips_class32")
+        return
     if (!hoverCtrl || !hoverStyleMap.Has(hoverCtrl)) {
         ResetLastHover()
         SetTimer(HoverLeaveWatch, 0)
     }
 }
 
+OnGuiMiddleClick(wParam, lParam, msg, hwnd) {
+    if (hwnd != settingsGui.Hwnd && DllCall("GetParent", "Ptr", hwnd, "Ptr") != settingsGui.Hwnd)
+        return
+    param := GetHoveredChannel()
+    if (param != "") {
+        ToggleSpecificChannelMute(param)
+        return 0
+    }
+}
+
 OnMessage(0x0200, OnGuiMouseMove)
+OnMessage(0x0207, OnGuiMiddleClick)
 
 settingsGui := Gui("+AlwaysOnTop -MaximizeBox", "VoiceMeeter Potato Massah")
 settingsGui.MarginX := 16
@@ -352,177 +480,346 @@ settingsGui.BackColor := "0D0D11"
 settingsGui.SetFont("s9 cF4F4F5", "Segoe UI")
 ApplySleekWindowTheme(settingsGui, false)
 
-; --- Hero Telemetry Card ---
-heroAccent := settingsGui.AddProgress("x16 y12 w436 h2 Background0D0D11 c38BDF8", 100)
-heroBg     := settingsGui.AddText("x16 y14 w436 h74 Background15151C", "")
+; --- Optional First-Run Welcome Card ---
+welAccent := settingsGui.AddProgress("x16 y12 w460 h2 Background0D0D11 c38BDF8", 100)
+welBg     := settingsGui.AddText("x16 y14 w460 h52 Background13202C", "")
+settingsGui.SetFont("s8 Bold c38BDF8", "Segoe UI")
+welTitle  := settingsGui.AddText("x26 y19 w380 h16 Background13202C", "WELCOME TO POTATO MASSAH  •  QUICK START")
+welClose  := settingsGui.AddText("x414 y18 w54 h18 Center +0x200 Background1B2E3E", "Got it " Chr(0x2715))
+welClose.OnEvent("Click", DismissWelcomeBanner)
+RegisterButtonHover(welClose, "1B2E3E", "243D52", "Dismiss welcome tips")
+
+settingsGui.SetFont("s8 Norm cD4D4D8", "Segoe UI")
+welBody := settingsGui.AddText("x26 y37 w440 h26 Background13202C", "Roll your volume wheel anywhere  •  Hover any row to scroll it (Shift = fine)  •  Middle-click to mute  •  Right-click to rename")
+
+welcomeControls.Push(welAccent, welBg, welTitle, welClose, welBody)
+
+; --- Hero Telemetry Panel ---
+heroAccent := settingsGui.AddProgress("x16 y12 w460 h2 Background0D0D11 c38BDF8", 100)
+heroBg     := settingsGui.AddText("x16 y14 w460 h166 Background15151C", "")
 
 settingsGui.SetFont("s8 Bold c71717A", "Segoe UI")
-settingsGui.AddText("x28 y20 w210 h16 Background15151C", "ACTIVE WHEEL TARGET")
+heroTitleLbl := settingsGui.AddText("x28 y20 w140 h16 Background15151C", "ACTIVE WHEEL TARGET")
 
-; Mode Pill Toggle (Top-Right of Hero Card)
+settingsGui.SetFont("s8 Bold cA1A1AA", "Segoe UI")
+heroMutePill := settingsGui.AddText("x174 y18 w76 h20 Center +0x200 Background1E1E28", "MUTE")
+heroMutePill.OnEvent("Click", (*) => ToggleVMMute())
+hoverStyleMap[heroMutePill.Hwnd] := {
+    key: "heroMutePill",
+    ctrls: [heroMutePill],
+    isMain: true,
+    getBg: (*) => IsAnyActiveTargetMuted() ? "3A1A20" : "1E1E28",
+    hoverBg: (*) => IsAnyActiveTargetMuted() ? "4D222A" : "2A2A38"
+}
+hoverHintMap["heroMutePill"] := "Click to toggle mute on your active wheel target(s)  •  Tip: Middle-click any row to mute it"
+
 settingsGui.SetFont("s8 Bold c38BDF8", "Segoe UI")
-modePill := settingsGui.AddText("x292 y18 w148 h20 Center +0x200 Background1B2B3A", "◉  Single-Target Mode")
+modePill := settingsGui.AddText("x254 y18 w132 h20 Center +0x200 Background1B2B3A", "◉  Single-Target")
 modePill.OnEvent("Click", OnModeToggle)
 hoverStyleMap[modePill.Hwnd] := {
     key: "modePill",
     ctrls: [modePill],
+    isMain: true,
     getBg: (*) => (exclusiveMode = 1) ? "1B2B3A" : "22222E",
     hoverBg: (*) => (exclusiveMode = 1) ? "23384C" : "2C2C3B"
 }
+hoverHintMap["modePill"] := "Switch between Single-Target Mode and Multi-Group Spread-Locked linking"
+
+settingsGui.SetFont("s8 Bold cF59E0B", "Segoe UI")
+proTogglePill := settingsGui.AddText("x390 y18 w74 h20 Center +0x200 Background261E12", "Pro " Chr(0x25BE))
+proTogglePill.OnEvent("Click", ToggleAdvancedPanel)
+hoverStyleMap[proTogglePill.Hwnd] := {
+    key: "proTogglePill",
+    ctrls: [proTogglePill],
+    isMain: true,
+    getBg: (*) => (showAdvancedPanel = 1) ? "332614" : "261E12",
+    hoverBg: (*) => "3F2F18"
+}
+hoverHintMap["proTogglePill"] := "Show or hide advanced Submix Bus Layers, A1–B3 Routing Matrix && Mixer Snapshots"
 
 settingsGui.SetFont("s10 Bold c38BDF8", "Segoe UI")
-statusText := settingsGui.AddText("x28 y40 w412 h20 Background15151C", "")
+statusText := settingsGui.AddText("x28 y42 w436 h20 Background15151C", "")
 
 settingsGui.SetFont("s8 Norm cA1A1AA", "Segoe UI")
-heroSubText := settingsGui.AddText("x28 y62 w412 h18 Background15151C", "")
+heroSubText := settingsGui.AddText("x28 y64 w436 h18 Background15151C", "")
 
-; --- Section 1: Virtual Inputs ---
+; --- Collapsible Advanced Submix, Routing & Snapshots Drawer (Amber Color-Coded) ---
+advDivider := settingsGui.AddText("x28 y86 w436 h1 Background332818", "")
+
+settingsGui.SetFont("s8 Bold cF59E0B", "Segoe UI")
+advWarnLbl := settingsGui.AddText("x28 y92 w204 h20 +0x200 Background15151C", Chr(0x26A0) " PRO: Submix, Routing && Snapshots")
+
+settingsGui.SetFont("s7 Bold cFBBF24", "Segoe UI")
+rstLayersBtn := settingsGui.AddText("x234 y92 w74 h20 Center +0x200 Background261E12", "Reset Layers")
+rstLayersBtn.OnEvent("Click", ResetActiveStripLayers)
+RegisterButtonHover(rstLayersBtn, "261E12", "382B19", "Reset all A1–B3 submix gain layers on this strip to 0.0 dB")
+
+rstRoutesBtn := settingsGui.AddText("x311 y92 w74 h20 Center +0x200 Background261E12", "Reset Routes")
+rstRoutesBtn.OnEvent("Click", ResetActiveStripRoutes)
+RegisterButtonHover(rstRoutesBtn, "261E12", "382B19", "Reset strip output routing back to default A1 only")
+
+rstMixerBtn := settingsGui.AddText("x388 y92 w76 h20 Center +0x200 Background261E12", "Default Mixer")
+rstMixerBtn.OnEvent("Click", ResetEntireMixerDefault)
+RegisterButtonHover(rstMixerBtn, "261E12", "382B19", "Reset all 16 faders to 0.0 dB, clear submix layers && restore A1 routing")
+
+settingsGui.SetFont("s8 Bold cF59E0B", "Segoe UI")
+layerPill := settingsGui.AddText("x28 y116 w436 h22 +0x200 Background221B11", "  ↳  Layer: Master Gain")
+layerPill.OnEvent("Click", (*) => CycleGainLayer(1))
+layerPill.OnEvent("ContextMenu", (*) => CycleGainLayer(-1))
+hoverStyleMap[layerPill.Hwnd] := {
+    key: "layerPill",
+    ctrls: [layerPill],
+    isMain: true,
+    getBg: (*) => (GetActiveGainLayerIndex() > 0) ? "332614" : "221B11",
+    hoverBg: (*) => (GetActiveGainLayerIndex() > 0) ? "42311A" : "2E2416"
+}
+hoverHintMap["layerPill"] := "Left-click: Next bus submix layer  •  Right-click: Previous  •  Ctrl+Shift+Up/Down"
+
+advControls.Push(advDivider, advWarnLbl, rstLayersBtn, rstRoutesBtn, rstMixerBtn, layerPill)
+
+for idx, b in outputBuses {
+    xR := 28 + ((idx - 1) * 55)
+    settingsGui.SetFont("s8 Bold c71717A", "Segoe UI")
+    rBtn := settingsGui.AddText("x" xR " y142 w51 h22 Center +0x200 Background1A1A22", b.name)
+    rBtn.OnEvent("Click", ToggleStripBusRoute.Bind(b.name))
+    routeBtnMap[b.name] := rBtn
+    advControls.Push(rBtn)
+    RegisterRouteButtonHover(rBtn, b.name, nameMap[b.param])
+}
+
+settingsGui.SetFont("s8 Bold cA1A1AA", "Segoe UI")
+snapLbl := settingsGui.AddText("x28 y168 w82 h22 +0x200 Background15151C", "SNAPSHOTS:")
+advControls.Push(snapLbl)
+
+Loop 3 {
+    sIdx := A_Index
+    xS := 114 + ((sIdx - 1) * 118)
+    settingsGui.SetFont("s8 Bold cD4D4D8", "Segoe UI")
+    sBtn := settingsGui.AddText("x" xS " y168 w114 h22 Center +0x200 Background1E1E28", "P" sIdx ": Empty")
+    sBtn.OnEvent("Click", LoadMixerSnapshot.Bind(sIdx))
+    sBtn.OnEvent("ContextMenu", SaveMixerSnapshot.Bind(sIdx))
+    snapBtnMap[sIdx] := sBtn
+    advControls.Push(sBtn)
+    RegisterSnapshotButtonHover(sBtn, sIdx)
+}
+
+; --- Body Section 1: Virtual Inputs ---
 settingsGui.SetFont("s8 Bold c71717A", "Segoe UI")
-AddBodyControl(settingsGui.AddText("x16 y100 w436 h16 Background0D0D11", "VIRTUAL INPUTS"), 100)
+AddBodyControl(settingsGui.AddText("x16 y0 w460 h16 Background0D0D11", "VIRTUAL INPUTS"), 0)
 
-yPos := 120
+relY := 20
 for item in virtualInputs {
     active := IsTargetActive(item.param)
     bgHex  := active ? "152433" : "16161E"
 
-    pillBg := AddBodyControl(settingsGui.AddText("x16 y" yPos " w386 h26 Background" bgHex, ""), yPos)
+    pillBg := AddBodyControl(settingsGui.AddText("x16 y" relY " w394 h26 Background" bgHex, ""), relY)
 
     settingsGui.SetFont("s9 Bold c" (active ? "38BDF8" : "52525B"), "Segoe UI")
-    dotCtrl := AddBodyControl(settingsGui.AddText("x26 y" yPos " w16 h26 +0x200 Background" bgHex, active ? "●" : "○"), yPos)
+    dotCtrl := AddBodyControl(settingsGui.AddText("x24 y" relY " w14 h26 +0x200 Background" bgHex, active ? "●" : "○"), relY)
 
     settingsGui.SetFont("s9 " (active ? "Bold cF4F4F5" : "Norm cD4D4D8"), "Segoe UI")
-    lblCtrl := AddBodyControl(settingsGui.AddText("x44 y" yPos " w264 h26 +0x200 Background" bgHex, nameMap[item.param]), yPos)
+    lblCtrl := AddBodyControl(settingsGui.AddText("x40 y" relY " w230 h26 +0x200 Background" bgHex, nameMap[item.param]), relY)
 
     settingsGui.SetFont("s8 Norm c52525B", "Segoe UI")
-    tagCtrl := AddBodyControl(settingsGui.AddText("x312 y" yPos " w80 h26 Right +0x200 Background" bgHex, item.param), yPos)
+    tagCtrl := AddBodyControl(settingsGui.AddText("x272 y" relY " w56 h26 Right +0x200 Background" bgHex, item.param), relY)
 
     settingsGui.SetFont("s8 Bold cA1A1AA", "Segoe UI")
-    rstBtn := AddBodyControl(settingsGui.AddText("x406 y" yPos " w46 h26 Center +0x200 Background1C1C26", "0dB"), yPos)
+    dbCtrl  := AddBodyControl(settingsGui.AddText("x332 y" relY " w70 h26 Right +0x200 Background" bgHex, "0.0 dB"), relY)
 
-    for c in [pillBg, dotCtrl, lblCtrl, tagCtrl]
+    settingsGui.SetFont("s8 Norm cA1A1AA", "Segoe UI")
+    renBtn := AddBodyControl(settingsGui.AddText("x414 y" relY " w26 h26 Center +0x200 Background1C1C26", Chr(0x270E)), relY)
+
+    settingsGui.SetFont("s8 Bold cA1A1AA", "Segoe UI")
+    rstBtn := AddBodyControl(settingsGui.AddText("x443 y" relY " w33 h26 Center +0x200 Background1C1C26", "0dB"), relY)
+
+    for c in [pillBg, dotCtrl, lblCtrl, tagCtrl, dbCtrl] {
         c.OnEvent("Click", OnTargetClick.Bind(item.param))
+        c.OnEvent("ContextMenu", OnRenameChannel.Bind(item.param))
+    }
+    renBtn.OnEvent("Click", OnRenameChannel.Bind(item.param))
     rstBtn.OnEvent("Click", ResetChannelGain.Bind(item.param))
 
-    rowVisualMap[item.param] := { bg: pillBg, dot: dotCtrl, lbl: lblCtrl, tag: tagCtrl }
-    RegisterPillHover(item.param, pillBg, dotCtrl, lblCtrl, tagCtrl)
-    RegisterButtonHover(rstBtn, "1C1C26", "282836")
-    RegisterHoverRow(item.param, 16, yPos - 1, 452, yPos + 27, pillBg, dotCtrl, lblCtrl, tagCtrl, rstBtn)
-    yPos += 30
+    rowVisualMap[item.param] := { bg: pillBg, dot: dotCtrl, lbl: lblCtrl, tag: tagCtrl, db: dbCtrl }
+    RegisterPillHover(item.param, pillBg, dotCtrl, lblCtrl, tagCtrl, dbCtrl)
+    RegisterButtonHover(renBtn, "1C1C26", "282836", "Rename " nameMap[item.param] " (e.g. System, Discord, Music)")
+    RegisterButtonHover(rstBtn, "1C1C26", "282836", "Reset " nameMap[item.param] " fader to 0.0 dB")
+    RegisterHoverRow(item.param, 16, relY - 1, 476, relY + 27, pillBg, dotCtrl, lblCtrl, tagCtrl, dbCtrl, renBtn, rstBtn)
+    relY += 30
 }
 
-; --- Section 2: Hardware Inputs (Renameable + 0dB Reset) ---
+; --- Body Section 2: Hardware Inputs ---
 settingsGui.SetFont("s8 Bold c71717A", "Segoe UI")
-AddBodyControl(settingsGui.AddText("x16 y" (yPos + 8) " w436 h16 Background0D0D11", "HARDWARE INPUTS"), yPos + 8)
-yPos += 28
+AddBodyControl(settingsGui.AddText("x16 y" (relY + 8) " w460 h16 Background0D0D11", "HARDWARE INPUTS"), relY + 8)
+relY += 28
 for idx, item in hardwareInputs {
     active := IsTargetActive(item.param)
     bgHex  := active ? "152433" : "16161E"
     isLeft := (Mod(idx, 2) = 1)
-    xCol   := isLeft ? 16 : 238
+    xCol   := isLeft ? 16 : 250
 
-    pillBg := AddBodyControl(settingsGui.AddText("x" xCol " y" yPos " w152 h26 Background" bgHex, ""), yPos)
+    pillBg := AddBodyControl(settingsGui.AddText("x" xCol " y" relY " w164 h26 Background" bgHex, ""), relY)
 
     settingsGui.SetFont("s9 Bold c" (active ? "38BDF8" : "52525B"), "Segoe UI")
-    dotCtrl := AddBodyControl(settingsGui.AddText("x" (xCol + 8) " y" yPos " w14 h26 +0x200 Background" bgHex, active ? "●" : "○"), yPos)
+    dotCtrl := AddBodyControl(settingsGui.AddText("x" (xCol + 7) " y" relY " w12 h26 +0x200 Background" bgHex, active ? "●" : "○"), relY)
 
     settingsGui.SetFont("s9 " (active ? "Bold cF4F4F5" : "Norm cD4D4D8"), "Segoe UI")
-    lblCtrl := AddBodyControl(settingsGui.AddText("x" (xCol + 24) " y" yPos " w120 h26 +0x200 Background" bgHex, nameMap[item.param]), yPos)
-
-    settingsGui.SetFont("s8 Norm cA1A1AA", "Segoe UI")
-    renBtn := AddBodyControl(settingsGui.AddText("x" (xCol + 155) " y" yPos " w24 h26 Center +0x200 Background1C1C26", Chr(0x270E)), yPos)
+    lblCtrl := AddBodyControl(settingsGui.AddText("x" (xCol + 21) " y" relY " w88 h26 +0x200 Background" bgHex, nameMap[item.param]), relY)
 
     settingsGui.SetFont("s8 Bold cA1A1AA", "Segoe UI")
-    rstBtn := AddBodyControl(settingsGui.AddText("x" (xCol + 182) " y" yPos " w32 h26 Center +0x200 Background1C1C26", "0dB"), yPos)
+    dbCtrl  := AddBodyControl(settingsGui.AddText("x" (xCol + 109) " y" relY " w50 h26 Right +0x200 Background" bgHex, "0.0dB"), relY)
 
-    for c in [pillBg, dotCtrl, lblCtrl] {
+    settingsGui.SetFont("s8 Norm cA1A1AA", "Segoe UI")
+    renBtn := AddBodyControl(settingsGui.AddText("x" (xCol + 167) " y" relY " w24 h26 Center +0x200 Background1C1C26", Chr(0x270E)), relY)
+
+    settingsGui.SetFont("s8 Bold cA1A1AA", "Segoe UI")
+    rstBtn := AddBodyControl(settingsGui.AddText("x" (xCol + 194) " y" relY " w32 h26 Center +0x200 Background1C1C26", "0dB"), relY)
+
+    for c in [pillBg, dotCtrl, lblCtrl, dbCtrl] {
         c.OnEvent("Click", OnTargetClick.Bind(item.param))
         c.OnEvent("ContextMenu", OnRenameChannel.Bind(item.param))
     }
     renBtn.OnEvent("Click", OnRenameChannel.Bind(item.param))
     rstBtn.OnEvent("Click", ResetChannelGain.Bind(item.param))
 
-    rowVisualMap[item.param] := { bg: pillBg, dot: dotCtrl, lbl: lblCtrl, tag: "" }
-    RegisterPillHover(item.param, pillBg, dotCtrl, lblCtrl)
-    RegisterButtonHover(renBtn, "1C1C26", "282836")
-    RegisterButtonHover(rstBtn, "1C1C26", "282836")
-    RegisterHoverRow(item.param, xCol, yPos - 1, xCol + 214, yPos + 27, pillBg, dotCtrl, lblCtrl, renBtn, rstBtn)
+    rowVisualMap[item.param] := { bg: pillBg, dot: dotCtrl, lbl: lblCtrl, tag: "", db: dbCtrl }
+    RegisterPillHover(item.param, pillBg, dotCtrl, lblCtrl, dbCtrl)
+    RegisterButtonHover(renBtn, "1C1C26", "282836", "Rename " nameMap[item.param])
+    RegisterButtonHover(rstBtn, "1C1C26", "282836", "Reset " nameMap[item.param] " fader to 0.0 dB")
+    RegisterHoverRow(item.param, xCol, relY - 1, xCol + 226, relY + 27, pillBg, dotCtrl, lblCtrl, dbCtrl, renBtn, rstBtn)
 
     if (!isLeft || idx = hardwareInputs.Length)
-        yPos += 30
+        relY += 30
 }
 
-; --- Section 3: Output Buses (Renameable + 0dB Reset) ---
+; --- Body Section 3: Output Buses ---
 settingsGui.SetFont("s8 Bold c71717A", "Segoe UI")
-AddBodyControl(settingsGui.AddText("x16 y" (yPos + 8) " w436 h16 Background0D0D11", "OUTPUT BUSES"), yPos + 8)
-yPos += 28
+AddBodyControl(settingsGui.AddText("x16 y" (relY + 8) " w460 h16 Background0D0D11", "OUTPUT BUSES"), relY + 8)
+relY += 28
 for idx, item in outputBuses {
     active := IsTargetActive(item.param)
     bgHex  := active ? "152433" : "16161E"
     isLeft := (Mod(idx, 2) = 1)
-    xCol   := isLeft ? 16 : 238
+    xCol   := isLeft ? 16 : 250
 
-    pillBg := AddBodyControl(settingsGui.AddText("x" xCol " y" yPos " w152 h26 Background" bgHex, ""), yPos)
+    pillBg := AddBodyControl(settingsGui.AddText("x" xCol " y" relY " w164 h26 Background" bgHex, ""), relY)
 
     settingsGui.SetFont("s9 Bold c" (active ? "38BDF8" : "52525B"), "Segoe UI")
-    dotCtrl := AddBodyControl(settingsGui.AddText("x" (xCol + 8) " y" yPos " w14 h26 +0x200 Background" bgHex, active ? "●" : "○"), yPos)
+    dotCtrl := AddBodyControl(settingsGui.AddText("x" (xCol + 7) " y" relY " w12 h26 +0x200 Background" bgHex, active ? "●" : "○"), relY)
 
     settingsGui.SetFont("s9 " (active ? "Bold cF4F4F5" : "Norm cD4D4D8"), "Segoe UI")
-    lblCtrl := AddBodyControl(settingsGui.AddText("x" (xCol + 24) " y" yPos " w120 h26 +0x200 Background" bgHex, nameMap[item.param]), yPos)
-
-    settingsGui.SetFont("s8 Norm cA1A1AA", "Segoe UI")
-    renBtn := AddBodyControl(settingsGui.AddText("x" (xCol + 155) " y" yPos " w24 h26 Center +0x200 Background1C1C26", Chr(0x270E)), yPos)
+    lblCtrl := AddBodyControl(settingsGui.AddText("x" (xCol + 21) " y" relY " w88 h26 +0x200 Background" bgHex, nameMap[item.param]), relY)
 
     settingsGui.SetFont("s8 Bold cA1A1AA", "Segoe UI")
-    rstBtn := AddBodyControl(settingsGui.AddText("x" (xCol + 182) " y" yPos " w32 h26 Center +0x200 Background1C1C26", "0dB"), yPos)
+    dbCtrl  := AddBodyControl(settingsGui.AddText("x" (xCol + 109) " y" relY " w50 h26 Right +0x200 Background" bgHex, "0.0dB"), relY)
 
-    for c in [pillBg, dotCtrl, lblCtrl] {
+    settingsGui.SetFont("s8 Norm cA1A1AA", "Segoe UI")
+    renBtn := AddBodyControl(settingsGui.AddText("x" (xCol + 167) " y" relY " w24 h26 Center +0x200 Background1C1C26", Chr(0x270E)), relY)
+
+    settingsGui.SetFont("s8 Bold cA1A1AA", "Segoe UI")
+    rstBtn := AddBodyControl(settingsGui.AddText("x" (xCol + 194) " y" relY " w32 h26 Center +0x200 Background1C1C26", "0dB"), relY)
+
+    for c in [pillBg, dotCtrl, lblCtrl, dbCtrl] {
         c.OnEvent("Click", OnTargetClick.Bind(item.param))
         c.OnEvent("ContextMenu", OnRenameChannel.Bind(item.param))
     }
     renBtn.OnEvent("Click", OnRenameChannel.Bind(item.param))
     rstBtn.OnEvent("Click", ResetChannelGain.Bind(item.param))
 
-    rowVisualMap[item.param] := { bg: pillBg, dot: dotCtrl, lbl: lblCtrl, tag: "" }
-    RegisterPillHover(item.param, pillBg, dotCtrl, lblCtrl)
-    RegisterButtonHover(renBtn, "1C1C26", "282836")
-    RegisterButtonHover(rstBtn, "1C1C26", "282836")
-    RegisterHoverRow(item.param, xCol, yPos - 1, xCol + 214, yPos + 27, pillBg, dotCtrl, lblCtrl, renBtn, rstBtn)
+    rowVisualMap[item.param] := { bg: pillBg, dot: dotCtrl, lbl: lblCtrl, tag: "", db: dbCtrl }
+    RegisterPillHover(item.param, pillBg, dotCtrl, lblCtrl, dbCtrl)
+    RegisterButtonHover(renBtn, "1C1C26", "282836", "Rename " nameMap[item.param])
+    RegisterButtonHover(rstBtn, "1C1C26", "282836", "Reset " nameMap[item.param] " fader to 0.0 dB")
+    RegisterHoverRow(item.param, xCol, relY - 1, xCol + 226, relY + 27, pillBg, dotCtrl, lblCtrl, dbCtrl, renBtn, rstBtn)
 
     if (!isLeft || idx = outputBuses.Length)
-        yPos += 30
+        relY += 30
 }
 
-; --- Footer Divider & Sleek Action Pills ---
-AddBodyControl(settingsGui.AddText("x16 y" (yPos + 4) " w436 h1 Background22222E", ""), yPos + 4)
+; --- Body Section 4: Automation & Protection Quick Toggles ---
+AddBodyControl(settingsGui.AddText("x16 y" (relY + 4) " w460 h1 Background22222E", ""), relY + 4)
 
-settingsGui.SetFont("s8 c71717A", "Segoe UI")
-footerHintText := AddBodyControl(settingsGui.AddText("x16 y" (yPos + 12) " w146 h28 Background0D0D11", ""), yPos + 12)
+settingsGui.SetFont("s8 Bold c71717A", "Segoe UI")
+AddBodyControl(settingsGui.AddText("x16 y" (relY + 12) " w460 h16 Background0D0D11", "AUTOMATION && PROTECTION  (CLICK TO TOGGLE  •  RIGHT-CLICK TO CONFIGURE)"), relY + 12)
 
-settingsGui.SetFont("s8 Bold cD4D4D8", "Segoe UI")
-featuresBtn := AddBodyControl(settingsGui.AddText("x166 y" (yPos + 12) " w62 h28 Center +0x200 Background191922", "Features"), yPos + 12)
-featuresBtn.OnEvent("Click", (*) => OpenFeaturesGui())
-RegisterButtonHover(featuresBtn, "191922", "242432")
+relToggle := relY + 32
 
 settingsGui.SetFont("s8 Bold c38BDF8", "Segoe UI")
-keybindBtn := AddBodyControl(settingsGui.AddText("x232 y" (yPos + 12) " w68 h28 Center +0x200 Background152433", "Keybinds"), yPos + 12)
-keybindBtn.OnEvent("Click", (*) => OpenKeybindGui())
-RegisterButtonHover(keybindBtn, "152433", "1C3247")
+autoResetPill := AddBodyControl(settingsGui.AddText("x16 y" relToggle " w150 h26 Center +0x200 Background152433", "● Auto-Reset: ON"), relToggle)
+autoResetPill.OnEvent("Click", ToggleAutoResetDevice)
+hoverStyleMap[autoResetPill.Hwnd] := {
+    key: "autoResetPill",
+    ctrls: [autoResetPill],
+    isMain: true,
+    getBg: (*) => (autoResetDevice = 1) ? "152433" : "16161E",
+    hoverBg: (*) => (autoResetDevice = 1) ? "1C3247" : "20202C"
+}
+hoverHintMap["autoResetPill"] := "Auto-Reset: Automatically restarts VoiceMeeter's audio engine when a USB, HDMI, or Bluetooth device reconnects"
+
+devLockPill := AddBodyControl(settingsGui.AddText("x171 y" relToggle " w150 h26 Center +0x200 Background16161E", "○ Anti-Hijack: OFF"), relToggle)
+devLockPill.OnEvent("Click", ToggleDeviceLock)
+devLockPill.OnEvent("ContextMenu", (*) => OpenAntiHijackGui())
+hoverStyleMap[devLockPill.Hwnd] := {
+    key: "devLockPill",
+    ctrls: [devLockPill],
+    isMain: true,
+    getBg: (*) => (deviceLockEnabled = 1) ? "152433" : "16161E",
+    hoverBg: (*) => (deviceLockEnabled = 1) ? "1C3247" : "20202C"
+}
+hoverHintMap["devLockPill"] := "Anti-Hijack: Locks Windows playback && recording defaults against new gear  •  Right-click: Choose locked devices"
+
+duckPill := AddBodyControl(settingsGui.AddText("x326 y" relToggle " w150 h26 Center +0x200 Background16161E", "○ Auto-Duck: OFF"), relToggle)
+duckPill.OnEvent("Click", ToggleAutoDuck)
+duckPill.OnEvent("ContextMenu", (*) => OpenDuckingGui())
+hoverStyleMap[duckPill.Hwnd] := {
+    key: "duckPill",
+    ctrls: [duckPill],
+    isMain: true,
+    getBg: (*) => (duckEnabled = 1) ? "152433" : "16161E",
+    hoverBg: (*) => (duckEnabled = 1) ? "1C3247" : "20202C"
+}
+hoverHintMap["duckPill"] := "Auto-Duck: Lowers music/game audio while speaking into your mic  •  Right-click: Open 5-stage dynamics setup"
+
+; --- Footer Divider, 4 Action Pills & Unified Smart Hint Bar ---
+relFoot := relToggle + 34
+AddBodyControl(settingsGui.AddText("x16 y" relFoot " w460 h1 Background22222E", ""), relFoot)
+
+relBtn := relFoot + 8
 
 settingsGui.SetFont("s8 Bold cD4D4D8", "Segoe UI")
-restartBtn := AddBodyControl(settingsGui.AddText("x304 y" (yPos + 12) " w84 h28 Center +0x200 Background191922", "Restart Engine"), yPos + 12)
-restartBtn.OnEvent("Click", RestartAudioEngine)
-RegisterButtonHover(restartBtn, "191922", "242432")
+startupBtn := AddBodyControl(settingsGui.AddText("x16 y" relBtn " w122 h28 Center +0x200 Background191922", "Startup && Updates"), relBtn)
+startupBtn.OnEvent("Click", (*) => OpenStartupGui())
+RegisterButtonHover(startupBtn, "191922", "242432", "Configure Windows auto-start, VoiceMeeter auto-launch && GitHub updates")
 
+settingsGui.SetFont("s8 Bold c38BDF8", "Segoe UI")
+keybindBtn := AddBodyControl(settingsGui.AddText("x144 y" relBtn " w100 h28 Center +0x200 Background152433", "Keybinds"), relBtn)
+keybindBtn.OnEvent("Click", (*) => OpenKeybindGui())
+RegisterButtonHover(keybindBtn, "152433", "1C3247", "Customize keyboard shortcuts for channels, submix layers, FX, snapshots && toggles")
+
+settingsGui.SetFont("s8 Bold cD4D4D8", "Segoe UI")
+featuresBtn := AddBodyControl(settingsGui.AddText("x250 y" relBtn " w100 h28 Center +0x200 Background191922", "Features"), relBtn)
+featuresBtn.OnEvent("Click", (*) => OpenFeaturesGui())
+RegisterButtonHover(featuresBtn, "191922", "242432", "Open the full user manual and live shortcut reference")
+
+restartBtn := AddBodyControl(settingsGui.AddText("x356 y" relBtn " w120 h28 Center +0x200 Background191922", "Restart Engine"), relBtn)
+restartBtn.OnEvent("Click", RestartAudioEngine)
+RegisterButtonHover(restartBtn, "191922", "242432", "Manually restart VoiceMeeter's audio driver engine")
+
+relHint := relBtn + 34
+settingsGui.SetFont("s8 Norm c71717A", "Segoe UI")
+footerHintText := AddBodyControl(settingsGui.AddText("x16 y" relHint " w460 h26 Background0D0D11", ""), relHint)
+
+relHide := relHint + 28
 settingsGui.SetFont("s8 Bold cA1A1AA", "Segoe UI")
-hideBtn := AddBodyControl(settingsGui.AddText("x392 y" (yPos + 12) " w60 h28 Center +0x200 Background191922", "Hide"), yPos + 12)
+hideBtn := AddBodyControl(settingsGui.AddText("x386 y" relHide " w90 h18 Right +0x200 Background0D0D11", "Hide to Tray"), relHide)
 hideBtn.OnEvent("Click", (*) => settingsGui.Hide())
-RegisterButtonHover(hideBtn, "191922", "242432")
+hoverStyleMap[hideBtn.Hwnd] := { key: "hideBtn", ctrls: [hideBtn], isMain: true, getBg: (*) => "0D0D11", hoverBg: (*) => "0D0D11" }
+hoverHintMap["hideBtn"] := "Hide window to the system tray (runs silently in background)"
 
 settingsGui.OnEvent("Close", (*) => (settingsGui.Hide(), 1))
 settingsGui.OnEvent("Escape", (*) => settingsGui.Hide())
 
 ; ==============================================================================
-; 4. CAR HEAD-UNIT OPAQUE POP-UP HUD (SHOWN WHEN MAIN GUI IS NOT ACTIVE)
+; 4. FLOATING POP-UP HUD (SHOWN WHEN MAIN GUI IS NOT ACTIVE)
 ; ==============================================================================
 osdVisible := false
 osdGui := Gui("+AlwaysOnTop -Caption +ToolWindow +E0x20 +E0x08000000", "VMHeadUnitOSD")
@@ -568,24 +865,31 @@ ShowHeadUnitOsd(mode := "volume") {
     } else {
         primary := activeTargets[1]
         chanTitle := nameMap.Has(primary) ? nameMap[primary] : primary
-        if (activeTargets.Length > 1)
+        layerIdx := GetActiveGainLayerIndex()
+
+        if (activeTargets.Length > 1) {
             chanTitle .= "  +" (activeTargets.Length - 1) " linked"
+        } else if (layerIdx > 0) {
+            busParam := outputBuses[layerIdx].param
+            busLabel := nameMap.Has(busParam) ? nameMap[busParam] : outputBuses[layerIdx].name
+            chanTitle .= "  " Chr(0x2192) "  " busLabel
+        }
 
         val := vm.gains.Has(primary) ? Round(vm.gains[primary].current, 1) : 0.0
         if (Abs(val) < 0.05)
             val := 0.0
 
-        anyMuted := false
-        for p in activeTargets {
-            if (vm.mutes.Has(p) && vm.mutes[p])
-                anyMuted := true
-        }
+        anyMuted := IsAnyActiveTargetMuted()
 
         osdChannelText.Value := chanTitle
         if anyMuted {
             osdGainText.SetFont("s11 Bold cF87171")
             osdGainText.Value := "MUTED"
             osdAccent.Opt("cF87171")
+        } else if (layerIdx > 0) {
+            osdGainText.SetFont("s11 Bold cF59E0B")
+            osdGainText.Value := (val > 0 ? "+" : "") Format("{:.1f} dB", val)
+            osdAccent.Opt("cF59E0B")
         } else {
             osdGainText.SetFont("s11 Bold c38BDF8")
             osdGainText.Value := (val > 0 ? "+" : "") Format("{:.1f} dB", val)
@@ -599,9 +903,15 @@ ShowHeadUnitOsd(mode := "volume") {
             fxVal := vm.fxValues.Has(fullParam) ? vm.fxValues[fullParam].val : 0.0
             fxValStr := FormatEffectValue(fxObj, fxVal)
 
-            osdFxLabelText.SetFont(mode = "fx" ? "s9 Bold c38BDF8" : "s9 Bold cA1A1AA")
-            osdFxLabelText.Value := "FX  " Chr(0x25C2) "  " fxObj.label "  " Chr(0x25B8)
-            osdFxValText.Value   := fxValStr
+            if (mode = "layer" && layerIdx > 0) {
+                osdFxLabelText.SetFont("s9 Bold cF59E0B")
+                osdFxLabelText.Value := "Pro Submix Layer  (" outputBuses[layerIdx].name ")"
+                osdFxValText.Value   := "GainLayer[" (layerIdx - 1) "]"
+            } else {
+                osdFxLabelText.SetFont(mode = "fx" ? "s9 Bold c38BDF8" : "s9 Bold cA1A1AA")
+                osdFxLabelText.Value := "FX  " Chr(0x25C2) "  " fxObj.label "  " Chr(0x25B8)
+                osdFxValText.Value   := fxValStr
+            }
 
             if (mode = "fx") {
                 pct := Round(((fxVal - fxObj.min) / (fxObj.max - fxObj.min)) * 100)
@@ -609,7 +919,7 @@ ShowHeadUnitOsd(mode := "volume") {
                 osdMeter.Value := Max(0, Min(100, pct))
             } else {
                 pct := Round(((val + 60.0) / 72.0) * 100)
-                osdMeter.Opt(anyMuted ? "cF87171" : "c38BDF8")
+                osdMeter.Opt(anyMuted ? "cF87171" : (layerIdx > 0 ? "cF59E0B" : "c38BDF8"))
                 osdMeter.Value := Max(0, Min(100, pct))
             }
         } else {
@@ -642,12 +952,690 @@ HideHeadUnitOsd() {
 }
 
 ; ==============================================================================
-; 5. FEATURES GUIDE GUI
+; 5. PRO SIDECHAIN AUTO-DUCKING GUI, ANTI-HIJACK GUI, STARTUP/UPDATES & GUIDE
 ; ==============================================================================
+duckGui           := ""
+duckCheckBoxes    := Map()
+duckTrigDDL       := ""
+duckLayerDDL      := ""
+duckIgnoreMuteChk := ""
+duckAmtSlider     := ""
+duckAmtValTxt     := ""
+duckThreshSlider  := ""
+duckThreshValTxt  := ""
+duckAttackSlider  := ""
+duckAttackValTxt  := ""
+duckHoldSlider    := ""
+duckHoldValTxt    := ""
+duckReleaseSlider := ""
+duckReleaseValTxt := ""
+duckLiveMeter     := ""
+duckGrMeter       := ""
+duckMicReadout    := ""
+duckGrReadout     := ""
+duckStageBadge    := ""
+
+CloseDuckingGui(*) {
+    global duckGui
+    SetTimer(UpdateDuckLiveMeter, 0)
+    ResetLastHover()
+    if IsObject(duckGui) {
+        try duckGui.Destroy()
+    }
+    duckGui := ""
+}
+
+FormatTimeLabel(ms) {
+    if (ms = 0)
+        return "0 ms (None)"
+    if (ms < 1000)
+        return ms " ms"
+    return Format("{:.2f} s", ms / 1000.0)
+}
+
+ApplyDuckPreset(depthDb, threshDb, attMs, hldMs, relMs, presetName, *) {
+    duckAmtSlider.Value     := depthDb
+    duckThreshSlider.Value  := threshDb
+    duckAttackSlider.Value  := attMs
+    duckHoldSlider.Value    := hldMs
+    duckReleaseSlider.Value := relMs
+
+    duckAmtValTxt.Value     := "-" depthDb " dB"
+    duckThreshValTxt.Value  := threshDb " dBFS"
+    duckAttackValTxt.Value  := FormatTimeLabel(attMs)
+    duckHoldValTxt.Value    := FormatTimeLabel(hldMs)
+    duckReleaseValTxt.Value := FormatTimeLabel(relMs)
+
+    ShowQuickTip("Loaded '" presetName "' ducking curve — click Save & Enable to apply.", 1400)
+}
+
+SetDuckTargetSelection(mode, *) {
+    for idx, ch in allChannels {
+        if !duckCheckBoxes.Has(ch.param)
+            continue
+        if (mode = "all") {
+            duckCheckBoxes[ch.param].Value := 1
+        } else if (mode = "none") {
+            duckCheckBoxes[ch.param].Value := 0
+        } else if (mode = "virtual") {
+            isVirt := (ch.param = "Strip[5]" || ch.param = "Strip[6]" || ch.param = "Strip[7]")
+            duckCheckBoxes[ch.param].Value := isVirt ? 1 : 0
+        }
+    }
+}
+
+OpenDuckingGui() {
+    global duckGui, duckCheckBoxes, duckTrigDDL, duckLayerDDL, duckIgnoreMuteChk
+    global duckAmtSlider, duckAmtValTxt, duckThreshSlider, duckThreshValTxt
+    global duckAttackSlider, duckAttackValTxt, duckHoldSlider, duckHoldValTxt
+    global duckReleaseSlider, duckReleaseValTxt
+    global duckLiveMeter, duckGrMeter, duckMicReadout, duckGrReadout, duckStageBadge
+
+    if IsGuiAlive(duckGui) {
+        duckGui.Show()
+        SetTimer(UpdateDuckLiveMeter, 50)
+        return
+    }
+
+    duckCheckBoxes := Map()
+
+    duckGui := Gui("+AlwaysOnTop -MaximizeBox", "Sidechain Auto-Ducking Studio")
+    duckGui.MarginX := 16
+    duckGui.MarginY := 14
+    duckGui.BackColor := "0D0D11"
+    ApplySleekWindowTheme(duckGui, false)
+
+    duckGui.AddProgress("x16 y12 w620 h2 Background0D0D11 c38BDF8", 100)
+    duckGui.SetFont("s11 Bold cF4F4F5", "Segoe UI")
+    duckGui.AddText("x16 y20 w420 h22 Background0D0D11", "Sidechain Auto-Ducking")
+    duckGui.SetFont("s9 Norm cA1A1AA", "Segoe UI")
+    duckGui.AddText("x16 y42 w620 h17 Background0D0D11", "Automatically lowers background audio when you speak, then smoothly restores it after you finish.")
+
+    duckGui.AddText("x16 y66 w620 h96 Background15151C", "")
+
+    duckGui.SetFont("s8 Bold c38BDF8", "Segoe UI")
+    duckGui.AddText("x28 y74 w286 h15 Background15151C", "1. TRIGGER INPUT (YOUR MICROPHONE)")
+    duckGui.AddText("x334 y74 w290 h15 Background15151C", "2. DUCKING SCOPE (WHERE TO LOWER AUDIO)")
+
+    stripChoices := []
+    trigSelIdx := 1
+    for idx, st in inputStrips {
+        stripChoices.Push(nameMap[st.param] "  (" st.param ")")
+        if (st.param = duckTriggerStrip)
+            trigSelIdx := idx
+    }
+
+    duckGui.SetFont("s9 Norm cF4F4F5", "Segoe UI")
+    duckTrigDDL := duckGui.AddDropDownList("x28 y92 w286 Background1C1C26 cF4F4F5 Choose" trigSelIdx, stripChoices)
+
+    layerChoices := ["All Output Buses (Main Channel Fader)"]
+    for b in outputBuses
+        layerChoices.Push("Only in " b.name " — " nameMap[b.param] " (Submix Layer)")
+    duckLayerDDL := duckGui.AddDropDownList("x334 y92 w290 Background1C1C26 cF4F4F5 Choose" (duckBusLayer + 1), layerChoices)
+
+    duckGui.SetFont("s8 Norm cE4E4E7", "Segoe UI")
+    duckIgnoreMuteChk := duckGui.AddCheckBox("x28 y127 w290 h22 Background15151C cE4E4E7 Checked" duckIgnoreMuted, "Ignore mic trigger when strip is muted")
+
+    duckGui.SetFont("s8 Bold c71717A", "Segoe UI")
+    duckGui.AddText("x334 y127 w54 h22 +0x200 Background15151C", "PRESETS:")
+
+    duckGui.SetFont("s8 Bold c38BDF8", "Segoe UI")
+    pPodBtn := duckGui.AddText("x392 y126 w56 h22 Center +0x200 Background1B2B3A", "Podcast")
+    pPodBtn.OnEvent("Click", ApplyDuckPreset.Bind(14, -30, 60, 400, 350, "Podcast / Voiceover"))
+    RegisterButtonHover(pPodBtn, "1B2B3A", "23384C", "Balanced voiceover curve (-14 dB, 60 ms attack, 350 ms release)", false)
+
+    pGamBtn := duckGui.AddText("x452 y126 w56 h22 Center +0x200 Background1B2B3A", "Gaming")
+    pGamBtn.OnEvent("Click", ApplyDuckPreset.Bind(10, -26, 40, 280, 240, "Gaming / Discord"))
+    RegisterButtonHover(pGamBtn, "1B2B3A", "23384C", "Subtle background dip for game audio (-10 dB, 40 ms attack, 240 ms release)", false)
+
+    pRadBtn := duckGui.AddText("x512 y126 w52 h22 Center +0x200 Background1B2B3A", "Radio")
+    pRadBtn.OnEvent("Click", ApplyDuckPreset.Bind(18, -32, 120, 600, 850, "Smooth Radio Fade"))
+    RegisterButtonHover(pRadBtn, "1B2B3A", "23384C", "Deep broadcast music fade (-18 dB, 120 ms attack, 850 ms release)", false)
+
+    pTgtBtn := duckGui.AddText("x568 y126 w56 h22 Center +0x200 Background1B2B3A", "Tight")
+    pTgtBtn.OnEvent("Click", ApplyDuckPreset.Bind(12, -28, 15, 90, 60, "Snappy / Tight"))
+    RegisterButtonHover(pTgtBtn, "1B2B3A", "23384C", "Fast, punchy response (-12 dB, 15 ms attack, 60 ms release)", false)
+
+    duckGui.AddText("x16 y170 w620 h68 Background15151C", "")
+
+    duckGui.SetFont("s8 Bold c71717A", "Segoe UI")
+    duckGui.AddText("x28 y178 w150 h16 Background15151C", "LIVE MIC INPUT LEVEL")
+    duckGui.SetFont("s8 Bold cA1A1AA", "Segoe UI")
+    duckMicReadout := duckGui.AddText("x180 y178 w146 h16 Right Background15151C", "-60.0 dBFS")
+
+    duckGui.SetFont("s8 Bold c71717A", "Segoe UI")
+    duckGui.AddText("x344 y178 w150 h16 Background15151C", "ACTIVE GAIN REDUCTION")
+    duckGui.SetFont("s8 Bold c38BDF8", "Segoe UI")
+    duckGrReadout := duckGui.AddText("x496 y178 w128 h16 Right Background15151C", "0.0 dB")
+
+    duckLiveMeter := duckGui.AddProgress("x28 y196 w298 h8 Range-60-0 Background1C1C26 c52525B", -60)
+    duckGrMeter   := duckGui.AddProgress("x344 y196 w280 h8 Range0-48 Background1C1C26 c38BDF8", 0)
+
+    duckGui.SetFont("s8 Bold c71717A", "Segoe UI")
+    duckStageBadge := duckGui.AddText("x28 y211 w596 h18 Background15151C", "STAGE: IDLE  •  Speak into your mic or click Test Duck below to preview the envelope")
+
+    duckGui.AddText("x16 y246 w620 h176 Background15151C", "")
+
+    initAmt    := Max(1, Min(48, Round(Abs(duckAmountDb))))
+    initThresh := Max(-60, Min(0, Round(duckThresholdDb)))
+
+    duckGui.SetFont("s9 Bold cF4F4F5", "Segoe UI")
+    duckGui.AddText("x28 y254 w180 h18 Background15151C", "3. Duck Depth (Amount)")
+    duckGui.SetFont("s9 Bold c38BDF8", "Segoe UI")
+    duckAmtValTxt := duckGui.AddText("x212 y254 w102 h18 Right Background15151C", "-" initAmt " dB")
+
+    duckAmtSlider := duckGui.AddSlider("x24 y273 w294 h24 Range1-48 TickInterval6 AltSubmit Background15151C", initAmt)
+    try DllCall("uxtheme\SetWindowTheme", "Ptr", duckAmtSlider.Hwnd, "Str", "DarkMode_Explorer", "Ptr", 0)
+    duckAmtSlider.OnEvent("Change", (*) => (duckAmtValTxt.Value := "-" duckAmtSlider.Value " dB"))
+
+    duckGui.SetFont("s8 Norm c71717A", "Segoe UI")
+    duckGui.AddText("x28 y298 w286 h15 Background15151C", "How much quieter target channels get while talking")
+
+    duckGui.SetFont("s9 Bold cF4F4F5", "Segoe UI")
+    duckGui.AddText("x334 y254 w180 h18 Background15151C", "4. Voice Threshold")
+    duckGui.SetFont("s9 Bold c38BDF8", "Segoe UI")
+    duckThreshValTxt := duckGui.AddText("x518 y254 w106 h18 Right Background15151C", initThresh " dBFS")
+
+    duckThreshSlider := duckGui.AddSlider("x330 y273 w298 h24 Range-60-0 TickInterval10 AltSubmit Background15151C", initThresh)
+    try DllCall("uxtheme\SetWindowTheme", "Ptr", duckThreshSlider.Hwnd, "Str", "DarkMode_Explorer", "Ptr", 0)
+    duckThreshSlider.OnEvent("Change", (*) => (duckThreshValTxt.Value := duckThreshSlider.Value " dBFS"))
+
+    duckGui.SetFont("s8 Norm c71717A", "Segoe UI")
+    duckGui.AddText("x334 y298 w290 h15 Background15151C", "Set just below your normal speaking level above")
+
+    duckGui.AddText("x28 y321 w596 h1 Background22222E", "")
+
+    initAttack  := Max(10, Min(1000, duckAttackMs))
+    initHold    := Max(0, Min(3000, duckHoldMs))
+    initRelease := Max(40, Min(3000, duckReleaseMs))
+
+    duckGui.SetFont("s9 Bold cF4F4F5", "Segoe UI")
+    duckGui.AddText("x28 y330 w105 h18 Background15151C", "5. Attack Speed")
+    duckGui.SetFont("s9 Bold c38BDF8", "Segoe UI")
+    duckAttackValTxt := duckGui.AddText("x135 y330 w80 h18 Right Background15151C", FormatTimeLabel(initAttack))
+
+    duckAttackSlider := duckGui.AddSlider("x24 y350 w195 h24 Range10-1000 TickInterval150 AltSubmit Background15151C", initAttack)
+    try DllCall("uxtheme\SetWindowTheme", "Ptr", duckAttackSlider.Hwnd, "Str", "DarkMode_Explorer", "Ptr", 0)
+    duckAttackSlider.OnEvent("Change", (*) => (duckAttackValTxt.Value := FormatTimeLabel(duckAttackSlider.Value)))
+
+    duckGui.SetFont("s8 Norm c71717A", "Segoe UI")
+    duckGui.AddText("x28 y376 w190 h36 Background15151C", "How fast audio dips when you start speaking.")
+
+    duckGui.SetFont("s9 Bold cF4F4F5", "Segoe UI")
+    duckGui.AddText("x232 y330 w105 h18 Background15151C", "6. Hold Time")
+    duckGui.SetFont("s9 Bold c38BDF8", "Segoe UI")
+    duckHoldValTxt := duckGui.AddText("x339 y330 w80 h18 Right Background15151C", FormatTimeLabel(initHold))
+
+    duckHoldSlider := duckGui.AddSlider("x228 y350 w195 h24 Range0-3000 TickInterval500 AltSubmit Background15151C", initHold)
+    try DllCall("uxtheme\SetWindowTheme", "Ptr", duckHoldSlider.Hwnd, "Str", "DarkMode_Explorer", "Ptr", 0)
+    duckHoldSlider.OnEvent("Change", (*) => (duckHoldValTxt.Value := FormatTimeLabel(duckHoldSlider.Value)))
+
+    duckGui.SetFont("s8 Norm c71717A", "Segoe UI")
+    duckGui.AddText("x232 y376 w190 h36 Background15151C", "Pause before recovery (bridges word gaps).")
+
+    duckGui.SetFont("s9 Bold cF4F4F5", "Segoe UI")
+    duckGui.AddText("x436 y330 w105 h18 Background15151C", "7. Release Speed")
+    duckGui.SetFont("s9 Bold c38BDF8", "Segoe UI")
+    duckReleaseValTxt := duckGui.AddText("x543 y330 w81 h18 Right Background15151C", FormatTimeLabel(initRelease))
+
+    duckReleaseSlider := duckGui.AddSlider("x432 y350 w196 h24 Range40-3000 TickInterval500 AltSubmit Background15151C", initRelease)
+    try DllCall("uxtheme\SetWindowTheme", "Ptr", duckReleaseSlider.Hwnd, "Str", "DarkMode_Explorer", "Ptr", 0)
+    duckReleaseSlider.OnEvent("Change", (*) => (duckReleaseValTxt.Value := FormatTimeLabel(duckReleaseSlider.Value)))
+
+    duckGui.SetFont("s8 Norm c71717A", "Segoe UI")
+    duckGui.AddText("x436 y376 w190 h36 Background15151C", "How smoothly volume fades back up after Hold.")
+
+    duckGui.SetFont("s8 Bold c38BDF8", "Segoe UI")
+    duckGui.AddText("x16 y432 w370 h20 +0x200 Background0D0D11", "8. TARGET CHANNELS TO DUCK WHEN SPEAKING")
+
+    duckGui.SetFont("s8 Bold cA1A1AA", "Segoe UI")
+    selVirtBtn := duckGui.AddText("x418 y431 w92 h20 Center +0x200 Background191922", "Virtual Only")
+    selVirtBtn.OnEvent("Click", SetDuckTargetSelection.Bind("virtual"))
+    RegisterButtonHover(selVirtBtn, "191922", "242432", "Select only Virtual Inputs (VAIO, AUX, VAIO3)", false)
+
+    selAllBtn := duckGui.AddText("x514 y431 w58 h20 Center +0x200 Background191922", "All")
+    selAllBtn.OnEvent("Click", SetDuckTargetSelection.Bind("all"))
+    RegisterButtonHover(selAllBtn, "191922", "242432", "Select all 16 channels", false)
+
+    selNoneBtn := duckGui.AddText("x576 y431 w60 h20 Center +0x200 Background191922", "None")
+    selNoneBtn.OnEvent("Click", SetDuckTargetSelection.Bind("none"))
+    RegisterButtonHover(selNoneBtn, "191922", "242432", "Clear all selected channels", false)
+
+    yChk := 456
+    for idx, ch in allChannels {
+        col := Mod(idx - 1, 3)
+        xC  := 16 + (col * 210)
+        isChecked := false
+        for dt in duckTargets {
+            if (dt = ch.param) {
+                isChecked := true
+                break
+            }
+        }
+        duckGui.SetFont("s9 Norm cE4E4E7", "Segoe UI")
+        cb := duckGui.AddCheckBox("x" xC " y" yChk " w202 h21 Background0D0D11 cE4E4E7 Checked" isChecked, nameMap[ch.param])
+        duckCheckBoxes[ch.param] := cb
+        if (col = 2 || idx = allChannels.Length)
+            yChk += 23
+    }
+
+    yAct := yChk + 10
+    duckGui.AddText("x16 y" (yAct - 6) " w620 h1 Background22222E", "")
+
+    duckGui.SetFont("s9 Bold cD4D4D8", "Segoe UI")
+    testDuckBtn := duckGui.AddText("x16 y" yAct " w154 h28 Center +0x200 Background191922", "Test Duck Curve (1.8s)")
+    testDuckBtn.OnEvent("Click", TriggerDuckTest)
+    RegisterButtonHover(testDuckBtn, "191922", "242432", "Simulate speaking for 1.8s to audition your Attack, Hold && Release curve", false)
+
+    duckGui.SetFont("s9 Bold c38BDF8", "Segoe UI")
+    saveDuckBtn := duckGui.AddText("x420 y" yAct " w128 h28 Center +0x200 Background152433", "Save && Enable")
+    saveDuckBtn.OnEvent("Click", SaveDuckingConfig)
+    RegisterButtonHover(saveDuckBtn, "152433", "1C3247", "Save Auto-Ducking settings and turn Auto-Ducking ON", false)
+
+    duckGui.SetFont("s9 Bold cA1A1AA", "Segoe UI")
+    cancelDuckBtn := duckGui.AddText("x554 y" yAct " w82 h28 Center +0x200 Background191922", "Close")
+    cancelDuckBtn.OnEvent("Click", CloseDuckingGui)
+    RegisterButtonHover(cancelDuckBtn, "191922", "242432", "", false)
+
+    duckGui.OnEvent("Close", CloseDuckingGui)
+    duckGui.OnEvent("Escape", CloseDuckingGui)
+    duckGui.Show("AutoSize")
+    SetTimer(UpdateDuckLiveMeter, 50)
+}
+
+TriggerDuckTest(*) {
+    global duckTriggerStrip, duckBusLayer, duckAmountDb, duckThresholdDb, duckAttackMs, duckHoldMs, duckReleaseMs, duckTargets, duckTestUntilTick
+
+    tIdx := duckTrigDDL.Value
+    if (tIdx >= 1 && tIdx <= inputStrips.Length)
+        duckTriggerStrip := inputStrips[tIdx].param
+
+    duckBusLayer    := Max(0, duckLayerDDL.Value - 1)
+    duckAmountDb    := Float(duckAmtSlider.Value)
+    duckThresholdDb := Float(duckThreshSlider.Value)
+    duckAttackMs    := Integer(duckAttackSlider.Value)
+    duckHoldMs      := Integer(duckHoldSlider.Value)
+    duckReleaseMs   := Integer(duckReleaseSlider.Value)
+
+    duckTargets := []
+    for ch in allChannels {
+        if (duckCheckBoxes.Has(ch.param) && duckCheckBoxes[ch.param].Value = 1)
+            duckTargets.Push(ch.param)
+    }
+
+    duckTestUntilTick := A_TickCount + 1800
+    SetTimer(AutoDuckTick, 25)
+    ShowQuickTip("Testing Auto-Ducking curve (-" Round(duckAmountDb) " dB)...", 1500)
+}
+
+UpdateDuckLiveMeter() {
+    if !IsGuiAlive(duckGui) {
+        SetTimer(UpdateDuckLiveMeter, 0)
+        return
+    }
+    if (!vm.connected || !pGetLevel) {
+        duckStageBadge.Value := "STAGE: OFFLINE  •  Start VoiceMeeter Potato to preview live levels"
+        return
+    }
+
+    tIdx := duckTrigDDL.Value
+    param := (tIdx >= 1 && tIdx <= inputStrips.Length) ? inputStrips[tIdx].param : duckTriggerStrip
+    stripIdx := Integer(RegExReplace(param, "\D"))
+
+    isMuted := false
+    if (duckIgnoreMuteChk.Value = 1) {
+        mVal := 0.0
+        DllCall(pGetFloat, "AStr", param ".Mute", "Float*", &mVal)
+        isMuted := (mVal >= 0.5)
+    }
+
+    lvlL := 0.0
+    lvlR := 0.0
+    DllCall(pGetLevel, "Int", 0, "Int", stripIdx * 8, "Float*", &lvlL)
+    DllCall(pGetLevel, "Int", 0, "Int", (stripIdx * 8) + 1, "Float*", &lvlR)
+
+    peak := isMuted ? 0.0 : Max(lvlL, lvlR)
+    db := (peak > 0.000001) ? (20.0 * Log(peak)) : -60.0
+    clampedDb := Round(Max(-60, Min(0, db)))
+    thresh := duckThreshSlider.Value
+
+    duckLiveMeter.Value := clampedDb
+    if isMuted {
+        duckLiveMeter.Opt("cF87171")
+        duckMicReadout.SetFont("s8 Bold cF87171")
+        duckMicReadout.Value := "MUTED (Ignored)"
+    } else if (db >= thresh) {
+        duckLiveMeter.Opt("c38BDF8")
+        duckMicReadout.SetFont("s8 Bold c38BDF8")
+        duckMicReadout.Value := Format("{:.1f} dBFS  (TRIGGERED)", Max(-60.0, db))
+    } else {
+        duckLiveMeter.Opt("c52525B")
+        duckMicReadout.SetFont("s8 Bold cA1A1AA")
+        duckMicReadout.Value := Format("{:.1f} dBFS", Max(-60.0, db))
+    }
+
+    grAbs := Abs(duckCurrentOffset)
+    duckGrMeter.Value := Round(Max(0, Min(48, grAbs)))
+    duckGrReadout.Value := (grAbs >= 0.05) ? Format("-{:.1f} dB", grAbs) : "0.0 dB"
+
+    if (duckStageLabel = "IDLE") {
+        duckStageBadge.SetFont("s8 Bold c71717A")
+        duckStageBadge.Value := "STAGE: IDLE  •  Waiting for voice above " thresh " dBFS"
+    } else {
+        duckStageBadge.SetFont("s8 Bold c38BDF8")
+        duckStageBadge.Value := "STAGE: " duckStageLabel "  •  Applying " Format("-{:.1f} dB", grAbs) " reduction"
+    }
+}
+
+SaveDuckingConfig(*) {
+    global duckEnabled, duckTriggerStrip, duckBusLayer, duckAmountDb, duckThresholdDb
+    global duckAttackMs, duckHoldMs, duckReleaseMs, duckIgnoreMuted, duckTargets, duckTestUntilTick
+
+    duckTestUntilTick := 0
+    RestoreAllDuckedChannels()
+
+    tIdx := duckTrigDDL.Value
+    if (tIdx >= 1 && tIdx <= inputStrips.Length)
+        duckTriggerStrip := inputStrips[tIdx].param
+
+    duckBusLayer    := Max(0, duckLayerDDL.Value - 1)
+    duckAmountDb    := Float(duckAmtSlider.Value)
+    duckThresholdDb := Float(duckThreshSlider.Value)
+    duckAttackMs    := Integer(duckAttackSlider.Value)
+    duckHoldMs      := Integer(duckHoldSlider.Value)
+    duckReleaseMs   := Integer(duckReleaseSlider.Value)
+    duckIgnoreMuted := duckIgnoreMuteChk.Value
+
+    duckTargets := []
+    joined := ""
+    for ch in allChannels {
+        if (duckCheckBoxes.Has(ch.param) && duckCheckBoxes[ch.param].Value = 1) {
+            duckTargets.Push(ch.param)
+            joined .= (joined != "" ? "," : "") ch.param
+        }
+    }
+
+    duckEnabled := 1
+    IniWrite(1, iniPath, "AutoDuck", "Enabled")
+    IniWrite(duckTriggerStrip, iniPath, "AutoDuck", "TriggerStrip")
+    IniWrite(joined, iniPath, "AutoDuck", "Targets")
+    IniWrite(duckBusLayer, iniPath, "AutoDuck", "BusLayer")
+    IniWrite(Format("{:.1f}", duckAmountDb), iniPath, "AutoDuck", "AmountDb")
+    IniWrite(Format("{:.1f}", duckThresholdDb), iniPath, "AutoDuck", "ThresholdDb")
+    IniWrite(duckAttackMs, iniPath, "AutoDuck", "AttackMs")
+    IniWrite(duckHoldMs, iniPath, "AutoDuck", "HoldMs")
+    IniWrite(duckReleaseMs, iniPath, "AutoDuck", "ReleaseMs")
+    IniWrite(duckIgnoreMuted, iniPath, "AutoDuck", "IgnoreMuted")
+
+    SetTimer(AutoDuckTick, 25)
+    RefreshAutomationPills()
+    RefreshShortcutLabels()
+    CloseDuckingGui()
+    ShowQuickTip("Auto-Ducking saved & enabled (-" Round(duckAmountDb) " dB).", 1500)
+}
+
+; --- Dedicated Anti-Hijack (Windows Default Device Lock) Window ---
+antiHijackGui   := ""
+playDevDDL      := ""
+recDevDDL       := ""
+enumPlayDevices := []
+enumRecDevices  := []
+
+CloseAntiHijackGui(*) {
+    global antiHijackGui
+    ResetLastHover()
+    if IsObject(antiHijackGui) {
+        try antiHijackGui.Destroy()
+    }
+    antiHijackGui := ""
+}
+
+OpenAntiHijackGui() {
+    global antiHijackGui, playDevDDL, recDevDDL, enumPlayDevices, enumRecDevices
+
+    if IsGuiAlive(antiHijackGui) {
+        antiHijackGui.Show()
+        return
+    }
+
+    enumPlayDevices := EnumWindowsAudioDevices(0)
+    enumRecDevices  := EnumWindowsAudioDevices(1)
+
+    antiHijackGui := Gui("+AlwaysOnTop -MaximizeBox", "Windows Default Device Lock (Anti-Hijack)")
+    antiHijackGui.MarginX := 16
+    antiHijackGui.MarginY := 14
+    antiHijackGui.BackColor := "0D0D11"
+    ApplySleekWindowTheme(antiHijackGui, false)
+
+    antiHijackGui.AddProgress("x16 y12 w480 h2 Background0D0D11 c38BDF8", 100)
+    antiHijackGui.SetFont("s11 Bold cF4F4F5", "Segoe UI")
+    antiHijackGui.AddText("x16 y20 w480 h22 Background0D0D11", "Windows Default Audio Device Lock (Anti-Hijack)")
+    antiHijackGui.SetFont("s9 Norm cA1A1AA", "Segoe UI")
+    antiHijackGui.AddText("x16 y42 w480 h18 Background0D0D11", "Prevents USB headsets, controllers, or monitors from stealing Windows audio defaults.")
+
+    antiHijackGui.AddText("x16 y68 w480 h162 Background15151C", "")
+
+    antiHijackGui.SetFont("s8 Bold c38BDF8", "Segoe UI")
+    antiHijackGui.AddText("x28 y78 w456 h16 Background15151C", "1. LOCKED PLAYBACK DEVICE (DEFAULT OUTPUT)")
+
+    playNames := []
+    playSel := 1
+    for idx, d in enumPlayDevices {
+        playNames.Push(d.name)
+        if (d.id = lockedPlaybackId)
+            playSel := idx
+    }
+    if (playNames.Length = 0)
+        playNames.Push("No active playback devices detected")
+
+    antiHijackGui.SetFont("s9 Norm cF4F4F5", "Segoe UI")
+    playDevDDL := antiHijackGui.AddDropDownList("x28 y98 w456 Background1C1C26 cF4F4F5 Choose" playSel, playNames)
+
+    antiHijackGui.SetFont("s8 Bold c38BDF8", "Segoe UI")
+    antiHijackGui.AddText("x28 y134 w456 h16 Background15151C", "2. LOCKED RECORDING DEVICE (DEFAULT INPUT / MIC)")
+
+    recNames := []
+    recSel := 1
+    for idx, d in enumRecDevices {
+        recNames.Push(d.name)
+        if (d.id = lockedRecordId)
+            recSel := idx
+    }
+    if (recNames.Length = 0)
+        recNames.Push("No active recording devices detected")
+
+    antiHijackGui.SetFont("s9 Norm cF4F4F5", "Segoe UI")
+    recDevDDL := antiHijackGui.AddDropDownList("x28 y154 w456 Background1C1C26 cF4F4F5 Choose" recSel, recNames)
+
+    antiHijackGui.SetFont("s8 Bold c38BDF8", "Segoe UI")
+    capBtn := antiHijackGui.AddText("x28 y190 w220 h26 Center +0x200 Background1B2B3A", "Use Current Windows Defaults")
+    capBtn.OnEvent("Click", CaptureCurrentDefaultsIntoGui)
+    RegisterButtonHover(capBtn, "1B2B3A", "23384C", "Auto-fill dropdowns with your current Windows default devices", false)
+
+    antiHijackGui.SetFont("s8 Norm c71717A", "Segoe UI")
+    antiHijackGui.AddText("x258 y190 w226 h26 +0x200 Background15151C", "Usually VoiceMeeter Input && Output")
+
+    antiHijackGui.AddText("x16 y240 w480 h1 Background22222E", "")
+
+    antiHijackGui.SetFont("s9 Bold c38BDF8", "Segoe UI")
+    saveLockBtn := antiHijackGui.AddText("x260 y248 w148 h28 Center +0x200 Background152433", "Save && Lock Devices")
+    saveLockBtn.OnEvent("Click", SaveAndEnforceDeviceLock)
+    RegisterButtonHover(saveLockBtn, "152433", "1C3247", "Lock selected playback and recording devices", false)
+
+    antiHijackGui.SetFont("s9 Bold cA1A1AA", "Segoe UI")
+    closeLockBtn := antiHijackGui.AddText("x414 y248 w82 h28 Center +0x200 Background191922", "Close")
+    closeLockBtn.OnEvent("Click", CloseAntiHijackGui)
+    RegisterButtonHover(closeLockBtn, "191922", "242432", "", false)
+
+    antiHijackGui.OnEvent("Close", CloseAntiHijackGui)
+    antiHijackGui.OnEvent("Escape", CloseAntiHijackGui)
+    antiHijackGui.Show("AutoSize")
+}
+
+CaptureCurrentDefaultsIntoGui(*) {
+    curPlay := GetDefaultWindowsEndpoint(0)
+    curRec  := GetDefaultWindowsEndpoint(1)
+
+    if (curPlay.id != "") {
+        for idx, d in enumPlayDevices {
+            if (d.id = curPlay.id) {
+                playDevDDL.Choose(idx)
+                break
+            }
+        }
+    }
+    if (curRec.id != "") {
+        for idx, d in enumRecDevices {
+            if (d.id = curRec.id) {
+                recDevDDL.Choose(idx)
+                break
+            }
+        }
+    }
+    ShowQuickTip("Captured current Windows Playback & Recording defaults.", 1300)
+}
+
+SaveAndEnforceDeviceLock(*) {
+    global lockedPlaybackId, lockedPlaybackName, lockedRecordId, lockedRecordName, deviceLockEnabled
+
+    pIdx := playDevDDL.Value
+    if (pIdx >= 1 && pIdx <= enumPlayDevices.Length) {
+        lockedPlaybackId   := enumPlayDevices[pIdx].id
+        lockedPlaybackName := enumPlayDevices[pIdx].name
+        IniWrite(lockedPlaybackId, iniPath, "DeviceLock", "PlaybackId")
+        IniWrite(lockedPlaybackName, iniPath, "DeviceLock", "PlaybackName")
+    }
+
+    rIdx := recDevDDL.Value
+    if (rIdx >= 1 && rIdx <= enumRecDevices.Length) {
+        lockedRecordId   := enumRecDevices[rIdx].id
+        lockedRecordName := enumRecDevices[rIdx].name
+        IniWrite(lockedRecordId, iniPath, "DeviceLock", "RecordId")
+        IniWrite(lockedRecordName, iniPath, "DeviceLock", "RecordName")
+    }
+
+    deviceLockEnabled := 1
+    IniWrite(1, iniPath, "DeviceLock", "Enabled")
+    RefreshAutomationPills()
+    RefreshShortcutLabels()
+    EnforceDefaultDevices(true)
+    CloseAntiHijackGui()
+    ShowQuickTip("Windows Default Devices Locked!", 1400)
+}
+
+; --- Startup & GitHub Updates Window ---
+startupGui      := ""
+winStartChk     := ""
+autoLaunchVmChk := ""
+hideVmChk       := ""
+chkUpdateChk    := ""
+updateStatusTxt := ""
+
+CloseStartupGui(*) {
+    global startupGui
+    ResetLastHover()
+    if IsObject(startupGui) {
+        try startupGui.Destroy()
+    }
+    startupGui := ""
+}
+
+OpenStartupGui() {
+    global startupGui, winStartChk, autoLaunchVmChk, hideVmChk, chkUpdateChk, updateStatusTxt
+
+    if IsGuiAlive(startupGui) {
+        startupGui.Show()
+        return
+    }
+
+    startupGui := Gui("+AlwaysOnTop -MaximizeBox", "Startup, VoiceMeeter Boot & Updates")
+    startupGui.MarginX := 16
+    startupGui.MarginY := 14
+    startupGui.BackColor := "0D0D11"
+    ApplySleekWindowTheme(startupGui, false)
+
+    startupGui.AddProgress("x16 y12 w480 h2 Background0D0D11 c38BDF8", 100)
+    startupGui.SetFont("s11 Bold cF4F4F5", "Segoe UI")
+    startupGui.AddText("x16 y20 w480 h22 Background0D0D11", "Startup, VoiceMeeter Boot && Updates")
+
+    startupGui.AddText("x16 y50 w480 h138 Background15151C", "")
+    startupGui.SetFont("s8 Bold c38BDF8", "Segoe UI")
+    startupGui.AddText("x28 y58 w456 h16 Background15151C", "STARTUP && VOICEMEETER INTEGRATION")
+
+    hasStartupLink := FileExist(A_Startup "\Potato Massah.lnk") ? 1 : 0
+    startupGui.SetFont("s9 Norm cE4E4E7", "Segoe UI")
+    winStartChk     := startupGui.AddCheckBox("x28 y80 w456 h22 Background15151C cE4E4E7 Checked" hasStartupLink, "Start Potato Massah automatically when Windows boots")
+    autoLaunchVmChk := startupGui.AddCheckBox("x28 y104 w456 h22 Background15151C cE4E4E7 Checked" autoLaunchVM, "Auto-launch VoiceMeeter Potato if it is closed")
+    hideVmChk       := startupGui.AddCheckBox("x28 y128 w456 h22 Background15151C cE4E4E7 Checked" hideVMOnLaunch, "Minimize/hide VoiceMeeter Potato window after auto-launch")
+
+    startupGui.SetFont("s8 Bold cD4D4D8", "Segoe UI")
+    showVmBtn := startupGui.AddText("x28 y154 w220 h24 Center +0x200 Background1C1C26", "Show VoiceMeeter Window")
+    showVmBtn.OnEvent("Click", (*) => SetVoicemeeterVisibility(true))
+    RegisterButtonHover(showVmBtn, "1C1C26", "282836", "", false)
+
+    hideVmBtn := startupGui.AddText("x264 y154 w220 h24 Center +0x200 Background1C1C26", "Hide VoiceMeeter to Tray")
+    hideVmBtn.OnEvent("Click", (*) => SetVoicemeeterVisibility(false))
+    RegisterButtonHover(hideVmBtn, "1C1C26", "282836", "", false)
+
+    startupGui.AddText("x16 y198 w480 h74 Background15151C", "")
+    startupGui.SetFont("s8 Bold c38BDF8", "Segoe UI")
+    startupGui.AddText("x28 y206 w310 h16 Background15151C", "GITHUB RELEASES UPDATE CHECK (" APP_VERSION ")")
+
+    startupGui.SetFont("s9 Norm cE4E4E7", "Segoe UI")
+    chkUpdateChk := startupGui.AddCheckBox("x28 y226 w290 h20 Background15151C cE4E4E7 Checked" checkUpdatesStart, "Check for new releases on startup")
+
+    startupGui.SetFont("s8 Bold c38BDF8", "Segoe UI")
+    updNowBtn := startupGui.AddText("x334 y216 w150 h26 Center +0x200 Background152433", "Check GitHub Now")
+    updNowBtn.OnEvent("Click", (*) => CheckForGithubUpdates(false))
+    RegisterButtonHover(updNowBtn, "152433", "1C3247", "", false)
+
+    startupGui.SetFont("s8 Norm cA1A1AA", "Segoe UI")
+    updateStatusTxt := startupGui.AddText("x28 y248 w456 h16 Background15151C", "Repo: github.com/" GITHUB_REPO)
+
+    startupGui.SetFont("s9 Bold c38BDF8", "Segoe UI")
+    saveStartupBtn := startupGui.AddText("x304 y282 w104 h28 Center +0x200 Background152433", "Save Settings")
+    saveStartupBtn.OnEvent("Click", SaveStartupConfig)
+    RegisterButtonHover(saveStartupBtn, "152433", "1C3247", "", false)
+
+    startupGui.SetFont("s9 Bold cA1A1AA", "Segoe UI")
+    closeStartupBtn := startupGui.AddText("x414 y282 w82 h28 Center +0x200 Background191922", "Close")
+    closeStartupBtn.OnEvent("Click", CloseStartupGui)
+    RegisterButtonHover(closeStartupBtn, "191922", "242432", "", false)
+
+    startupGui.OnEvent("Close", CloseStartupGui)
+    startupGui.OnEvent("Escape", CloseStartupGui)
+    startupGui.Show("AutoSize")
+}
+
+SaveStartupConfig(*) {
+    global autoLaunchVM, hideVMOnLaunch, checkUpdatesStart
+
+    lnkPath := A_Startup "\Potato Massah.lnk"
+    if (winStartChk.Value = 1) {
+        try FileCreateShortcut(A_ScriptFullPath, lnkPath, A_ScriptDir, "", "Potato Massah — VoiceMeeter Wheel Controller", FileExist(customIconPath) ? customIconPath : "")
+    } else {
+        if FileExist(lnkPath)
+            try FileDelete(lnkPath)
+    }
+
+    autoLaunchVM      := autoLaunchVmChk.Value
+    hideVMOnLaunch    := hideVmChk.Value
+    checkUpdatesStart := chkUpdateChk.Value
+
+    IniWrite(autoLaunchVM, iniPath, "Startup", "AutoLaunchVM")
+    IniWrite(hideVMOnLaunch, iniPath, "Startup", "HideVMOnLaunch")
+    IniWrite(checkUpdatesStart, iniPath, "Startup", "CheckUpdatesOnStart")
+
+    CloseStartupGui()
+    ShowQuickTip("Startup & Update settings saved.", 1200)
+}
+
+; --- Comprehensive Features & User Manual Window ---
 featGui := ""
 
 CloseFeaturesGui(*) {
     global featGui
+    ResetLastHover()
     if IsObject(featGui) {
         try featGui.Destroy()
     }
@@ -665,6 +1653,8 @@ OpenFeaturesGui() {
     tKey     := FormatHotkeyHuman(keybinds["toggleGui"])
     chPrev   := FormatHotkeyHuman(keybinds["chanPrev"])
     chNext   := FormatHotkeyHuman(keybinds["chanNext"])
+    lyPrev   := FormatHotkeyHuman(keybinds["layerPrev"])
+    lyNext   := FormatHotkeyHuman(keybinds["layerNext"])
     fxPrev   := FormatHotkeyHuman(keybinds["fxPrev"])
     fxNext   := FormatHotkeyHuman(keybinds["fxNext"])
     fxUp     := FormatHotkeyHuman(keybinds["fxUp"])
@@ -672,68 +1662,87 @@ OpenFeaturesGui() {
     fxFUp    := FormatHotkeyHuman(keybinds["fxFineUp"])
     fxFDn    := FormatHotkeyHuman(keybinds["fxFineDown"])
     fxRst    := FormatHotkeyHuman(keybinds["fxReset"])
+    dkTog    := FormatHotkeyHuman(keybinds["toggleDuck"])
+    lkTog    := FormatHotkeyHuman(keybinds["toggleLock"])
+    sn1      := FormatHotkeyHuman(keybinds["snap1"])
+    sn2      := FormatHotkeyHuman(keybinds["snap2"])
+    sn3      := FormatHotkeyHuman(keybinds["snap3"])
 
-    boundSummary := ""
+    boundList := ""
     for ch in allChannels {
         hk := keybinds["target_" ch.param]
         if (hk != "")
-            boundSummary .= (boundSummary != "" ? ", " : "") nameMap[ch.param] " (" FormatHotkeyHuman(hk) ")"
+            boundList .= (boundList != "" ? "  •  " : "") nameMap[ch.param] " [" FormatHotkeyHuman(hk) "]"
     }
-    if (boundSummary = "")
-        boundSummary := "None bound yet"
+    if (boundList = "")
+        boundList := "None assigned yet (click Keybinds to add any channel shortcut)"
 
     guideText := (
         "1. HARDWARE VOLUME WHEEL & SMOOTH GLIDE ENGINE`r`n"
-        . "• Intercepts your keyboard/mouse Volume Up, Volume Down, and Volume Mute keys before Windows sees them (preventing Windows master volume changes and the OS volume popup).`r`n"
-        . "• Exponential Scroll Acceleration: Slow, single-notch clicks trim by 0.2 dB; fast spins accelerate smoothly up to 4.5 dB per notch.`r`n"
-        . "• 20 ms Smooth Glide Interpolation: Eases fader travel cleanly with instant direction-reversal braking and anti-bounce tracking.`r`n`r`n"
-        . "2. TARGET MODES, CHANNEL CYCLING & GROUP LINKING`r`n"
-        . "• Cycle Solo Target Channels: " chPrev " / " chNext " steps through all 16 inputs and outputs in Single-Target Mode.`r`n"
-        . "• Single-Target Mode: Click any Virtual Input (VAIO, AUX, VAIO3), Hardware Input (1–5), or Output Bus (A1–A5, B1–B3) to focus your volume wheel exclusively on that channel.`r`n"
-        . "• Multi-Target Group Mode: Click the top-right mode pill to toggle Multi-Group Mode and link multiple channels together with Spread-Locked Clamping (-60.0 to +12.0 dB).`r`n`r`n"
-        . "3. SOLO FX NAVIGATION (SINGLE-TARGET MODE)`r`n"
-        . "• Cycle Effects: " fxPrev " / " fxNext "`r`n"
-        . "• Adjust Value: " fxUp " / " fxDown "  (Fine Step: " fxFUp " / " fxFDn ")`r`n"
-        . "• Reset Selected Effect to 0.0: " fxRst "`r`n"
+        . "Takes over your keyboard/mouse Volume Up, Volume Down, and Mute keys and routes them straight into VoiceMeeter Potato—preventing Windows master volume changes and hiding the bulky Windows volume popup.`r`n"
+        . "• Precision & Speed Scaling: Slow single clicks trim by 0.2 dB for pinpoint adjustments; fast wheel spins accelerate smoothly up to 4.5 dB per notch with 20 ms fader interpolation and instant direction-reversal braking.`r`n`r`n"
+        . "2. MOUSE SHORTCUTS & INLINE MIXER CONTROLS (NO KEYBOARD NEEDED)`r`n"
+        . "• Hover-Scroll Any Channel: Point your cursor over any channel pill and roll your mouse wheel (±1.0 dB per notch) to adjust that fader directly without changing your active wheel target.`r`n"
+        . "• Gradual Fine Control (Shift + Scroll): Hold Shift while scrolling over any channel row for ultra-fine ±0.2 dB increments.`r`n"
+        . "• Middle-Click to Mute: Middle-click any channel pill (or click the MUTE pill in the top Hero Card) to toggle mute with your mouse.`r`n"
+        . "• Rename Any Channel (✎): Click the pencil icon (or right-click) on ANY Virtual Input (e.g., rename VAIO/AUX/VAIO3 to System, Discord, Music), Hardware Input, or Output Bus.`r`n"
+        . "• Instant Unity Reset (0dB): Click 0dB on any row to snap that fader (or active submix layer) straight back to 0.0 dB.`r`n`r`n"
+        . "3. PRO DRAWER: PER-BUS GAIN LAYERS, ROUTING MATRIX & SNAPSHOTS (AMBER)`r`n"
+        . "Click 'Pro ▾' in the top-right of the Hero Panel to reveal advanced Potato mixer controls:`r`n"
+        . "• Per-Bus Submix Gain Layers: Press " lyPrev " / " lyNext " (or left/right-click the Layer pill) while an Input Strip is selected to switch between Master Gain and individual output bus submixes (A1–A5, B1–B3)—letting you set separate headphone vs. stream volumes.`r`n"
+        . "• Strip Output Routing Matrix (A1–B3): Click any A1–B3 badge to toggle where the selected input strip sends audio (Amber = ON, Grey = OFF).`r`n"
+        . "• 3 Quick Mixer Snapshots (P1, P2, P3): Right-click P1–P3 to save all 16 fader levels and A1–B3 routes; left-click (or press " sn1 " / " sn2 " / " sn3 ") to recall them instantly.`r`n"
+        . "• 1-Click Safety Resets: Use 'Reset Layers', 'Reset Routes', or 'Default Mixer' anytime to restore default A1 routing and 0.0 dB levels.`r`n`r`n"
+        . "4. CHANNEL CYCLING, SINGLE-TARGET & MULTI-GROUP LINKING`r`n"
+        . "• Step Through All 16 Channels: Press " chPrev " / " chNext " to cycle through all 3 Virtual Inputs, 5 Hardware Inputs, and 8 Output Buses.`r`n"
+        . "• Single-Target vs. Multi-Group Mode: Click the mode pill to link multiple channels together with Spread-Locked Clamping (-60.0 to +12.0 dB) so their relative volume balances stay locked.`r`n`r`n"
+        . "5. SOLO FX, 3-BAND EQ & BUS RETURN CONTROLS`r`n"
+        . "• Cycle Effect: " fxPrev " / " fxNext "  |  Adjust: " fxUp " / " fxDown " (Fine 0.1 step: " fxFUp " / " fxFDn ")  |  Reset to 0: " fxRst "`r`n"
         . "• Hardware Inputs (1–5): Comp. → Gate → Denoiser → Reverb → Delay → FX1 Send → FX2 Send.`r`n"
-        . "• Virtual Inputs (VAIO / AUX / VAIO3): EQ Treble → EQ Mid → EQ Bass (-12.0 dB to +12.0 dB).`r`n"
+        . "• Virtual Inputs (VAIO / AUX / VAIO3): EQ Treble → EQ Mid → EQ Bass (-12.0 to +12.0 dB).`r`n"
         . "• Output Buses (A1–B3): Reverb Return → Delay Return → FX1 Return → FX2 Return.`r`n`r`n"
-        . "4. CAR HEAD-UNIT POP-UP HUD`r`n"
-        . "• Automatically pops up an opaque, click-through dark HUD at the bottom-center of your screen whenever the Control Panel isn't the active foreground window.`r`n"
-        . "• Displays the active channel name, live dB / MUTED badge, selected Solo FX carousel, and a real-time level bar (auto-hides 1.5s after stopping).`r`n`r`n"
-        . "5. GUI CONTROLS, HOVER-SCROLLING & RENAMING`r`n"
-        . "• Hover-Scroll Any Row: Point your cursor over any channel pill inside the Control Panel and roll your mouse wheel (±1.0 dB, or Shift + Wheel for ±0.2 dB) to adjust that fader without changing your hardware wheel target.`r`n"
-        . "• Custom Channel Labels: Click " Chr(0x270E) " (or right-click) on any Hardware Input or Output Bus to give it a custom name saved to volume_settings.ini.`r`n"
-        . "• Per-Channel 0dB Pills: Click 0dB next to any strip or bus for an instant unity gain reset.`r`n`r`n"
-        . "6. CUSTOM CHANNEL KEYBINDS, TRAY MENU & RELIABILITY`r`n"
-        . "• Full 16-Channel Keybinds (Keybinds): Bind any Virtual Input, Hardware Input, or Output Bus—plus channel cycling and Solo FX controls—to any multi-key combination.`r`n"
-        . "• Currently Bound Channels: " boundSummary ".`r`n"
-        . "• Toggle Control Panel: " tKey " (or left-click the tray icon; right-click for the Quick Target submenu).`r`n"
-        . "• Visual Mute Alert: Muting turns the top telemetry accent bar coral-red and switches the tray icon to a red mute badge.`r`n"
-        . "• Restart Engine & Auto-Watchdog: One-click ASIO/driver engine restart plus automatic reconnection if VoiceMeeter Potato closes and reopens."
+        . "6. AUTOMATION & PROTECTION SUITE`r`n"
+        . "• Auto-Reset on Device Reconnect: Automatically restarts VoiceMeeter's audio engine 1.8s after a USB, HDMI, or Bluetooth audio device reconnects (fixes red flashing strips).`r`n"
+        . "• Windows Default Device Lock (Anti-Hijack) [" lkTog "]: Locks your Windows Playback & Recording defaults so newly connected gear can't steal audio. Right-click Anti-Hijack to choose locked devices.`r`n"
+        . "• Sidechain Auto-Ducking [" dkTog "]: Monitors your chosen mic with live level & gain-reduction meters and smoothly lowers selected channels (or a single bus layer) with configurable Duck Depth, Threshold, Attack Speed, Hold Time, Release Speed, Mute Guard, and 4 quick presets. Right-click Auto-Duck to open the studio setup.`r`n`r`n"
+        . "7. FLOATING POP-UP HUD, STARTUP & UPDATES`r`n"
+        . "• Floating Pop-Up HUD: Whenever the Control Panel isn't focused, adjusting volume, Gain Layers, or Solo FX shows a sleek click-through HUD at the bottom-center of your screen (auto-hides after 1.5s).`r`n"
+        . "• Toggle Window: " tKey " (or left-click the tray icon; right-click for Quick Targets and toggles).`r`n"
+        . "• Startup & Updates Menu: Configure Windows auto-start, auto-launch & minimize VoiceMeeter Potato on startup, and check GitHub releases for new versions.`r`n"
+        . "• Currently Bound Channel Shortcuts: " boundList "."
     )
 
-    featGui := Gui("+AlwaysOnTop -MaximizeBox", "VoiceMeeter Potato Massah — Features & Guide")
+    featGui := Gui("+AlwaysOnTop -MaximizeBox", "VoiceMeeter Potato Massah — Complete User Guide (" APP_VERSION ")")
     featGui.MarginX := 16
     featGui.MarginY := 14
     featGui.BackColor := "0D0D11"
     ApplySleekWindowTheme(featGui, false)
 
-    featGui.AddProgress("x16 y12 w470 h2 Background0D0D11 c38BDF8", 100)
+    featGui.AddProgress("x16 y12 w540 h2 Background0D0D11 c38BDF8", 100)
     featGui.SetFont("s11 Bold cF4F4F5", "Segoe UI")
-    featGui.AddText("x16 y20 w470 h22 Background0D0D11", "Complete Feature & Shortcut Reference")
+    featGui.AddText("x16 y20 w540 h22 Background0D0D11", "Potato Massah " APP_VERSION " — Features, Controls && Shortcuts")
 
     featGui.SetFont("s9 Norm c38BDF8", "Segoe UI")
-    featGui.AddText("x16 y42 w470 h18 Background0D0D11", "All settings, labels, and custom keybinds save automatically to volume_settings.ini")
+    featGui.AddText("x16 y42 w540 h18 Background0D0D11", "Displays your live custom keybinds  •  All preferences auto-save to volume_settings.ini")
 
     featGui.SetFont("s9 Norm cE4E4E7", "Segoe UI")
-    featEdit := featGui.AddEdit("x16 y68 w470 h340 ReadOnly -WantReturn +VScroll Background15151C cE4E4E7", guideText)
+    featEdit := featGui.AddEdit("x16 y68 w540 h410 ReadOnly -WantReturn +VScroll Background15151C cE4E4E7", guideText)
     try DllCall("uxtheme\SetWindowTheme", "Ptr", featEdit.Hwnd, "Str", "DarkMode_Explorer", "Ptr", 0)
 
+    featGui.SetFont("s9 Bold c38BDF8", "Segoe UI")
+    openKbFromFeat := featGui.AddText("x16 y488 w150 h28 Center +0x200 Background152433", "Edit Keybinds...")
+    openKbFromFeat.OnEvent("Click", (*) => (CloseFeaturesGui(), OpenKeybindGui()))
+    RegisterButtonHover(openKbFromFeat, "152433", "1C3247", "", false)
+
+    featGui.SetFont("s9 Bold cD4D4D8", "Segoe UI")
+    openDuckFromFeat := featGui.AddText("x174 y488 w164 h28 Center +0x200 Background191922", "Auto-Ducking Setup...")
+    openDuckFromFeat.OnEvent("Click", (*) => (CloseFeaturesGui(), OpenDuckingGui()))
+    RegisterButtonHover(openDuckFromFeat, "191922", "242432", "", false)
+
     featGui.SetFont("s9 Bold cF4F4F5", "Segoe UI")
-    closeFeatBtn := featGui.AddText("x396 y418 w90 h28 Center +0x200 Background191922", "Close")
+    closeFeatBtn := featGui.AddText("x466 y488 w90 h28 Center +0x200 Background191922", "Close")
     closeFeatBtn.OnEvent("Click", CloseFeaturesGui)
-    RegisterButtonHover(closeFeatBtn, "191922", "242432")
+    RegisterButtonHover(closeFeatBtn, "191922", "242432", "", false)
 
     featGui.OnEvent("Close", CloseFeaturesGui)
     featGui.OnEvent("Escape", CloseFeaturesGui)
@@ -798,13 +1807,16 @@ RegisterAllHotkeys() {
 }
 
 RefreshShortcutLabels() {
+    global defaultFooterHint
     tKey := FormatHotkeyHuman(keybinds["toggleGui"])
     boundCount := 0
     for ch in allChannels {
         if (keybinds["target_" ch.param] != "")
             boundCount += 1
     }
-    footerHintText.Value := tKey ": Panel`n" boundCount " channel shortcut" (boundCount = 1 ? "" : "s") " active"
+    defaultFooterHint := tKey ": Panel  •  " boundCount " channel shortcut" (boundCount = 1 ? "" : "s") " active  •  Hover any control for tips"
+    if (lastHoverKey = "")
+        footerHintText.Value := defaultFooterHint
 
     targetSub := Menu()
     for ch in allChannels {
@@ -817,8 +1829,21 @@ RefreshShortcutLabels() {
     A_TrayMenu.Add("Open Control Panel (" tKey ")", (*) => ToggleGui())
     A_TrayMenu.Add("Quick Target", targetSub)
     A_TrayMenu.Add()
-    A_TrayMenu.Add("Features & Guide...", (*) => OpenFeaturesGui())
+    A_TrayMenu.Add("Auto-Reset on Device Reconnect", ToggleAutoResetDevice)
+    if (autoResetDevice = 1)
+        A_TrayMenu.Check("Auto-Reset on Device Reconnect")
+    A_TrayMenu.Add("Windows Default Device Lock", ToggleDeviceLock)
+    if (deviceLockEnabled = 1)
+        A_TrayMenu.Check("Windows Default Device Lock")
+    A_TrayMenu.Add("Auto-Ducking", ToggleAutoDuck)
+    if (duckEnabled = 1)
+        A_TrayMenu.Check("Auto-Ducking")
+    A_TrayMenu.Add()
+    A_TrayMenu.Add("Configure Auto-Ducking...", (*) => OpenDuckingGui())
+    A_TrayMenu.Add("Configure Anti-Hijack...", (*) => OpenAntiHijackGui())
+    A_TrayMenu.Add("Startup && Updates...", (*) => OpenStartupGui())
     A_TrayMenu.Add("Configure Keybinds...", (*) => OpenKeybindGui())
+    A_TrayMenu.Add("Features && Guide...", (*) => OpenFeaturesGui())
     A_TrayMenu.Add("Restart Audio Engine", (*) => RestartAudioEngine())
     A_TrayMenu.Add("Reload Script", (*) => Reload())
     A_TrayMenu.Add("Exit", (*) => ExitApp())
@@ -828,6 +1853,7 @@ RefreshShortcutLabels() {
 
 CloseKeybindGui(*) {
     global kbGui, activeInputHook
+    ResetLastHover()
     if (activeInputHook != "") {
         try activeInputHook.Stop()
         activeInputHook := ""
@@ -843,26 +1869,28 @@ AddKeybindRow(targetGui, item, xBase, yPos) {
     displayLabel := (item.param != "" && nameMap.Has(item.param)) ? nameMap[item.param] : item.label
     hkVal := keybinds[item.id]
     isBound := (hkVal != "")
+    actionId := item.id
 
     targetGui.SetFont("s9 Norm cE4E4E7", "Segoe UI")
-    lblCtrl := targetGui.AddText("x" xBase " y" yPos " w154 h25 +0x200 Background0D0D11", displayLabel)
-    kbLabelMap[item.id] := lblCtrl
+    lblCtrl := targetGui.AddText("x" xBase " y" yPos " w154 h23 +0x200 Background0D0D11", displayLabel)
+    kbLabelMap[actionId] := lblCtrl
 
     targetGui.SetFont("s8 Bold c" (isBound ? "38BDF8" : "71717A"), "Segoe UI")
-    bindBtn := targetGui.AddText("x" (xBase + 158) " y" yPos " w132 h25 Center +0x200 Background" (isBound ? "152433" : "16161E"), FormatHotkeyHuman(hkVal))
-    bindBtn.OnEvent("Click", CaptureHotkeyForAction.Bind(item.id))
-    kbBtnMap[item.id] := bindBtn
+    bindBtn := targetGui.AddText("x" (xBase + 158) " y" yPos " w132 h23 Center +0x200 Background" (isBound ? "152433" : "16161E"), FormatHotkeyHuman(hkVal))
+    bindBtn.OnEvent("Click", CaptureHotkeyForAction.Bind(actionId))
+    kbBtnMap[actionId] := bindBtn
     hoverStyleMap[bindBtn.Hwnd] := {
-        key: "kb_" item.id,
+        key: "kb_" actionId,
         ctrls: [bindBtn],
-        getBg: (*) => (keybinds[item.id] != "") ? "152433" : "16161E",
-        hoverBg: (*) => (keybinds[item.id] != "") ? "1C3247" : "20202C"
+        isMain: false,
+        getBg: (*) => (keybinds[actionId] != "") ? "152433" : "16161E",
+        hoverBg: (*) => (keybinds[actionId] != "") ? "1C3247" : "20202C"
     }
 
     targetGui.SetFont("s8 Bold cA1A1AA", "Segoe UI")
-    clrBtn := targetGui.AddText("x" (xBase + 294) " y" yPos " w26 h25 Center +0x200 Background191922", Chr(0x2715))
-    clrBtn.OnEvent("Click", ClearSingleHotkey.Bind(item.id))
-    RegisterButtonHover(clrBtn, "191922", "2A1A20")
+    clrBtn := targetGui.AddText("x" (xBase + 294) " y" yPos " w26 h23 Center +0x200 Background191922", Chr(0x2715))
+    clrBtn.OnEvent("Click", ClearSingleHotkey.Bind(actionId))
+    RegisterButtonHover(clrBtn, "191922", "2A1A20", "", false)
 }
 
 OpenKeybindGui() {
@@ -885,20 +1913,19 @@ OpenKeybindGui() {
 
     kbGui.AddProgress("x16 y12 w664 h2 Background0D0D11 c38BDF8", 100)
     kbGui.SetFont("s11 Bold cF4F4F5", "Segoe UI")
-    kbGui.AddText("x16 y20 w664 h22 Background0D0D11", "Keyboard Shortcuts (All Inputs, Outputs & FX)")
+    kbGui.AddText("x16 y20 w664 h22 Background0D0D11", "Keyboard Shortcuts (All Inputs, Outputs, Layers && FX)")
     kbGui.SetFont("s9 Norm c38BDF8", "Segoe UI")
     kbStatusLabel := kbGui.AddText("x16 y42 w664 h18 Background0D0D11", "Click any shortcut pill, then press your desired key combination.")
 
-    ; Left Column: General & Solo FX + Virtual Inputs
     yLeft := 70
     kbGui.SetFont("s8 Bold c71717A", "Segoe UI")
-    kbGui.AddText("x16 y" yLeft " w320 h16 Background0D0D11", "GENERAL, NAVIGATION & SOLO FX")
+    kbGui.AddText("x16 y" yLeft " w320 h16 Background0D0D11", "GENERAL, BUS LAYERS, SNAPSHOTS && FX")
     yLeft += 20
 
     for item in hotkeyDefs {
         if (item.group = "general") {
             AddKeybindRow(kbGui, item, 16, yLeft)
-            yLeft += 29
+            yLeft += 25
         }
     }
 
@@ -910,11 +1937,10 @@ OpenKeybindGui() {
     for item in hotkeyDefs {
         if (item.group = "virtual") {
             AddKeybindRow(kbGui, item, 16, yLeft)
-            yLeft += 29
+            yLeft += 25
         }
     }
 
-    ; Right Column: Hardware Inputs + Output Buses
     yRight := 70
     kbGui.SetFont("s8 Bold c71717A", "Segoe UI")
     kbGui.AddText("x360 y" yRight " w320 h16 Background0D0D11", "HARDWARE INPUTS")
@@ -923,7 +1949,7 @@ OpenKeybindGui() {
     for item in hotkeyDefs {
         if (item.group = "hardware") {
             AddKeybindRow(kbGui, item, 360, yRight)
-            yRight += 29
+            yRight += 25
         }
     }
 
@@ -935,7 +1961,7 @@ OpenKeybindGui() {
     for item in hotkeyDefs {
         if (item.group = "bus") {
             AddKeybindRow(kbGui, item, 360, yRight)
-            yRight += 29
+            yRight += 25
         }
     }
 
@@ -945,16 +1971,16 @@ OpenKeybindGui() {
     kbGui.SetFont("s8 Bold cD4D4D8", "Segoe UI")
     defBtn := kbGui.AddText("x16 y" yBottom " w130 h28 Center +0x200 Background191922", "Reset Defaults")
     defBtn.OnEvent("Click", ResetDefaultHotkeys)
-    RegisterButtonHover(defBtn, "191922", "242432")
+    RegisterButtonHover(defBtn, "191922", "242432", "", false)
 
     clrAllChBtn := kbGui.AddText("x154 y" yBottom " w164 h28 Center +0x200 Background191922", "Unbind All Channels")
     clrAllChBtn.OnEvent("Click", ClearAllChannelHotkeys)
-    RegisterButtonHover(clrAllChBtn, "191922", "242432")
+    RegisterButtonHover(clrAllChBtn, "191922", "242432", "", false)
 
     kbGui.SetFont("s8 Bold c38BDF8", "Segoe UI")
     doneBtn := kbGui.AddText("x590 y" yBottom " w90 h28 Center +0x200 Background152433", "Done")
     doneBtn.OnEvent("Click", CloseKeybindGui)
-    RegisterButtonHover(doneBtn, "152433", "1C3247")
+    RegisterButtonHover(doneBtn, "152433", "1C3247", "", false)
 
     kbGui.OnEvent("Close", CloseKeybindGui)
     kbGui.OnEvent("Escape", CloseKeybindGui)
@@ -1095,7 +2121,7 @@ ResetDefaultHotkeys(*) {
 }
 
 ; ==============================================================================
-; 7. HARDWARE VOLUME WHEEL, SOLO CHANNEL & FX NAVIGATION, HOVER-SCROLLING
+; 7. HARDWARE VOLUME WHEEL, GAIN LAYERS, SOLO FX & HOVER-SCROLLING
 ; ==============================================================================
 Volume_Up::QueueWheelStep(1)
 Volume_Down::QueueWheelStep(-1)
@@ -1107,6 +2133,91 @@ WheelDown::HoverWheelStep(-1, 1.0)
 +WheelUp::HoverWheelStep(1, 0.2)
 +WheelDown::HoverWheelStep(-1, 0.2)
 #HotIf
+
+GetActiveGainLayerIndex() {
+    soloParam := GetSoloTarget()
+    if (soloParam = "" || !IsInputStrip(soloParam))
+        return 0
+    return vm.layerIndex.Has(soloParam) ? vm.layerIndex[soloParam] : 0
+}
+
+GetGainParamForChannel(param) {
+    if (exclusiveMode = 1 && activeTargets.Length = 1 && activeTargets[1] = param && IsInputStrip(param)) {
+        lIdx := vm.layerIndex.Has(param) ? vm.layerIndex[param] : 0
+        if (lIdx >= 1 && lIdx <= 8)
+            return param ".GainLayer[" (lIdx - 1) "]"
+    }
+    return param ".Gain"
+}
+
+IsDuckTargetParam(fullParam) {
+    if ((!duckEnabled && A_TickCount > duckTestUntilTick) || duckTargets.Length = 0)
+        return false
+    for tParam in duckTargets {
+        if (tParam = duckTriggerStrip)
+            continue
+        targetFull := (IsInputStrip(tParam) && duckBusLayer > 0)
+            ? tParam ".GainLayer[" (duckBusLayer - 1) "]"
+            : tParam ".Gain"
+        if (targetFull = fullParam)
+            return true
+    }
+    return false
+}
+
+GetDuckOffsetForParam(fullParam) {
+    if ((!duckEnabled && A_TickCount > duckTestUntilTick) || Abs(duckCurrentOffset) < 0.01)
+        return 0.0
+    return IsDuckTargetParam(fullParam) ? duckCurrentOffset : 0.0
+}
+
+ApplyChannelGainWithDuck(fullParam, baseVal) {
+    cleanBase := Round(Max(-60.0, Min(12.0, baseVal)), 2)
+    if (duckBaseGains.Has(fullParam))
+        duckBaseGains[fullParam] := cleanBase
+    applied := Round(Max(-60.0, Min(12.0, cleanBase + GetDuckOffsetForParam(fullParam))), 2)
+    DllCall(pSetFloat, "AStr", fullParam, "Float", applied)
+    vm.lastWriteTick := A_TickCount
+}
+
+CycleGainLayer(dir) {
+    Critical
+    soloParam := GetSoloTarget()
+    if (soloParam = "") {
+        ShowQuickTip("Enable Single-Target Mode to select Bus Gain Layers", 1200)
+        return
+    }
+    if !IsInputStrip(soloParam) {
+        ShowQuickTip("Gain Layers apply to Input Strips (Virtual & Hardware)", 1200)
+        return
+    }
+
+    SetTimer(GlideStep, 0)
+    vm.gliding := false
+
+    cur := vm.layerIndex.Has(soloParam) ? vm.layerIndex[soloParam] : 0
+    nxt := cur + dir
+    if (nxt < 0)
+        nxt := outputBuses.Length
+    else if (nxt > outputBuses.Length)
+        nxt := 0
+
+    vm.layerIndex[soloParam] := nxt
+    vm.gains.Clear()
+    SyncAllActiveTargets(true)
+
+    if (showAdvancedPanel = 0 && DllCall("IsWindowVisible", "Ptr", settingsGui.Hwnd)) {
+        global showAdvancedPanel := 1
+        IniWrite(1, iniPath, "Settings", "ShowAdvanced")
+        RecalculateMainLayout()
+    }
+
+    if DllCall("IsWindowVisible", "Ptr", settingsGui.Hwnd) {
+        UpdateStatusBanner()
+        RefreshAllChannelReadouts(true)
+    }
+    ShowHeadUnitOsd("layer")
+}
 
 CycleSoloChannel(dir) {
     Critical
@@ -1274,7 +2385,7 @@ GetHoveredChannel() {
     cy := NumGet(pt, 4, "Int")
 
     for zone in hoverZones {
-        if (cx >= zone.x1 && cx <= zone.x2 && cy >= (zone.baseY1 + currentDeltaY) && cy <= (zone.baseY2 + currentDeltaY))
+        if (cx >= zone.x1 && cx <= zone.x2 && cy >= (zone.relY1 + currentBodyStartY) && cy <= (zone.relY2 + currentBodyStartY))
             return zone.param
     }
     return ""
@@ -1286,52 +2397,774 @@ HoverWheelStep(dir, stepSize) {
     if (param = "" || !vm.connected)
         return
 
+    gainParam := GetGainParamForChannel(param)
+
     if (IsTargetActive(param) && vm.gains.Has(param)) {
         cur := vm.gains[param].target
         newGain := Round(Max(-60.0, Min(12.0, cur + (dir * stepSize))), 1)
         vm.gains[param].current := newGain
         vm.gains[param].target  := newGain
-        DllCall(pSetFloat, "AStr", param ".Gain", "Float", newGain)
-        vm.lastWriteTick := A_TickCount
+        ApplyChannelGainWithDuck(gainParam, newGain)
         UpdateStatusBanner()
     } else {
-        if (!hoverCache.Has(param) || (A_TickCount - hoverCache[param].tick > 300)) {
+        if (!hoverCache.Has(gainParam) || (A_TickCount - hoverCache[gainParam].tick > 300)) {
             DllCall(pIsDirty)
             liveGain := 0.0
-            DllCall(pGetFloat, "AStr", param ".Gain", "Float*", &liveGain, "Int")
-            cur := liveGain
+            DllCall(pGetFloat, "AStr", gainParam, "Float*", &liveGain, "Int")
+            cur := Round(Max(-60.0, Min(12.0, liveGain - GetDuckOffsetForParam(gainParam))), 2)
         } else {
-            cur := hoverCache[param].gain
+            cur := hoverCache[gainParam].gain
         }
 
         newGain := Round(Max(-60.0, Min(12.0, cur + (dir * stepSize))), 1)
-        hoverCache[param] := { gain: newGain, tick: A_TickCount }
-        DllCall(pSetFloat, "AStr", param ".Gain", "Float", newGain)
-        vm.lastWriteTick := A_TickCount
+        hoverCache[gainParam] := { gain: newGain, tick: A_TickCount }
+        ApplyChannelGainWithDuck(gainParam, newGain)
         SetTimer(FlushOwnDirtyFlag, -350)
     }
 
+    RefreshAllChannelReadouts(true)
     disp := (Abs(newGain) < 0.05) ? 0.0 : newGain
     ShowQuickTip(nameMap[param] ":  " (disp > 0 ? "+" : "") Format("{:.1f} dB", disp), 900)
 }
 
 ; ==============================================================================
-; 8. GUI, PRESETS & ENGINE ACTIONS
+; 8. AUTOMATION SUITE: DEVICE LOCK, AUTO-DUCKING, STARTUP & GITHUB UPDATES
 ; ==============================================================================
+EnumWindowsAudioDevices(dataFlow) {
+    list := []
+    try {
+        enumerator := ComObject("{BCDE0395-E52F-467C-8E3D-C4579291692E}", "{A95664D2-9614-4F35-A746-DE8DB63617E6}")
+        ComCall(3, enumerator, "Int", dataFlow, "UInt", 1, "Ptr*", &pCol := 0)
+        if !pCol
+            return list
+        colObj := ComValue(13, pCol)
+        ComCall(3, colObj, "UInt*", &count := 0)
+
+        pkey := Buffer(20, 0)
+        DllCall("ole32\CLSIDFromString", "WStr", "{A45C254E-DF1C-4EFD-8020-67D146A850E0}", "Ptr", pkey)
+        NumPut("UInt", 14, pkey, 16)
+
+        Loop count {
+            ComCall(4, colObj, "UInt", A_Index - 1, "Ptr*", &pDev := 0)
+            if !pDev
+                continue
+            devObj := ComValue(13, pDev)
+
+            ComCall(5, devObj, "Ptr*", &pId := 0)
+            devId := ""
+            if pId {
+                devId := StrGet(pId, "UTF-16")
+                DllCall("ole32\CoTaskMemFree", "Ptr", pId)
+            }
+
+            friendly := devId
+            ComCall(4, devObj, "UInt", 0, "Ptr*", &pStore := 0)
+            if pStore {
+                storeObj := ComValue(13, pStore)
+                pv := Buffer(24, 0)
+                if (ComCall(5, storeObj, "Ptr", pkey, "Ptr", pv) = 0) {
+                    vt := NumGet(pv, 0, "UShort")
+                    if (vt = 31) {
+                        pStr := NumGet(pv, 8, "Ptr")
+                        if pStr
+                            friendly := StrGet(pStr, "UTF-16")
+                    }
+                    DllCall("ole32\PropVariantClear", "Ptr", pv)
+                }
+            }
+
+            if (devId != "")
+                list.Push({ id: devId, name: friendly })
+        }
+    }
+    return list
+}
+
+GetDefaultWindowsEndpoint(dataFlow) {
+    res := { id: "", name: "" }
+    try {
+        enumerator := ComObject("{BCDE0395-E52F-467C-8E3D-C4579291692E}", "{A95664D2-9614-4F35-A746-DE8DB63617E6}")
+        ComCall(4, enumerator, "Int", dataFlow, "Int", 0, "Ptr*", &pDev := 0)
+        if !pDev
+            return res
+        devObj := ComValue(13, pDev)
+        ComCall(5, devObj, "Ptr*", &pId := 0)
+        if pId {
+            res.id := StrGet(pId, "UTF-16")
+            DllCall("ole32\CoTaskMemFree", "Ptr", pId)
+        }
+    }
+    return res
+}
+
+SetDefaultWindowsEndpoint(devId) {
+    if (devId = "")
+        return false
+    try {
+        policy := ComObject("{870AF99C-171D-4F9E-AF0D-E63DF40C2BC9}", "{F8679F50-850A-41CF-9C72-430F290290C8}")
+        ComCall(13, policy, "WStr", devId, "Int", 0)
+        ComCall(13, policy, "WStr", devId, "Int", 1)
+        ComCall(13, policy, "WStr", devId, "Int", 2)
+        return true
+    } catch {
+        return false
+    }
+}
+
+EnforceDefaultDevices(silent := true) {
+    if !deviceLockEnabled
+        return
+
+    restored := false
+    if (lockedPlaybackId != "") {
+        curP := GetDefaultWindowsEndpoint(0)
+        if (curP.id != "" && curP.id != lockedPlaybackId) {
+            if SetDefaultWindowsEndpoint(lockedPlaybackId)
+                restored := true
+        }
+    }
+    if (lockedRecordId != "") {
+        curR := GetDefaultWindowsEndpoint(1)
+        if (curR.id != "" && curR.id != lockedRecordId) {
+            if SetDefaultWindowsEndpoint(lockedRecordId)
+                restored := true
+        }
+    }
+
+    if (restored && !silent)
+        ShowQuickTip("Anti-Hijack: Restored locked Windows default audio devices.", 1500)
+}
+
+EnforceDefaultDevicesLoud() {
+    EnforceDefaultDevices(false)
+}
+
+EnforceDefaultDevicesSilent() {
+    EnforceDefaultDevices(true)
+}
+
+ToggleDeviceLock(*) {
+    global deviceLockEnabled, lockedPlaybackId, lockedPlaybackName, lockedRecordId, lockedRecordName
+
+    if (deviceLockEnabled = 0) {
+        if (lockedPlaybackId = "" && lockedRecordId = "") {
+            pList := EnumWindowsAudioDevices(0)
+            rList := EnumWindowsAudioDevices(1)
+            curP  := GetDefaultWindowsEndpoint(0)
+            curR  := GetDefaultWindowsEndpoint(1)
+            for d in pList {
+                if (d.id = curP.id) {
+                    lockedPlaybackId   := d.id
+                    lockedPlaybackName := d.name
+                }
+            }
+            for d in rList {
+                if (d.id = curR.id) {
+                    lockedRecordId   := d.id
+                    lockedRecordName := d.name
+                }
+            }
+            IniWrite(lockedPlaybackId, iniPath, "DeviceLock", "PlaybackId")
+            IniWrite(lockedPlaybackName, iniPath, "DeviceLock", "PlaybackName")
+            IniWrite(lockedRecordId, iniPath, "DeviceLock", "RecordId")
+            IniWrite(lockedRecordName, iniPath, "DeviceLock", "RecordName")
+        }
+        deviceLockEnabled := 1
+        EnforceDefaultDevices(true)
+    } else {
+        deviceLockEnabled := 0
+    }
+
+    IniWrite(deviceLockEnabled, iniPath, "DeviceLock", "Enabled")
+    RefreshAutomationPills()
+    RefreshShortcutLabels()
+    ShowQuickTip("Windows Device Anti-Hijack: " (deviceLockEnabled ? "ON (" lockedPlaybackName ")" : "OFF"), 1400)
+}
+
+ToggleAutoDuck(*) {
+    global duckEnabled := (duckEnabled = 1) ? 0 : 1
+    IniWrite(duckEnabled, iniPath, "AutoDuck", "Enabled")
+
+    if (duckEnabled = 1) {
+        SetTimer(AutoDuckTick, 25)
+    } else {
+        SetTimer(AutoDuckTick, 0)
+        RestoreAllDuckedChannels()
+    }
+
+    RefreshAutomationPills()
+    RefreshShortcutLabels()
+    ShowQuickTip("Auto-Ducking: " (duckEnabled ? "ON" : "OFF"), 1200)
+}
+
+RestoreAllDuckedChannels() {
+    global duckCurrentOffset, duckTargetOffset, duckBaseGains, duckStageLabel
+    duckCurrentOffset := 0.0
+    duckTargetOffset  := 0.0
+    duckStageLabel    := "IDLE"
+    for fullParam, baseVal in duckBaseGains {
+        try DllCall(pSetFloat, "AStr", fullParam, "Float", baseVal)
+    }
+    duckBaseGains.Clear()
+    if DllCall("IsWindowVisible", "Ptr", settingsGui.Hwnd) {
+        UpdateStatusBanner()
+        RefreshAllChannelReadouts(true)
+    }
+}
+
+AutoDuckTick() {
+    Critical
+    global duckCurrentOffset, duckTargetOffset, duckLastLoudTick, duckBaseGains, duckStageLabel, duckTestUntilTick
+
+    now := A_TickCount
+    isTesting := (now <= duckTestUntilTick)
+
+    if ((!duckEnabled && !isTesting) || !vm.connected || !pGetLevel || duckTargets.Length = 0) {
+        if (duckBaseGains.Count > 0)
+            RestoreAllDuckedChannels()
+        if !duckEnabled
+            SetTimer(AutoDuckTick, 0)
+        return
+    }
+
+    stripIdx := Integer(RegExReplace(duckTriggerStrip, "\D"))
+
+    isMuted := false
+    if (!isTesting && duckIgnoreMuted = 1) {
+        mVal := 0.0
+        DllCall(pGetFloat, "AStr", duckTriggerStrip ".Mute", "Float*", &mVal)
+        isMuted := (mVal >= 0.5)
+    }
+
+    if isTesting {
+        db := 0.0
+    } else if isMuted {
+        db := -120.0
+    } else {
+        lvlL := 0.0
+        lvlR := 0.0
+        DllCall(pGetLevel, "Int", 0, "Int", stripIdx * 8, "Float*", &lvlL)
+        DllCall(pGetLevel, "Int", 0, "Int", (stripIdx * 8) + 1, "Float*", &lvlR)
+        peak := Max(lvlL, lvlR)
+        db := (peak > 0.000001) ? (20.0 * Log(peak)) : -120.0
+    }
+
+    if (db >= duckThresholdDb) {
+        duckLastLoudTick := now
+        duckTargetOffset := -Abs(duckAmountDb)
+    } else if ((now - duckLastLoudTick) >= duckHoldMs) {
+        duckTargetOffset := 0.0
+    }
+
+    diff := duckTargetOffset - duckCurrentOffset
+    if (Abs(diff) < 0.05 && duckTargetOffset = 0.0) {
+        if (duckBaseGains.Count > 0) {
+            RestoreAllDuckedChannels()
+            vm.lastWriteTick := now
+            SetTimer(FlushOwnDirtyFlag, -350)
+        }
+        duckStageLabel := "IDLE"
+        return
+    }
+
+    if (duckTargetOffset < duckCurrentOffset) {
+        rate := Min(1.0, 1.0 - (0.05 ** (25.0 / Max(10, duckAttackMs))))
+        duckStageLabel := (Abs(diff) > 0.25) ? "ATTACK" : "DUCKED"
+    } else if (duckTargetOffset < 0.0) {
+        rate := 1.0
+        duckStageLabel := "HOLD"
+    } else {
+        rate := Min(1.0, 1.0 - (0.05 ** (25.0 / Max(40, duckReleaseMs))))
+        duckStageLabel := "RELEASING"
+    }
+
+    prevOffset := duckCurrentOffset
+    if (Abs(diff) <= 0.05)
+        duckCurrentOffset := Round(duckTargetOffset, 2)
+    else
+        duckCurrentOffset := Round(duckCurrentOffset + (diff * rate), 2)
+
+    for tParam in duckTargets {
+        if (tParam = duckTriggerStrip)
+            continue
+
+        fullParam := (IsInputStrip(tParam) && duckBusLayer > 0)
+            ? tParam ".GainLayer[" (duckBusLayer - 1) "]"
+            : tParam ".Gain"
+
+        isControlledActive := (IsTargetActive(tParam) && vm.gains.Has(tParam) && GetGainParamForChannel(tParam) = fullParam)
+
+        if isControlledActive {
+            baseVal := vm.gains[tParam].current
+            duckBaseGains[fullParam] := baseVal
+        } else if !duckBaseGains.Has(fullParam) {
+            liveVal := 0.0
+            DllCall(pGetFloat, "AStr", fullParam, "Float*", &liveVal)
+            duckBaseGains[fullParam] := Round(Max(-60.0, Min(12.0, liveVal - prevOffset)), 2)
+        } else if (!vm.gliding && (now - vm.lastWriteTick > 300)) {
+            liveVal := 0.0
+            DllCall(pGetFloat, "AStr", fullParam, "Float*", &liveVal)
+            expected := Max(-60.0, Min(12.0, duckBaseGains[fullParam] + prevOffset))
+            if (Abs(liveVal - expected) > 0.35) {
+                duckBaseGains[fullParam] := Round(Max(-60.0, Min(12.0, liveVal - prevOffset)), 2)
+                if hoverCache.Has(fullParam)
+                    hoverCache.Delete(fullParam)
+            }
+        }
+
+        ApplyChannelGainWithDuck(fullParam, duckBaseGains[fullParam])
+    }
+
+    if DllCall("IsWindowVisible", "Ptr", settingsGui.Hwnd) {
+        UpdateStatusBanner()
+        RefreshAllChannelReadouts(true)
+    }
+}
+
+EnsureVoicemeeterRunning() {
+    if !autoLaunchVM
+        return
+
+    vmType := 0
+    if (DllCall(pGetType, "Int*", &vmType, "Int") = 0 && vmType > 0)
+        return
+
+    vmExe := "C:\Program Files (x86)\VB\Voicemeeter\voicemeeter8x64.exe"
+    if !FileExist(vmExe)
+        vmExe := "C:\Program Files (x86)\VB\Voicemeeter\voicemeeter8.exe"
+
+    if FileExist(vmExe) {
+        try {
+            Run(vmExe)
+            if hideVMOnLaunch
+                SetTimer(HideVoicemeeterAfterBoot, -2500)
+        }
+    }
+}
+
+HideVoicemeeterAfterBoot() {
+    SetVoicemeeterVisibility(false)
+}
+
+SetVoicemeeterVisibility(showWin) {
+    DllCall(pSetFloat, "AStr", "Command.Show", "Float", showWin ? 1.0 : 0.0)
+}
+
+CompareSemVer(vRemote, vLocal) {
+    rClean := RegExReplace(vRemote, "^[vV]")
+    lClean := RegExReplace(vLocal, "^[vV]")
+    rParts := StrSplit(rClean, ".")
+    lParts := StrSplit(lClean, ".")
+    Loop Max(rParts.Length, lParts.Length) {
+        rNum := (A_Index <= rParts.Length && IsInteger(rParts[A_Index])) ? Integer(rParts[A_Index]) : 0
+        lNum := (A_Index <= lParts.Length && IsInteger(lParts[A_Index])) ? Integer(lParts[A_Index]) : 0
+        if (rNum > lNum)
+            return 1
+        if (rNum < lNum)
+            return -1
+    }
+    return 0
+}
+
+CheckForGithubUpdates(silent := true) {
+    try {
+        http := ComObject("WinHttp.WinHttpRequest.5.1")
+        http.SetTimeouts(3000, 3000, 4000, 4000)
+        http.Open("GET", "https://api.github.com/repos/" GITHUB_REPO "/releases/latest", false)
+        http.SetRequestHeader("User-Agent", "Potato-Massah-App")
+        http.Send()
+
+        if (http.Status = 200) {
+            body := http.ResponseText
+            if RegExMatch(body, '"tag_name"\s*:\s*"([^"]+)"', &m) {
+                latestTag := m[1]
+                if (CompareSemVer(latestTag, APP_VERSION) > 0) {
+                    if IsGuiAlive(startupGui)
+                        updateStatusTxt.Value := "Update available: " latestTag " (Current: " APP_VERSION ")"
+                    ans := MsgBox(
+                        "A new version of Potato Massah (" latestTag ") is available on GitHub!`nYou are currently running " APP_VERSION ".`n`nOpen the release download page now?",
+                        "Potato Massah Update Available",
+                        "YesNo Iconi 262144"
+                    )
+                    if (ans = "Yes")
+                        Run("https://github.com/" GITHUB_REPO "/releases/latest")
+                } else {
+                    if IsGuiAlive(startupGui)
+                        updateStatusTxt.Value := "Up to date (" APP_VERSION " matches latest " latestTag ")"
+                    if !silent
+                        ShowQuickTip("Potato Massah is up to date (" APP_VERSION ").", 1400)
+                }
+            }
+        } else if !silent {
+            if IsGuiAlive(startupGui)
+                updateStatusTxt.Value := "Could not check GitHub (HTTP " http.Status ")"
+        }
+    } catch {
+        if !silent && IsGuiAlive(startupGui)
+            updateStatusTxt.Value := "Offline or GitHub unreachable."
+    }
+}
+
+CheckUpdatesOnBoot() {
+    CheckForGithubUpdates(true)
+}
+
+; ==============================================================================
+; 9. PRO DRAWER ACTIONS, SNAPSHOTS, INLINE READOUTS & DYNAMIC LAYOUT ENGINE
+; ==============================================================================
+DismissWelcomeBanner(*) {
+    global showWelcomeBanner := 0
+    IniWrite(0, iniPath, "Settings", "ShowWelcome")
+    RecalculateMainLayout()
+}
+
+ToggleAdvancedPanel(*) {
+    global showAdvancedPanel := (showAdvancedPanel = 1) ? 0 : 1
+    IniWrite(showAdvancedPanel, iniPath, "Settings", "ShowAdvanced")
+    RecalculateMainLayout()
+    if (showAdvancedPanel = 1) {
+        RefreshStripRoutingPills()
+        RefreshSnapshotPills()
+    }
+}
+
+ToggleStripBusRoute(busName, *) {
+    Critical
+    soloParam := GetSoloTarget()
+    if (soloParam = "" || !IsInputStrip(soloParam)) {
+        ShowQuickTip("Select a single Input Strip to toggle its A1–B3 routing.", 1300)
+        return
+    }
+
+    cur := 0.0
+    DllCall(pGetFloat, "AStr", soloParam "." busName, "Float*", &cur)
+    nxt := (cur >= 0.5) ? 0.0 : 1.0
+    DllCall(pSetFloat, "AStr", soloParam "." busName, "Float", nxt)
+    vm.lastWriteTick := A_TickCount
+    SetTimer(FlushOwnDirtyFlag, -350)
+
+    overrides := Map(busName, nxt >= 0.5)
+    RefreshStripRoutingPills(overrides)
+    ShowQuickTip(nameMap[soloParam] "  " Chr(0x2192) "  " busName ": " (nxt >= 0.5 ? "ON" : "OFF"), 1000)
+}
+
+RefreshStripRoutingPills(overrides := "") {
+    global routeStateCache
+    soloParam := GetSoloTarget()
+    isStrip := (soloParam != "" && IsInputStrip(soloParam) && vm.connected)
+
+    for idx, b in outputBuses {
+        btn := routeBtnMap[b.name]
+        if !isStrip {
+            routeStateCache[b.name] := false
+            btn.SetFont("s8 Bold c52525B")
+            btn.Opt("Background16161E")
+        } else {
+            if (IsObject(overrides) && overrides.Has(b.name)) {
+                isOn := overrides[b.name]
+            } else {
+                val := 0.0
+                DllCall(pGetFloat, "AStr", soloParam "." b.name, "Float*", &val)
+                isOn := (val >= 0.5)
+            }
+            routeStateCache[b.name] := isOn
+            if isOn {
+                btn.SetFont("s8 Bold cF59E0B")
+                btn.Opt("Background332614")
+            } else {
+                btn.SetFont("s8 Bold c71717A")
+                btn.Opt("Background1A1A22")
+            }
+        }
+        try btn.Redraw()
+    }
+}
+
+ResetActiveStripLayers(*) {
+    Critical
+    soloParam := GetSoloTarget()
+    if (soloParam = "" || !IsInputStrip(soloParam)) {
+        ShowQuickTip("Select a single Input Strip to reset its submix layers.", 1300)
+        return
+    }
+
+    Loop 8
+        DllCall(pSetFloat, "AStr", soloParam ".GainLayer[" (A_Index - 1) "]", "Float", 0.0)
+
+    vm.layerIndex[soloParam] := 0
+    vm.gains.Clear()
+    SyncAllActiveTargets(true)
+    vm.lastWriteTick := A_TickCount
+    SetTimer(FlushOwnDirtyFlag, -350)
+
+    UpdateStatusBanner()
+    RefreshAllChannelReadouts(true)
+    ShowQuickTip("Reset all A1–B3 submix layers on " nameMap[soloParam] " to 0.0 dB.", 1400)
+}
+
+ResetActiveStripRoutes(*) {
+    Critical
+    soloParam := GetSoloTarget()
+    if (soloParam = "" || !IsInputStrip(soloParam)) {
+        ShowQuickTip("Select a single Input Strip to reset its output routes.", 1300)
+        return
+    }
+
+    overrides := Map()
+    for idx, b in outputBuses {
+        isDefault := (b.name = "A1")
+        DllCall(pSetFloat, "AStr", soloParam "." b.name, "Float", isDefault ? 1.0 : 0.0)
+        overrides[b.name] := isDefault
+    }
+
+    vm.lastWriteTick := A_TickCount
+    SetTimer(FlushOwnDirtyFlag, -350)
+    RefreshStripRoutingPills(overrides)
+    ShowQuickTip("Reset " nameMap[soloParam] " routing to default (A1 ON).", 1300)
+}
+
+ResetEntireMixerDefault(*) {
+    settingsGui.Opt("-AlwaysOnTop")
+    ans := MsgBox(
+        "Reset all 16 channel faders to 0.0 dB, clear all per-bus submix layers, and set input routing back to A1 only?",
+        "Reset Mixer to Default State",
+        "YesNo Icon? 262144"
+    )
+    settingsGui.Opt("+AlwaysOnTop")
+    if (ans != "Yes")
+        return
+
+    Critical
+    SetTimer(GlideStep, 0)
+    vm.gliding := false
+    duckBaseGains.Clear()
+
+    for ch in allChannels
+        DllCall(pSetFloat, "AStr", ch.param ".Gain", "Float", 0.0)
+
+    for st in inputStrips {
+        Loop 8
+            DllCall(pSetFloat, "AStr", st.param ".GainLayer[" (A_Index - 1) "]", "Float", 0.0)
+        for b in outputBuses
+            DllCall(pSetFloat, "AStr", st.param "." b.name, "Float", (b.name = "A1") ? 1.0 : 0.0)
+        vm.layerIndex[st.param] := 0
+    }
+
+    vm.gains.Clear()
+    SyncAllActiveTargets(true)
+    vm.lastWriteTick := A_TickCount
+    SetTimer(FlushOwnDirtyFlag, -350)
+
+    overrides := Map()
+    for b in outputBuses
+        overrides[b.name] := (b.name = "A1")
+    RefreshStripRoutingPills(overrides)
+    UpdateStatusBanner()
+    RefreshAllChannelReadouts(true)
+    ShowQuickTip("All faders, submix layers, and A1 routes restored to default!", 1600)
+}
+
+SaveMixerSnapshot(idx, *) {
+    if !vm.connected {
+        ShowQuickTip("VoiceMeeter Potato must be running to save a snapshot.", 1300)
+        return
+    }
+
+    sec := "Snapshot" idx
+    IniWrite(1, iniPath, sec, "Saved")
+    for ch in allChannels {
+        gVal := 0.0
+        DllCall(pGetFloat, "AStr", ch.param ".Gain", "Float*", &gVal)
+        IniWrite(Format("{:.2f}", gVal), iniPath, sec, ch.param "_Gain")
+    }
+    for st in inputStrips {
+        for b in outputBuses {
+            rVal := 0.0
+            DllCall(pGetFloat, "AStr", st.param "." b.name, "Float*", &rVal)
+            IniWrite((rVal >= 0.5) ? 1 : 0, iniPath, sec, st.param "_" b.name)
+        }
+    }
+
+    RefreshSnapshotPills()
+    ShowQuickTip("Saved current mixer faders & routes to Snapshot P" idx "!", 1400)
+}
+
+LoadMixerSnapshot(idx, *) {
+    if !vm.connected {
+        ShowQuickTip("VoiceMeeter Potato is offline.", 1200)
+        return
+    }
+
+    sec := "Snapshot" idx
+    if (IniRead(iniPath, sec, "Saved", "0") != "1") {
+        ShowQuickTip("Snapshot P" idx " is empty — right-click P" idx " to save your current mixer.", 1500)
+        return
+    }
+
+    Critical
+    SetTimer(GlideStep, 0)
+    vm.gliding := false
+    duckBaseGains.Clear()
+
+    for ch in allChannels {
+        gVal := Float(IniRead(iniPath, sec, ch.param "_Gain", "0.0"))
+        DllCall(pSetFloat, "AStr", ch.param ".Gain", "Float", gVal)
+    }
+
+    soloParam := GetSoloTarget()
+    overrides := Map()
+    for st in inputStrips {
+        for b in outputBuses {
+            rVal := Integer(IniRead(iniPath, sec, st.param "_" b.name, (b.name = "A1") ? "1" : "0"))
+            DllCall(pSetFloat, "AStr", st.param "." b.name, "Float", rVal ? 1.0 : 0.0)
+            if (st.param = soloParam)
+                overrides[b.name] := (rVal = 1)
+        }
+    }
+
+    vm.gains.Clear()
+    SyncAllActiveTargets(true)
+    vm.lastWriteTick := A_TickCount
+    SetTimer(FlushOwnDirtyFlag, -350)
+
+    if DllCall("IsWindowVisible", "Ptr", settingsGui.Hwnd) {
+        RefreshStripRoutingPills(overrides)
+        UpdateStatusBanner()
+        RefreshAllChannelReadouts(true)
+    }
+    ShowQuickTip("Loaded Mixer Snapshot P" idx "!", 1300)
+}
+
+RefreshSnapshotPills() {
+    Loop 3 {
+        sIdx := A_Index
+        btn := snapBtnMap[sIdx]
+        isSaved := (IniRead(iniPath, "Snapshot" sIdx, "Saved", "0") = "1")
+        if isSaved {
+            btn.SetFont("s8 Bold cF59E0B")
+            btn.Opt("Background261E12")
+            btn.Value := "● P" sIdx ": Saved"
+        } else {
+            btn.SetFont("s8 Bold c71717A")
+            btn.Opt("Background1E1E28")
+            btn.Value := "○ P" sIdx ": Empty"
+        }
+        try btn.Redraw()
+    }
+}
+
+IsAnyActiveTargetMuted() {
+    for p in activeTargets {
+        if (vm.mutes.Has(p) && vm.mutes[p])
+            return true
+    }
+    return false
+}
+
+ToggleSpecificChannelMute(param) {
+    Critical
+    if !vm.connected
+        return
+
+    DllCall(pIsDirty)
+    curMute := 0.0
+    DllCall(pGetFloat, "AStr", param ".Mute", "Float*", &curMute)
+    newMute := (curMute >= 0.5) ? 0.0 : 1.0
+    DllCall(pSetFloat, "AStr", param ".Mute", "Float", newMute)
+    vm.mutes[param] := (newMute >= 0.5)
+
+    vm.lastWriteTick := A_TickCount
+    SetTimer(FlushOwnDirtyFlag, -350)
+
+    UpdateTrayIcon(IsAnyActiveTargetMuted())
+    UpdateStatusBanner()
+    RefreshAllChannelReadouts(true)
+    ShowQuickTip(nameMap[param] ": " (newMute >= 0.5 ? "MUTED" : "UNMUTED"), 1000)
+}
+
+RefreshAllChannelReadouts(forceRead := false) {
+    if (!vm.connected || !DllCall("IsWindowVisible", "Ptr", settingsGui.Hwnd))
+        return
+
+    dirty := DllCall(pIsDirty)
+    if (!forceRead && dirty != 1 && !vm.gliding && duckBaseGains.Count = 0)
+        return
+
+    for ch in allChannels {
+        param := ch.param
+        if !rowVisualMap.Has(param)
+            continue
+
+        vis := rowVisualMap[param]
+        isCompact := (vis.tag = "")
+
+        mVal := 0.0
+        DllCall(pGetFloat, "AStr", param ".Mute", "Float*", &mVal)
+        isMuted := (mVal >= 0.5)
+        vm.mutes[param] := isMuted
+
+        if isMuted {
+            txt := "MUTED"
+            col := "F87171"
+        } else {
+            gainParam := GetGainParamForChannel(param)
+            if (IsTargetActive(param) && vm.gains.Has(param)) {
+                gVal := vm.gains[param].current
+            } else {
+                liveG := 0.0
+                DllCall(pGetFloat, "AStr", gainParam, "Float*", &liveG)
+                gVal := liveG - GetDuckOffsetForParam(gainParam)
+            }
+            clean := Round(gVal, 1)
+            if (Abs(clean) < 0.05)
+                clean := 0.0
+            txt := (clean > 0 ? "+" : "") Format(isCompact ? "{:.1f}dB" : "{:.1f} dB", clean)
+            col := IsTargetActive(param) ? (GetActiveGainLayerIndex() > 0 && IsInputStrip(param) ? "F59E0B" : "38BDF8") : "A1A1AA"
+        }
+
+        cacheKey := txt "|" col
+        if (!rowBadgeCache.Has(param) || rowBadgeCache[param] != cacheKey) {
+            rowBadgeCache[param] := cacheKey
+            vis.db.SetFont("s8 Bold c" col)
+            vis.db.Value := txt
+        }
+    }
+}
+
+GuiLiveSyncTick() {
+    if DllCall("IsWindowVisible", "Ptr", settingsGui.Hwnd)
+        RefreshAllChannelReadouts(false)
+}
+
+RefreshAutomationPills() {
+    autoResetPill.SetFont(autoResetDevice ? "s8 Bold c38BDF8" : "s8 Bold c71717A")
+    autoResetPill.Opt(autoResetDevice ? "Background152433" : "Background16161E")
+    autoResetPill.Value := autoResetDevice ? "● Auto-Reset: ON" : "○ Auto-Reset: OFF"
+
+    devLockPill.SetFont(deviceLockEnabled ? "s8 Bold c38BDF8" : "s8 Bold c71717A")
+    devLockPill.Opt(deviceLockEnabled ? "Background152433" : "Background16161E")
+    devLockPill.Value := deviceLockEnabled ? "● Anti-Hijack: ON" : "○ Anti-Hijack: OFF"
+
+    duckPill.SetFont(duckEnabled ? "s8 Bold c38BDF8" : "s8 Bold c71717A")
+    duckPill.Opt(duckEnabled ? "Background152433" : "Background16161E")
+    duckPill.Value := duckEnabled ? "● Auto-Duck: ON" : "○ Auto-Duck: OFF"
+}
+
 RefreshModePillVisual() {
     if (exclusiveMode = 1) {
         modePill.SetFont("s8 Bold c38BDF8")
         modePill.Opt("Background1B2B3A")
-        modePill.Value := "◉  Single-Target Mode"
+        modePill.Value := "◉  Single-Target"
     } else {
         modePill.SetFont("s8 Bold cA1A1AA")
         modePill.Opt("Background22222E")
-        modePill.Value := "◎  Multi-Group Mode"
+        modePill.Value := "◎  Multi-Group"
     }
 }
 
 RefreshChannelVisuals() {
     global lastHoverKey := ""
+    rowBadgeCache.Clear()
     for param, vis in rowVisualMap {
         active := IsTargetActive(param)
         bgHex  := active ? "152433" : "16161E"
@@ -1345,10 +3178,91 @@ RefreshChannelVisuals() {
         vis.lbl.SetFont("s9 " (active ? "Bold cF4F4F5" : "Norm cD4D4D8"))
         vis.lbl.Value := nameMap[param]
 
+        vis.db.Opt("Background" bgHex)
+
         if (vis.tag != "") {
             vis.tag.Opt("Background" bgHex)
             vis.tag.SetFont("s8 Norm c" (active ? "38BDF8" : "52525B"))
         }
+    }
+    RefreshAllChannelReadouts(true)
+}
+
+RecalculateMainLayout(resizeWindow := true) {
+    global currentBodyStartY
+    isVisible := DllCall("IsWindowVisible", "Ptr", settingsGui.Hwnd)
+
+    curY := 12
+
+    if (showWelcomeBanner = 1) {
+        welAccent.Move(16, curY, 460, 2)
+        welBg.Move(16, curY + 2, 460, 52)
+        welTitle.Move(26, curY + 7, 380, 16)
+        welClose.Move(414, curY + 6, 54, 18)
+        welBody.Move(26, curY + 25, 440, 26)
+        for c in welcomeControls
+            c.Visible := true
+        curY += 62
+    } else {
+        for c in welcomeControls
+            c.Visible := false
+    }
+
+    lineCount := Max(1, activeTargets.Length)
+    statusH   := lineCount * 20
+
+    heroAccent.Move(16, curY, 460, 2)
+    heroTitleLbl.Move(28, curY + 8)
+    heroMutePill.Move(174, curY + 6)
+    modePill.Move(254, curY + 6)
+    proTogglePill.Move(390, curY + 6)
+    proTogglePill.Value := (showAdvancedPanel = 1) ? "Pro " Chr(0x25B4) : "Pro " Chr(0x25BE)
+    proTogglePill.Opt((showAdvancedPanel = 1) ? "Background332614" : "Background261E12")
+
+    statusText.Move(28, curY + 30, 436, statusH)
+    heroSubText.Move(28, curY + 32 + statusH, 436, 18)
+
+    if (showAdvancedPanel = 1) {
+        advY := curY + 56 + statusH
+        advDivider.Move(28, advY, 436, 1)
+        advWarnLbl.Move(28, advY + 6, 204, 20)
+        rstLayersBtn.Move(234, advY + 6, 74, 20)
+        rstRoutesBtn.Move(311, advY + 6, 74, 20)
+        rstMixerBtn.Move(388, advY + 6, 76, 20)
+        layerPill.Move(28, advY + 30, 436, 22)
+
+        for idx, b in outputBuses {
+            xR := 28 + ((idx - 1) * 55)
+            routeBtnMap[b.name].Move(xR, advY + 56, 51, 22)
+        }
+
+        snapLbl.Move(28, advY + 82, 82, 22)
+        Loop 3 {
+            sIdx := A_Index
+            xS := 114 + ((sIdx - 1) * 118)
+            snapBtnMap[sIdx].Move(xS, advY + 82, 114, 22)
+        }
+
+        for c in advControls
+            c.Visible := true
+
+        heroBodyH := 166 + statusH
+    } else {
+        for c in advControls
+            c.Visible := false
+        heroBodyH := 56 + statusH
+    }
+
+    heroBg.Move(16, curY + 2, 460, heroBodyH)
+    curY += heroBodyH + 12
+
+    currentBodyStartY := curY
+    for item in bodyControls
+        item.ctrl.Move(, item.relY + currentBodyStartY)
+
+    if (resizeWindow && isVisible) {
+        settingsGui.Show("AutoSize NoActivate")
+        DllCall("RedrawWindow", "Ptr", settingsGui.Hwnd, "Ptr", 0, "Ptr", 0, "UInt", 0x0585)
     }
 }
 
@@ -1361,7 +3275,13 @@ ToggleGui() {
         SyncSelectedSoloEffect(true)
         RefreshModePillVisual()
         RefreshChannelVisuals()
+        RefreshAutomationPills()
+        if (showAdvancedPanel = 1) {
+            RefreshStripRoutingPills()
+            RefreshSnapshotPills()
+        }
         UpdateStatusBanner()
+        RecalculateMainLayout(false)
         settingsGui.Show("AutoSize")
     }
 }
@@ -1381,6 +3301,8 @@ ApplyQuickPreset(targetParam, *) {
     SaveSettings()
     RefreshModePillVisual()
     RefreshChannelVisuals()
+    if (showAdvancedPanel = 1)
+        RefreshStripRoutingPills()
     UpdateStatusBanner()
     ShowHeadUnitOsd("volume")
 }
@@ -1395,10 +3317,65 @@ ResyncAfterEngineRestart() {
     vm.gains.Clear()
     vm.mutes.Clear()
     vm.fxValues.Clear()
+    duckBaseGains.Clear()
     SyncAllActiveTargets(true)
     SyncSelectedSoloEffect(true)
-    if DllCall("IsWindowVisible", "Ptr", settingsGui.Hwnd)
+    if DllCall("IsWindowVisible", "Ptr", settingsGui.Hwnd) {
+        if (showAdvancedPanel = 1)
+            RefreshStripRoutingPills()
         UpdateStatusBanner()
+        RefreshAllChannelReadouts(true)
+    }
+}
+
+RegisterAudioDeviceWatcher() {
+    global hDevNotify
+    dbi := Buffer(32, 0)
+    NumPut("UInt", 32, dbi, 0)
+    NumPut("UInt", 5, dbi, 4)
+    hDevNotify := DllCall("RegisterDeviceNotificationW", "Ptr", settingsGui.Hwnd, "Ptr", dbi, "UInt", 0x00000004, "Ptr")
+    OnMessage(0x0219, OnDeviceChange)
+}
+
+OnDeviceChange(wParam, lParam, msg, hwnd) {
+    if (wParam = 0x8000 && lParam) {
+        devType := NumGet(lParam, 4, "UInt")
+        if (devType = 5) {
+            guidBuf := Buffer(80, 0)
+            DllCall("ole32\StringFromGUID2", "Ptr", lParam + 12, "Ptr", guidBuf, "Int", 40)
+            classGuid := StrGet(guidBuf, "UTF-16")
+
+            if (classGuid = "{6994AD04-93EF-11D0-A3CC-00A0C9223196}") {
+                if (autoResetDevice && vm.connected)
+                    SetTimer(AutoResetEngineCallback, -1800)
+                if (deviceLockEnabled)
+                    SetTimer(EnforceDefaultDevicesLoud, -900)
+            }
+        }
+    } else if (wParam = 0x0007 && deviceLockEnabled) {
+        SetTimer(EnforceDefaultDevicesSilent, -900)
+    }
+}
+
+AutoResetEngineCallback() {
+    global lastAutoReset
+    if (!autoResetDevice || !vm.connected)
+        return
+    if (A_TickCount - lastAutoReset < 5000)
+        return
+
+    lastAutoReset := A_TickCount
+    DllCall(pSetFloat, "AStr", "Command.Restart", "Float", 1.0)
+    ShowQuickTip("Audio device reconnected — Restarting VoiceMeeter Engine...", 1600)
+    SetTimer(ResyncAfterEngineRestart, -650)
+}
+
+ToggleAutoResetDevice(*) {
+    global autoResetDevice := (autoResetDevice = 1) ? 0 : 1
+    IniWrite(autoResetDevice, iniPath, "Settings", "AutoResetDevice")
+    RefreshAutomationPills()
+    RefreshShortcutLabels()
+    ShowQuickTip("Auto-Reset on Device Reconnect: " (autoResetDevice ? "ON" : "OFF"), 1200)
 }
 
 OnModeToggle(*) {
@@ -1406,8 +3383,12 @@ OnModeToggle(*) {
     if (exclusiveMode = 1 && activeTargets.Length > 1) {
         global activeTargets := [activeTargets[1]]
     }
+    vm.gains.Clear()
+    SyncAllActiveTargets(true)
     RefreshModePillVisual()
     RefreshChannelVisuals()
+    if (showAdvancedPanel = 1)
+        RefreshStripRoutingPills()
     SyncSelectedSoloEffect(true)
     SaveSettings()
     UpdateStatusBanner()
@@ -1439,6 +3420,8 @@ OnTargetClick(clickedParam, *) {
     SyncAllActiveTargets(true)
     SyncSelectedSoloEffect(true)
     RefreshChannelVisuals()
+    if (showAdvancedPanel = 1)
+        RefreshStripRoutingPills()
     SaveSettings()
     UpdateStatusBanner()
 }
@@ -1483,10 +3466,10 @@ OnRenameChannel(param, *) {
 
 ResetChannelGain(param, *) {
     Critical
-    DllCall(pSetFloat, "AStr", param ".Gain", "Float", 0.0)
-    vm.lastWriteTick := A_TickCount
-    if hoverCache.Has(param)
-        hoverCache.Delete(param)
+    gainParam := GetGainParamForChannel(param)
+    ApplyChannelGainWithDuck(gainParam, 0.0)
+    if hoverCache.Has(gainParam)
+        hoverCache.Delete(gainParam)
 
     if vm.gains.Has(param) {
         vm.gains[param].current := 0.0
@@ -1495,8 +3478,10 @@ ResetChannelGain(param, *) {
 
     SetTimer(FlushOwnDirtyFlag, -350)
 
-    if DllCall("IsWindowVisible", "Ptr", settingsGui.Hwnd)
+    if DllCall("IsWindowVisible", "Ptr", settingsGui.Hwnd) {
         UpdateStatusBanner()
+        RefreshAllChannelReadouts(true)
+    }
 }
 
 IsTargetActive(param) {
@@ -1516,18 +3501,26 @@ SaveSettings() {
 }
 
 UpdateStatusBanner() {
-    static lastLineCount := 1
-    static lastMuteState := -1
+    static lastLineCount   := 1
+    static lastMuteState   := -1
+    static lastAccentMode  := -1
+    static lastStatusLines := ""
+    static lastSubLine     := ""
+    static lastLayerLine   := ""
+    static lastLayerState  := -1
 
     anyMuted := false
+    layerIdx := GetActiveGainLayerIndex()
 
     if (!vm.connected) {
         lines     := "VoiceMeeter Potato Offline"
         subLine   := "Waiting for VoiceMeeter Potato to start..."
+        layerLine := "  " Chr(0x21B3) "  Layer: Offline"
         lineCount := 1
     } else if (activeTargets.Length = 0) {
         lines     := "No Channel Selected"
         subLine   := "Click any Virtual Input, Hardware Input, or Bus below"
+        layerLine := "  " Chr(0x21B3) "  Layer: None"
         lineCount := 1
     } else {
         lines := ""
@@ -1547,7 +3540,10 @@ UpdateStatusBanner() {
                 anyMuted := true
             muteTag := isMuted ? "   [MUTED]" : ""
 
-            lines .= (idx > 1 ? "`n" : "") "•  " label "   —   " dbStr muteTag
+            dOff := GetDuckOffsetForParam(GetGainParamForChannel(param))
+            duckTag := (dOff <= -0.1) ? "   [DUCK " Format("{:.1f}", dOff) " dB]" : ""
+
+            lines .= (idx > 1 ? "`n" : "") "•  " label "   —   " dbStr muteTag duckTag
         }
         lineCount := activeTargets.Length
 
@@ -1557,43 +3553,77 @@ UpdateStatusBanner() {
             fullParam := soloParam "." fxObj.key
             fxVal := vm.fxValues.Has(fullParam) ? vm.fxValues[fullParam].val : 0.0
             subLine := Chr(0x21B3) "  FX:  " fxObj.label "   [ " FormatEffectValue(fxObj, fxVal) " ]"
+
+            if IsInputStrip(soloParam) {
+                if (layerIdx = 0) {
+                    layerLine := "  " Chr(0x21B3) "  Layer:  Master Gain  (All Routed Buses)"
+                } else {
+                    bObj := outputBuses[layerIdx]
+                    bName := nameMap.Has(bObj.param) ? nameMap[bObj.param] : bObj.name
+                    layerLine := "  " Chr(0x21B3) "  Layer:  " bObj.name " (" bName ") Submix Only"
+                }
+            } else {
+                layerLine := "  " Chr(0x21B3) "  Output Bus Master Fader"
+            }
         } else {
-            subLine := activeTargets.Length " channels linked   •   Spread-Locked (-60.0 to +12.0 dB)"
+            subLine   := activeTargets.Length " channels linked   •   Spread-Locked (-60.0 to +12.0 dB)"
+            layerLine := "  " Chr(0x21B3) "  Multi-Target Master Faders"
         }
     }
 
     muteFlag := anyMuted ? 1 : 0
     if (muteFlag != lastMuteState) {
         lastMuteState := muteFlag
-        statusText.SetFont(anyMuted ? "s10 Bold cF87171" : "s10 Bold c38BDF8")
-        heroAccent.Opt(anyMuted ? "cF87171" : "c38BDF8")
         UpdateTrayIcon(anyMuted)
+        if anyMuted {
+            heroMutePill.SetFont("s8 Bold cF87171")
+            heroMutePill.Opt("Background3A1A20")
+            heroMutePill.Value := "MUTED"
+        } else {
+            heroMutePill.SetFont("s8 Bold cA1A1AA")
+            heroMutePill.Opt("Background1E1E28")
+            heroMutePill.Value := "MUTE"
+        }
     }
 
-    statusText.Value  := lines
-    heroSubText.Value := subLine
+    accentMode := anyMuted ? 2 : (layerIdx > 0 ? 1 : 0)
+    if (accentMode != lastAccentMode) {
+        lastAccentMode := accentMode
+        if (accentMode = 2) {
+            statusText.SetFont("s10 Bold cF87171")
+            heroAccent.Opt("cF87171")
+        } else if (accentMode = 1) {
+            statusText.SetFont("s10 Bold cF59E0B")
+            heroAccent.Opt("cF59E0B")
+        } else {
+            statusText.SetFont("s10 Bold c38BDF8")
+            heroAccent.Opt("c38BDF8")
+        }
+    }
+
+    if (lines != lastStatusLines) {
+        lastStatusLines := lines
+        statusText.Value := lines
+    }
+    if (subLine != lastSubLine) {
+        lastSubLine := subLine
+        heroSubText.Value := subLine
+    }
+    if (layerLine != lastLayerLine) {
+        lastLayerLine := layerLine
+        layerPill.Value := layerLine
+    }
+
+    layerState := (layerIdx > 0) ? 1 : 0
+    if (layerState != lastLayerState) {
+        lastLayerState := layerState
+        layerPill.SetFont(layerState ? "s8 Bold cF59E0B" : "s8 Bold cD4D4D8")
+        layerPill.Opt(layerState ? "Background332614" : "Background221B11")
+    }
 
     if (lineCount != lastLineCount) {
         lastLineCount := lineCount
-        newStatusH := lineCount * 20
-        global currentDeltaY := newStatusH - 20
-        isVisible := DllCall("IsWindowVisible", "Ptr", settingsGui.Hwnd)
-
-        if isVisible
-            SendMessage(0x000B, 0, 0, settingsGui.Hwnd)  ; WM_SETREDRAW = false
-
-        heroBg.Move(, , 436, 74 + currentDeltaY)
-        statusText.Move(, , 412, newStatusH)
-        heroSubText.Move(, 62 + currentDeltaY)
-
-        for item in movableControls
-            item.ctrl.Move(, item.baseY + currentDeltaY)
-
-        if isVisible {
-            settingsGui.Show("AutoSize NoActivate")
-            SendMessage(0x000B, 1, 0, settingsGui.Hwnd)  ; WM_SETREDRAW = true
-            DllCall("RedrawWindow", "Ptr", settingsGui.Hwnd, "Ptr", 0, "Ptr", 0, "UInt", 0x0585)
-        }
+        RecalculateMainLayout(true)
     }
 }
 
@@ -1625,9 +3655,12 @@ ClearQuickTip() {
 }
 
 ; ==============================================================================
-; 9. WATCHDOG, SPREAD-LOCKED ACCELERATION & SMOOTH GLIDE ENGINE
+; 10. WATCHDOG, SPREAD-LOCKED ACCELERATION & SMOOTH GLIDE ENGINE
 ; ==============================================================================
 WatchdogCheck() {
+    if deviceLockEnabled
+        EnforceDefaultDevices(true)
+
     vmType := 0
     isOnline := (DllCall(pGetType, "Int*", &vmType, "Int") = 0 && vmType > 0)
 
@@ -1638,10 +3671,15 @@ WatchdogCheck() {
         vm.gains.Clear()
         vm.mutes.Clear()
         vm.fxValues.Clear()
+        duckBaseGains.Clear()
         SyncAllActiveTargets(true)
         SyncSelectedSoloEffect(true)
-        if DllCall("IsWindowVisible", "Ptr", settingsGui.Hwnd)
+        if DllCall("IsWindowVisible", "Ptr", settingsGui.Hwnd) {
+            if (showAdvancedPanel = 1)
+                RefreshStripRoutingPills()
             UpdateStatusBanner()
+            RefreshAllChannelReadouts(true)
+        }
     } else if (!isOnline && vm.connected) {
         vm.connected := false
         SetTimer(GlideStep, 0)
@@ -1660,11 +3698,14 @@ SyncAllActiveTargets(forceRead := false) {
         return
 
     for param in activeTargets {
+        gainParam := GetGainParamForChannel(param)
         liveGain := 0.0
-        if (DllCall(pGetFloat, "AStr", param ".Gain", "Float*", &liveGain, "Int") = 0)
-            vm.gains[param] := { current: liveGain, target: liveGain }
-        else if !vm.gains.Has(param)
+        if (DllCall(pGetFloat, "AStr", gainParam, "Float*", &liveGain, "Int") = 0) {
+            baseGain := Round(Max(-60.0, Min(12.0, liveGain - GetDuckOffsetForParam(gainParam))), 2)
+            vm.gains[param] := { current: baseGain, target: baseGain }
+        } else if !vm.gains.Has(param) {
             vm.gains[param] := { current: 0.0, target: 0.0 }
+        }
 
         liveMute := 0.0
         if (DllCall(pGetFloat, "AStr", param ".Mute", "Float*", &liveMute, "Int") = 0)
@@ -1693,9 +3734,11 @@ QueueWheelStep(dir) {
 
     for param in activeTargets {
         if !vm.gains.Has(param) {
+            gainParam := GetGainParamForChannel(param)
             liveGain := 0.0
-            DllCall(pGetFloat, "AStr", param ".Gain", "Float*", &liveGain, "Int")
-            vm.gains[param] := { current: liveGain, target: liveGain }
+            DllCall(pGetFloat, "AStr", gainParam, "Float*", &liveGain, "Int")
+            baseGain := Round(Max(-60.0, Min(12.0, liveGain - GetDuckOffsetForParam(gainParam))), 2)
+            vm.gains[param] := { current: baseGain, target: baseGain }
         }
         if (dir != vm.lastDir)
             vm.gains[param].target := vm.gains[param].current
@@ -1752,12 +3795,13 @@ GlideStep() {
             stillMoving := true
         }
 
-        DllCall(pSetFloat, "AStr", param ".Gain", "Float", entry.current)
-        vm.lastWriteTick := A_TickCount
+        ApplyChannelGainWithDuck(GetGainParamForChannel(param), entry.current)
     }
 
-    if DllCall("IsWindowVisible", "Ptr", settingsGui.Hwnd)
+    if DllCall("IsWindowVisible", "Ptr", settingsGui.Hwnd) {
         UpdateStatusBanner()
+        RefreshAllChannelReadouts(true)
+    }
     ShowHeadUnitOsd("volume")
 
     if !stillMoving {
@@ -1797,17 +3841,35 @@ ToggleVMMute() {
     SetTimer(FlushOwnDirtyFlag, -350)
 
     UpdateTrayIcon(anyUnmuted)
-    if DllCall("IsWindowVisible", "Ptr", settingsGui.Hwnd)
+    if DllCall("IsWindowVisible", "Ptr", settingsGui.Hwnd) {
         UpdateStatusBanner()
+        RefreshAllChannelReadouts(true)
+    }
     ShowHeadUnitOsd("volume")
 }
 
 ; ==============================================================================
-; 10. STARTUP INITIALIZATION
+; 11. STARTUP INITIALIZATION
 ; ==============================================================================
+EnsureVoicemeeterRunning()
 Sleep(50)
 vmType := 0
 vm.connected := (DllCall(pGetType, "Int*", &vmType, "Int") = 0 && vmType > 0)
+
+if (isFirstRun && vm.connected && pGetLevel) {
+    for st in inputStrips {
+        lL := 0.0
+        lR := 0.0
+        DllCall(pGetLevel, "Int", 0, "Int", st.idx * 8, "Float*", &lL)
+        DllCall(pGetLevel, "Int", 0, "Int", (st.idx * 8) + 1, "Float*", &lR)
+        if (Max(lL, lR) > 0.002) {
+            activeTargets := [st.param]
+            SaveSettings()
+            break
+        }
+    }
+}
+
 if vm.connected {
     SyncAllActiveTargets(true)
     SyncSelectedSoloEffect(true)
@@ -1816,6 +3878,20 @@ if vm.connected {
 RegisterAllHotkeys()
 RefreshModePillVisual()
 RefreshChannelVisuals()
+RefreshAutomationPills()
+RefreshStripRoutingPills()
+RefreshSnapshotPills()
 SetTimer(WatchdogCheck, 2000)
+SetTimer(GuiLiveSyncTick, 250)
+if (duckEnabled = 1)
+    SetTimer(AutoDuckTick, 25)
+if (deviceLockEnabled = 1)
+    EnforceDefaultDevices(true)
+
 UpdateStatusBanner()
+RecalculateMainLayout(false)
+RegisterAudioDeviceWatcher()
 settingsGui.Show("AutoSize")
+
+if (checkUpdatesStart = 1)
+    SetTimer(CheckUpdatesOnBoot, -2500)
