@@ -3,8 +3,11 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Potato Massah — Hardware Volume Wheel, Submix Layers &amp; Automation for VoiceMeeter Potato</title>
-  <meta name="description" content="Open-source 64-bit AutoHotkey v2 hardware volume wheel, per-bus submix layer, sidechain auto-ducking &amp; device anti-hijack controller for VoiceMeeter Potato." />
+  <title>Potato Massah — Hardware Volume Wheel &amp; Submix Controller for VoiceMeeter Potato</title>
+  <meta name="description" content="Open-source 64-bit AutoHotkey v2 hardware volume wheel, submix layer, sidechain auto-ducking &amp; device anti-hijack controller for VoiceMeeter Potato with 20 ms smooth fader glide and a Floating Pop-Up HUD." />
+  <meta property="og:title" content="Potato Massah — Hardware Volume Wheel &amp; Submix Controller" />
+  <meta property="og:description" content="Direct 64-bit VoicemeeterRemote64.dll control with 20 ms smooth glide, per-bus submix layers, sidechain auto-ducking, and Windows default device anti-hijack." />
+  <meta property="og:image" content="screenshot.png" />
   <link rel="icon" type="image/x-icon" href="Potato.ico" />
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -50,6 +53,7 @@
       color: #F4F4F5;
       font-family: "Segoe UI", "Inter", system-ui, -apple-system, sans-serif;
       overflow-x: hidden;
+      -webkit-tap-highlight-color: transparent;
     }
 
     .hero-backdrop {
@@ -58,7 +62,6 @@
         radial-gradient(480px circle at 16% 18%, rgba(56, 189, 248, 0.04), transparent 60%);
     }
 
-    /* Custom dark scrollbars */
     ::-webkit-scrollbar {
       width: 7px;
       height: 7px;
@@ -74,7 +77,6 @@
       background: #38BDF8;
     }
 
-    /* Hardware keycap badge */
     .kbd-key {
       background: linear-gradient(180deg, #1D1D26 0%, #14141B 100%);
       border: 1px solid #2A2A37;
@@ -91,7 +93,6 @@
       white-space: nowrap;
     }
 
-    /* Floating Pop-Up HUD entrance/exit transitions */
     .osd-hidden {
       opacity: 0;
       transform: translate(-50%, 14px) scale(0.97);
@@ -110,13 +111,11 @@
   <!-- 1. TOP STICKY NAVIGATION BAR                                          -->
   <!-- ===================================================================== -->
   <header class="sticky top-0 z-40 border-b border-borderSubtle bg-canvas/85 backdrop-blur-xl">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-3">
-      <!-- Brand Emblem + Title + Version Badge -->
-      <a href="#" class="flex items-center gap-3 group focus:outline-none shrink-0">
-        <div class="w-9 h-9 rounded-xl bg-[#141418] border border-borderSubtle flex items-center justify-center overflow-hidden group-hover:border-cyanAccent/50 transition-colors">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-2 sm:gap-3">
+      <a href="#" class="flex items-center gap-2.5 sm:gap-3 group focus:outline-none min-w-0">
+        <div class="w-9 h-9 rounded-xl bg-[#141418] border border-borderSubtle flex items-center justify-center overflow-hidden shrink-0 group-hover:border-cyanAccent/50 transition-colors">
           <img src="Potato.ico" alt="Potato Massah" class="w-7 h-7 rounded-md object-contain" onerror="this.style.display='none'; this.nextElementSibling.classList.remove('hidden');" />
-          <!-- Fallback Pinch-Knob SVG when Potato.ico is not adjacent in preview -->
-          <svg viewBox="0 0 64 64" class="hidden w-7 h-7" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="Potato Massah Pinch-Knob Emblem">
+          <svg viewBox="0 0 64 64" class="hidden w-7 h-7" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="Potato Massah Emblem">
             <rect width="64" height="64" rx="12" fill="#141418" />
             <path d="M14.5 21.5A8.2 8.2 0 0 0 14.5 32.5" stroke="#38BDF8" stroke-width="2.2" stroke-linecap="round" />
             <circle cx="19.5" cy="27" r="4.8" fill="#38BDF8" />
@@ -127,15 +126,14 @@
             <circle cx="42.2" cy="36.2" r="1.2" fill="#141418" />
           </svg>
         </div>
-        <div class="flex items-center gap-2.5">
-          <span class="font-bold text-base sm:text-lg tracking-tight text-textPrimary">Potato Massah</span>
-          <span class="hidden sm:inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-mono font-medium bg-elevated border border-borderSubtle text-cyanAccent">
+        <div class="flex items-center gap-2 min-w-0">
+          <span class="font-bold text-base sm:text-lg tracking-tight text-textPrimary truncate">Potato Massah</span>
+          <span class="hidden sm:inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-mono font-medium bg-elevated border border-borderSubtle text-cyanAccent shrink-0">
             v1.2.2 • Win64 / AHK v2
           </span>
         </div>
       </a>
 
-      <!-- Center Anchor Links -->
       <nav class="hidden lg:flex items-center gap-7 text-sm font-medium text-textMuted">
         <a href="#live-demo" class="hover:text-textPrimary transition-colors">Live Demo</a>
         <a href="#features" class="hover:text-textPrimary transition-colors">Features</a>
@@ -143,30 +141,29 @@
         <a href="#install-build" class="hover:text-textPrimary transition-colors">Install &amp; Build</a>
       </nav>
 
-      <!-- Right Utility & Release Actions -->
-      <div class="flex items-center gap-2 sm:gap-2.5">
-        <a href="https://github.com/grandfirephoenix/Potato-Massah" target="_blank" rel="noopener noreferrer" class="hidden sm:inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold bg-elevated hover:bg-pillHover text-textSecondary border border-borderSubtle hover:border-cyanAccent/40 transition-all">
+      <div class="flex items-center gap-2 shrink-0">
+        <a href="https://github.com/grandfirephoenix/Potato-Massah" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-2 rounded-xl text-xs font-semibold bg-elevated hover:bg-pillHover text-textSecondary border border-borderSubtle hover:border-cyanAccent/40 transition-all">
           <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" clip-rule="evenodd"/></svg>
-          GitHub Repo
+          <span class="hidden sm:inline">GitHub Repo</span>
         </a>
 
-        <a data-exe-download="true" href="https://github.com/grandfirephoenix/Potato-Massah/releases/latest" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold bg-cyanAccent hover:bg-sky-300 text-canvas transition-all shadow-cyanGlow">
+        <a data-exe-download="true" href="https://github.com/grandfirephoenix/Potato-Massah/releases/latest" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1.5 px-3 sm:px-3.5 py-2 rounded-xl text-xs font-bold bg-cyanAccent hover:bg-sky-300 text-canvas transition-all shadow-cyanGlow">
           <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
-          <span data-exe-label="nav">Download .EXE (v1.2.2)</span>
+          <span data-exe-label="nav">Download .EXE</span>
         </a>
       </div>
     </div>
   </header>
 
   <!-- ===================================================================== -->
-  <!-- 2. HERO SECTION + 1:1 INTERACTIVE APP & FLOATING POP-UP HUD SIMULATOR -->
+  <!-- 2. HERO SECTION + 1:1 INTERACTIVE APP & FLOATING HUD SIMULATOR        -->
   <!-- ===================================================================== -->
-  <section id="live-demo" class="hero-backdrop relative pt-10 pb-20 lg:pt-14 lg:pb-24 border-b border-borderSubtle">
+  <section id="live-demo" class="hero-backdrop relative pt-8 pb-16 sm:pt-12 sm:pb-20 lg:pt-14 lg:pb-24 border-b border-borderSubtle">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-10 items-start">
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-start">
 
-        <!-- Left Column: Product Overview, CTAs, Specs & Real Screenshot Callout -->
-        <div class="lg:col-span-5 space-y-6 pt-1">
+        <!-- Left Column: Product Overview, CTAs, Specs & Native Preview -->
+        <div class="lg:col-span-5 space-y-5 sm:space-y-6 pt-1">
           <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-elevated border border-borderSubtle text-xs font-mono text-textMuted">
             <span class="w-2 h-2 rounded-full bg-emeraldOk animate-pulse"></span>
             <span>Windows 10/11 (64-bit)</span>
@@ -174,22 +171,22 @@
             <span class="text-cyanAccent">PolyForm Noncommercial 1.0.0</span>
           </div>
 
-          <h1 class="text-3xl sm:text-4xl lg:text-[2.6rem] font-extrabold tracking-tight text-textPrimary leading-[1.14]">
+          <h1 class="text-2xl sm:text-4xl lg:text-[2.55rem] font-extrabold tracking-tight text-textPrimary leading-[1.16]">
             Hardware Volume Wheel, Submix Layers &amp; Automation for <span class="text-cyanAccent">VoiceMeeter Potato</span>
           </h1>
 
           <p class="text-sm sm:text-base text-textMuted leading-relaxed">
-            <strong class="text-textPrimary font-semibold">Potato Massah</strong> intercepts Windows media volume keys (<code class="font-mono text-xs px-1.5 py-0.5 rounded bg-elevated border border-borderSubtle text-cyanAccent">Volume_Up</code>, <code class="font-mono text-xs px-1.5 py-0.5 rounded bg-elevated border border-borderSubtle text-cyanAccent">Volume_Down</code>, <code class="font-mono text-xs px-1.5 py-0.5 rounded bg-elevated border border-borderSubtle text-cyanAccent">Volume_Mute</code>) and drives <code class="font-mono text-xs px-1.5 py-0.5 rounded bg-elevated border border-borderSubtle text-textPrimary">VoicemeeterRemote64.dll</code> directly—delivering 20&nbsp;ms smooth glide, Per-Bus Submix Gain Layers (<code class="font-mono text-xs text-amberAccent">GainLayer[0..7]</code>), 5-stage Sidechain Auto-Ducking, Windows Default Device Lock ("Anti-Hijack"), Auto-Reset on Device Reconnect, Solo FX &amp; 3-band EQ navigation, 16-channel keybinds, and a Floating Pop-Up HUD.
+            <strong class="text-textPrimary font-semibold">Potato Massah</strong> intercepts Windows media volume keys (<code class="font-mono text-xs px-1.5 py-0.5 rounded bg-elevated border border-borderSubtle text-cyanAccent">Volume_Up</code>, <code class="font-mono text-xs px-1.5 py-0.5 rounded bg-elevated border border-borderSubtle text-cyanAccent">Volume_Down</code>, <code class="font-mono text-xs px-1.5 py-0.5 rounded bg-elevated border border-borderSubtle text-cyanAccent">Volume_Mute</code>) and drives <code class="font-mono text-xs px-1.5 py-0.5 rounded bg-elevated border border-borderSubtle text-textPrimary">VoicemeeterRemote64.dll</code> directly—delivering 20&nbsp;ms smooth fader glide, per-bus submix layers, sidechain auto-ducking, Windows default device anti-hijack, and a non-focus-stealing floating HUD.
           </p>
 
           <!-- Primary & Secondary CTAs -->
           <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 pt-1">
-            <a data-exe-download="true" href="https://github.com/grandfirephoenix/Potato-Massah/releases/latest" target="_blank" rel="noopener noreferrer" class="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl text-sm font-bold bg-cyanAccent hover:bg-sky-300 text-canvas transition-all shadow-cyanGlow">
+            <a data-exe-download="true" href="https://github.com/grandfirephoenix/Potato-Massah/releases/latest" target="_blank" rel="noopener noreferrer" class="inline-flex items-center justify-center gap-2 px-5 py-3.5 sm:py-3 rounded-xl text-sm font-bold bg-cyanAccent hover:bg-sky-300 text-canvas transition-all shadow-cyanGlow">
               <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
               <span data-exe-label="hero">Download Potato Massah.exe (v1.2.2)</span>
             </a>
 
-            <a href="https://github.com/grandfirephoenix/Potato-Massah/blob/main/PotatoMassah.ahk" target="_blank" rel="noopener noreferrer" class="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl text-sm font-semibold bg-elevated hover:bg-pillHover text-textPrimary border border-borderSubtle hover:border-cyanAccent/40 transition-all">
+            <a href="https://github.com/grandfirephoenix/Potato-Massah/blob/main/PotatoMassah.ahk" target="_blank" rel="noopener noreferrer" class="inline-flex items-center justify-center gap-2 px-5 py-3.5 sm:py-3 rounded-xl text-sm font-semibold bg-elevated hover:bg-pillHover text-textPrimary border border-borderSubtle hover:border-cyanAccent/40 transition-all">
               <svg class="w-4 h-4 text-cyanAccent" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg>
               View Source (PotatoMassah.ahk)
             </a>
@@ -199,59 +196,54 @@
             <span id="releaseMetaText">Latest Release: v1.2.2</span>
           </div>
 
-          <!-- 4-Card Technical Specs Grid -->
+          <!-- Key Technical Specs Grid -->
           <div class="grid grid-cols-2 gap-2.5 pt-1">
             <div class="p-3 rounded-xl bg-elevated border border-borderSubtle">
-              <div class="text-[10px] font-bold uppercase tracking-wider text-textDim">Native Bridge</div>
-              <div class="text-xs font-mono font-semibold text-cyanAccent mt-0.5 truncate">VoicemeeterRemote64.dll</div>
-            </div>
-            <div class="p-3 rounded-xl bg-elevated border border-borderSubtle">
               <div class="text-[10px] font-bold uppercase tracking-wider text-textDim">Submix Layers</div>
-              <div class="text-xs font-mono font-semibold text-amberAccent mt-0.5">GainLayer[0..7] (A1–B3)</div>
+              <div class="text-xs font-mono font-semibold text-amberAccent mt-0.5 truncate">GainLayer[0..7] (A1–B3)</div>
             </div>
             <div class="p-3 rounded-xl bg-elevated border border-borderSubtle">
-              <div class="text-[10px] font-bold uppercase tracking-wider text-textDim">Protection Suite</div>
-              <div class="text-xs font-mono font-semibold text-emeraldOk mt-0.5">Auto-Duck &amp; Anti-Hijack</div>
+              <div class="text-[10px] font-bold uppercase tracking-wider text-textDim">Automation Suite</div>
+              <div class="text-xs font-mono font-semibold text-cyanAccent mt-0.5 truncate">Auto-Duck &amp; Anti-Hijack</div>
             </div>
             <div class="p-3 rounded-xl bg-elevated border border-borderSubtle">
-              <div class="text-[10px] font-bold uppercase tracking-wider text-textDim">State Persistence</div>
-              <div class="text-xs font-mono font-semibold text-textPrimary mt-0.5">volume_settings.ini</div>
+              <div class="text-[10px] font-bold uppercase tracking-wider text-textDim">Native Bridge</div>
+              <div class="text-xs font-mono font-semibold text-textPrimary mt-0.5 truncate">VoicemeeterRemote64.dll</div>
+            </div>
+            <div class="p-3 rounded-xl bg-elevated border border-borderSubtle">
+              <div class="text-[10px] font-bold uppercase tracking-wider text-textDim">Footprint</div>
+              <div class="text-xs font-mono font-semibold text-emeraldOk mt-0.5 truncate">Zero External Dependencies</div>
             </div>
           </div>
 
-          <!-- Repository Screenshot Drop-In Slot -->
-          <div class="p-4 rounded-xl bg-elevated/80 border border-borderSubtle space-y-2">
+          <!-- Clean Native Windows Capture Card (Hidden automatically if screenshot.png is absent) -->
+          <div id="realScreenshotHolder" class="hidden p-3.5 rounded-xl bg-elevated/80 border border-borderSubtle space-y-2.5">
             <div class="flex items-center justify-between gap-2">
-              <span class="text-[11px] font-bold uppercase tracking-wider text-textMuted">Repository Screenshot Slot</span>
-              <span class="text-[11px] font-mono text-cyanAccent">screenshot.png</span>
+              <span class="text-[11px] font-bold uppercase tracking-wider text-textMuted">Native Windows UI</span>
+              <span class="text-[11px] font-mono text-cyanAccent">Dark DWM Theme</span>
             </div>
-            <p class="text-xs text-textMuted leading-relaxed">
-              The panel on the right is a <strong class="text-textPrimary">live interactive browser simulator</strong> of the native Win32/DWM interface. Drop <code class="font-mono text-[11px] text-cyanAccent">screenshot.png</code> into your repository root alongside <code class="font-mono text-[11px] text-textPrimary">index.html</code> to display a static capture here automatically.
-            </p>
-            <div id="realScreenshotHolder" class="hidden pt-2">
-              <img src="screenshot.png" alt="Real Windows screenshot of VoiceMeeter Potato Massah" onload="document.getElementById('realScreenshotHolder').classList.remove('hidden')" onerror="document.getElementById('realScreenshotHolder').classList.add('hidden')" class="w-full h-auto rounded-lg border border-borderSubtle" />
-            </div>
+            <img src="screenshot.png" alt="VoiceMeeter Potato Massah Windows Control Panel" onload="document.getElementById('realScreenshotHolder').classList.remove('hidden')" onerror="document.getElementById('realScreenshotHolder').classList.add('hidden')" class="w-full h-auto rounded-lg border border-borderSubtle" />
           </div>
         </div>
 
-        <!-- Right Column: 1:1 Interactive App & Floating Pop-Up HUD Simulator -->
+        <!-- Right Column: 1:1 Interactive App & Floating HUD Simulator -->
         <div class="lg:col-span-7 space-y-3">
           <div class="flex flex-wrap items-center justify-between gap-2 px-1">
             <div class="flex items-center gap-2">
               <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-pillActive border border-cyanAccent/30 text-[11px] font-mono font-semibold text-cyanAccent">
                 <span class="w-1.5 h-1.5 rounded-full bg-cyanAccent"></span>
-                LIVE INTERACTIVE BROWSER SIMULATOR
+                INTERACTIVE CONTROL PANEL
               </span>
               <span id="simStepBadge" class="text-[11px] font-mono text-textMuted">Step: 0.20 dB</span>
             </div>
 
-            <button onclick="simTogglePanelVisibility()" id="simFocusToggleBtn" class="px-2.5 py-1 rounded-md bg-elevated hover:bg-pillHover border border-borderSubtle text-[11px] font-mono text-textSecondary transition cursor-pointer">
+            <button onclick="simTogglePanelVisibility()" id="simFocusToggleBtn" class="px-3 py-1.5 rounded-lg bg-elevated hover:bg-pillHover border border-borderSubtle text-xs font-mono text-textSecondary transition cursor-pointer">
               Panel: Visible
             </button>
           </div>
 
           <!-- Simulated Windows Desktop Stage -->
-          <div id="simulatorStage" class="relative rounded-2xl bg-[#09090C] border border-borderSubtle p-3 sm:p-5 pb-24 shadow-2xl select-none transition-colors hover:border-cyanAccent/30">
+          <div id="simulatorStage" class="relative rounded-2xl bg-[#09090C] border border-borderSubtle p-2.5 sm:p-5 pb-24 shadow-2xl select-none transition-colors hover:border-cyanAccent/30">
 
             <!-- Collapsed Tray Placeholder -->
             <div id="trayHiddenCard" class="hidden rounded-xl bg-elevated border border-borderSubtle p-6 text-center space-y-3 my-8">
@@ -259,9 +251,9 @@
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"/></svg>
               </div>
               <div>
-                <div class="text-sm font-bold text-textPrimary">Control Panel Hidden to System Tray</div>
+                <div class="text-sm font-bold text-textPrimary">Control Panel Minimized to System Tray</div>
                 <p class="text-xs text-textMuted mt-1 max-w-md mx-auto">
-                  Use the simulator controls below (<span class="text-cyanAccent font-mono">Vol − / +</span>, <span class="text-coralMute font-mono">Mute</span>, <span class="text-textPrimary font-mono">Prev/Next Ch</span>, <span class="text-amberAccent font-mono">Layer ▾</span>, or <span class="text-textPrimary font-mono">FX</span>) to see the <strong class="text-textPrimary">Floating Pop-Up HUD</strong> appear at the bottom-center.
+                  Adjust volume, mute, submix layers, or Solo FX using the controls below to preview the floating <strong class="text-textPrimary">Pop-Up HUD</strong> overlay.
                 </p>
               </div>
               <button onclick="simTogglePanelVisibility()" class="px-4 py-2 rounded-lg bg-pillActive hover:bg-pillActiveHover border border-cyanAccent/35 text-xs font-bold text-cyanAccent transition cursor-pointer">
@@ -270,12 +262,12 @@
             </div>
 
             <!-- =========================================================== -->
-            <!-- 1:1 REPLICA: "VoiceMeeter Potato Massah" v1.2.2 WINDOW      -->
+            <!-- 1:1 REPLICA: "VoiceMeeter Potato Massah" NATIVE WINDOW      -->
             <!-- =========================================================== -->
             <div id="nativeWindowReplica" class="rounded-xl bg-canvas border border-[#262632] overflow-hidden shadow-2xl">
               <!-- Dark DWM Titlebar -->
               <div class="h-9 px-3.5 bg-canvas border-b border-borderSubtle/80 flex items-center justify-between">
-                <div class="flex items-center gap-2.5">
+                <div class="flex items-center gap-2.5 min-w-0">
                   <img src="Potato.ico" alt="Potato Massah" class="w-4 h-4 rounded-sm shrink-0 object-contain" onerror="this.style.display='none'; this.nextElementSibling.classList.remove('hidden');" />
                   <svg viewBox="0 0 64 64" class="hidden w-4 h-4 shrink-0" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <rect width="64" height="64" rx="12" fill="#141418" />
@@ -283,68 +275,63 @@
                     <circle cx="19.5" cy="27" r="5" fill="#38BDF8" />
                     <path d="M20.2 20.2C22.4 18.1 26.5 16.3 30.8 16.3C34.9 16.3 39.6 18.3 42.4 20.9C44.5 22.9 46.0 27.4 47.4 32.1C48.8 36.8 52.1 43.1 58.0 50.2L51.0 57.2C45.0 49.9 40.5 44.4 35.8 41.9C31.7 39.7 27.0 38.0 22.7 36.1C20.2 35.0 19.3 33.1 20.4 31.6C21.5 30.1 24.2 30.2 27.5 31.3C30.5 32.3 33.6 32.6 35.6 31.5C37.3 30.5 37.8 28.1 36.7 25.9C35.7 23.9 33.7 22.3 31.4 22.1C28.6 21.9 25.3 23.3 22.9 23.6C20.6 23.9 19.2 22.7 19.4 21.4Z" fill="#F4F4F5" />
                   </svg>
-                  <span class="text-xs font-normal text-textSecondary">VoiceMeeter Potato Massah</span>
+                  <span class="text-xs font-normal text-textSecondary truncate">VoiceMeeter Potato Massah</span>
                 </div>
-                <div class="flex items-center gap-3 text-textDim text-xs">
-                  <button onclick="simTogglePanelVisibility()" title="Minimize / Hide to Tray" class="hover:text-textPrimary transition cursor-pointer">—</button>
+                <div class="flex items-center gap-3 text-textDim text-xs shrink-0">
+                  <button onclick="simTogglePanelVisibility()" title="Minimize to Tray" class="hover:text-textPrimary transition cursor-pointer px-1">—</button>
                   <span class="opacity-40">□</span>
-                  <button onclick="simTogglePanelVisibility()" title="Hide to Tray" class="hover:text-coralMute transition cursor-pointer">✕</button>
+                  <button onclick="simTogglePanelVisibility()" title="Hide to Tray" class="hover:text-coralMute transition cursor-pointer px-1">✕</button>
                 </div>
               </div>
 
               <!-- Window Content Body -->
-              <div class="p-4 space-y-3.5">
+              <div class="p-3 sm:p-4 space-y-3.5">
 
-                <!-- Hero Telemetry Card with 2px Top Accent Stripe & Collapsible Amber Pro Drawer -->
+                <!-- Hero Telemetry Card -->
                 <div class="rounded-lg overflow-hidden bg-elevated border border-borderSubtle/80">
                   <div id="heroTopStripe" class="h-[2px] w-full bg-cyanAccent transition-colors"></div>
-                  <div class="p-3 space-y-1.5">
-                    <div class="flex flex-wrap items-center justify-between gap-1.5">
+                  <div class="p-3 space-y-2">
+                    <div class="flex flex-wrap items-center justify-between gap-2">
                       <span class="text-[10px] font-bold uppercase tracking-wider text-textDim">ACTIVE WHEEL TARGET</span>
                       <div class="flex items-center gap-1.5">
-                        <button id="heroMutePill" onclick="simToggleMute()" onmouseenter="setSmartHint('Click to toggle mute on active target(s) • Tip: Middle-click any channel row to mute')" onmouseleave="resetSmartHint()" class="px-2 py-0.5 rounded bg-[#1E1E28] hover:bg-[#2A2A38] text-[10px] font-bold text-textMuted transition cursor-pointer">
-                          MUTE
+                        <button id="heroMuteBtn" onclick="simToggleMute()" class="px-2.5 py-1 rounded bg-[#1E1E28] hover:bg-pillHover text-[11px] font-bold text-textMuted transition cursor-pointer">MUTE</button>
+                        <button id="modeTogglePill" onclick="simToggleExclusive()" class="px-2.5 py-1 rounded bg-[#1B2B3A] hover:bg-[#23384C] text-[11px] font-bold text-cyanAccent transition cursor-pointer">
+                          ◉ Single-Target
                         </button>
-                        <button id="modeTogglePill" onclick="simToggleExclusive()" onmouseenter="setSmartHint('Switch between Single-Target Mode and Multi-Group Spread-Locked linking')" onmouseleave="resetSmartHint()" class="px-2.5 py-0.5 rounded bg-[#1B2B3A] hover:bg-[#23384C] text-[10px] font-bold text-cyanAccent transition cursor-pointer">
-                          ◉  Single-Target
-                        </button>
-                        <button id="proDrawerToggleBtn" onclick="simToggleProDrawer()" onmouseenter="setSmartHint('Show or hide advanced Submix Bus Layers, A1–B3 Routing Matrix & Mixer Snapshots')" onmouseleave="resetSmartHint()" class="px-2 py-0.5 rounded bg-[#261E12] hover:bg-[#3F2F18] text-[10px] font-bold text-amberAccent transition cursor-pointer">
+                        <button id="proDrawerBtn" onclick="simToggleProDrawer()" class="px-2.5 py-1 rounded bg-[#261E12] hover:bg-[#3F2F18] text-[11px] font-bold text-amberAccent transition cursor-pointer">
                           Pro ▾
                         </button>
                       </div>
                     </div>
 
-                    <!-- Active Channel Readout Lines -->
                     <div id="heroActiveLines" class="space-y-0.5"></div>
 
-                    <!-- Solo FX / Group Sub-line -->
                     <div id="heroSubLine" class="text-[11px] text-textMuted font-mono pt-0.5">
-                      ↳  FX:  EQ Treble   [ 0.0 dB ]
+                      ↳ FX: EQ Treble [ +4.5 dB ]
                     </div>
 
-                    <!-- Collapsible Amber Pro Drawer -->
-                    <div id="proDrawerSection" class="hidden pt-2.5 mt-2 border-t border-[#332818] space-y-2">
+                    <!-- Collapsible Pro Drawer (Amber Color-Coded) -->
+                    <div id="proDrawerContainer" class="hidden pt-2.5 border-t border-[#332818] space-y-2.5">
                       <div class="flex flex-wrap items-center justify-between gap-1.5">
-                        <span class="text-[10px] font-bold text-amberAccent">⚠️ PRO: Submix, Routing &amp; Snapshots</span>
+                        <span class="text-[11px] font-bold text-amberAccent">⚠ PRO: Submix, Routing &amp; Snapshots</span>
                         <div class="flex items-center gap-1">
-                          <button onclick="simResetLayers()" onmouseenter="setSmartHint('Reset all A1–B3 submix gain layers on this strip to 0.0 dB')" onmouseleave="resetSmartHint()" class="px-2 py-0.5 rounded bg-[#261E12] hover:bg-[#382B19] text-[10px] font-bold text-[#FBBF24] transition cursor-pointer">Reset Layers</button>
-                          <button onclick="simResetRoutes()" onmouseenter="setSmartHint('Reset strip output routing back to default A1 only')" onmouseleave="resetSmartHint()" class="px-2 py-0.5 rounded bg-[#261E12] hover:bg-[#382B19] text-[10px] font-bold text-[#FBBF24] transition cursor-pointer">Reset Routes</button>
-                          <button onclick="simDefaultMixer()" onmouseenter="setSmartHint('Reset all 16 faders to 0.0 dB, clear submix layers & restore A1 routing')" onmouseleave="resetSmartHint()" class="px-2 py-0.5 rounded bg-[#261E12] hover:bg-[#382B19] text-[10px] font-bold text-[#FBBF24] transition cursor-pointer">Default Mixer</button>
+                          <button onclick="simResetLayers()" class="px-2 py-1 rounded bg-[#261E12] hover:bg-[#382B19] text-[10px] font-bold text-[#FBBF24] transition cursor-pointer">Reset Layers</button>
+                          <button onclick="simResetRoutes()" class="px-2 py-1 rounded bg-[#261E12] hover:bg-[#382B19] text-[10px] font-bold text-[#FBBF24] transition cursor-pointer">Reset Routes</button>
+                          <button onclick="simResetDefaultMixer()" class="px-2 py-1 rounded bg-[#261E12] hover:bg-[#382B19] text-[10px] font-bold text-[#FBBF24] transition cursor-pointer">Default Mixer</button>
                         </div>
                       </div>
 
-                      <!-- Bus Submix Layer Pill (Left-click: Next, Right-click: Previous) -->
-                      <div id="simLayerPill" onclick="simCycleLayer(1)" oncontextmenu="event.preventDefault(); simCycleLayer(-1)" onmouseenter="setSmartHint('Left-click: Next bus submix layer • Right-click: Previous • Ctrl+Shift+Up/Down')" onmouseleave="resetSmartHint()" class="px-2.5 py-1 rounded bg-[#221B11] hover:bg-[#2E2416] text-[11px] font-bold text-textSecondary cursor-pointer transition">
-                        ↳  Layer:  Master Gain  (All Routed Buses)
+                      <div id="layerPillSim" onclick="simCycleLayer(1)" class="px-2.5 py-1.5 rounded bg-[#221B11] hover:bg-[#2E2416] text-[11px] font-bold text-textSecondary cursor-pointer transition">
+                        ↳ Layer: Master Gain (All Routed Buses)
                       </div>
 
-                      <!-- 8-Bus Output Routing Matrix Pills (A1–B3) -->
-                      <div id="simRoutingGrid" class="grid grid-cols-8 gap-1"></div>
+                      <!-- 8-Bus Routing Matrix -->
+                      <div class="grid grid-cols-4 sm:grid-cols-8 gap-1.5" id="simRoutingGrid"></div>
 
-                      <!-- 3 Quick Mixer Snapshots (P1–P3) -->
-                      <div class="flex items-center gap-2 pt-0.5">
-                        <span class="text-[10px] font-bold text-textMuted shrink-0">SNAPSHOTS:</span>
-                        <div id="simSnapshotsGrid" class="grid grid-cols-3 gap-1.5 flex-1"></div>
+                      <!-- 3 Quick Mixer Snapshots -->
+                      <div class="flex flex-col sm:flex-row sm:items-center gap-1.5 sm:gap-2 pt-0.5">
+                        <span class="text-[10px] font-bold uppercase tracking-wider text-textDim shrink-0">SNAPSHOTS:</span>
+                        <div class="grid grid-cols-3 gap-1.5 flex-1" id="simSnapshotGrid"></div>
                       </div>
                     </div>
                   </div>
@@ -356,43 +343,39 @@
                   <div id="simVirtualList" class="space-y-1.5"></div>
                 </div>
 
-                <!-- Section 2: HARDWARE INPUTS (2-Column Grid) -->
+                <!-- Section 2: HARDWARE INPUTS -->
                 <div>
                   <div class="text-[10px] font-bold uppercase tracking-wider text-textDim mb-1.5">HARDWARE INPUTS</div>
                   <div id="simHardwareGrid" class="grid grid-cols-1 sm:grid-cols-2 gap-1.5"></div>
                 </div>
 
-                <!-- Section 3: OUTPUT BUSES (2-Column Grid) -->
+                <!-- Section 3: OUTPUT BUSES -->
                 <div>
                   <div class="text-[10px] font-bold uppercase tracking-wider text-textDim mb-1.5">OUTPUT BUSES</div>
                   <div id="simBusesGrid" class="grid grid-cols-1 sm:grid-cols-2 gap-1.5"></div>
                 </div>
 
                 <!-- Section 4: AUTOMATION & PROTECTION -->
-                <div class="pt-2 border-t border-borderSubtle space-y-1.5">
-                  <div class="text-[10px] font-bold uppercase tracking-wider text-textDim">AUTOMATION &amp; PROTECTION  (CLICK TO TOGGLE • RIGHT-CLICK TO CONFIGURE)</div>
-                  <div class="grid grid-cols-3 gap-1.5">
-                    <button id="pillAutoReset" onclick="simToggleAuto('autoReset')" onmouseenter="setAutoDesc('autoReset')" onmouseleave="setAutoDesc('')" class="py-1.5 px-2 rounded bg-pillActive hover:bg-pillActiveHover text-[11px] font-bold text-cyanAccent transition cursor-pointer">● Auto-Reset: ON</button>
-                    <button id="pillAntiHijack" onclick="simToggleAuto('antiHijack')" oncontextmenu="event.preventDefault(); showToast('Opened Anti-Hijack Device Lock Setup')" onmouseenter="setAutoDesc('antiHijack')" onmouseleave="setAutoDesc('')" class="py-1.5 px-2 rounded bg-pillActive hover:bg-pillActiveHover text-[11px] font-bold text-cyanAccent transition cursor-pointer">● Anti-Hijack: ON</button>
-                    <button id="pillAutoDuck" onclick="simToggleAuto('autoDuck')" oncontextmenu="event.preventDefault(); showToast('Opened 5-Stage Auto-Ducking Studio')" onmouseenter="setAutoDesc('autoDuck')" onmouseleave="setAutoDesc('')" class="py-1.5 px-2 rounded bg-pillActive hover:bg-pillActiveHover text-[11px] font-bold text-cyanAccent transition cursor-pointer">● Auto-Duck: ON</button>
-                  </div>
-                  <div id="autoDescBox" class="px-2.5 py-1.5 rounded bg-[#13131A] text-[10px] text-textDim leading-snug min-h-[2.3rem] flex items-center">
-                    Hover an option above to see what it does  •  Right-click Anti-Hijack or Auto-Duck to configure
+                <div class="pt-1 border-t border-borderSubtle">
+                  <div class="text-[10px] font-bold uppercase tracking-wider text-textDim mb-1.5">AUTOMATION &amp; PROTECTION</div>
+                  <div class="grid grid-cols-1 sm:grid-cols-3 gap-1.5">
+                    <button id="simAutoResetPill" onclick="simToggleAutomation('autoReset')" class="px-2.5 py-2 sm:py-1.5 rounded bg-pillActive text-center text-[11px] font-bold text-cyanAccent transition cursor-pointer">● Auto-Reset: ON</button>
+                    <button id="simAntiHijackPill" onclick="simToggleAutomation('antiHijack')" class="px-2.5 py-2 sm:py-1.5 rounded bg-pillActive text-center text-[11px] font-bold text-cyanAccent transition cursor-pointer">● Anti-Hijack: ON</button>
+                    <button id="simAutoDuckPill" onclick="simToggleAutomation('autoDuck')" class="px-2.5 py-2 sm:py-1.5 rounded bg-pillActive text-center text-[11px] font-bold text-cyanAccent transition cursor-pointer">● Auto-Duck: ON</button>
                   </div>
                 </div>
 
-                <!-- Footer Action Buttons + Dynamic Smart Context Hint -->
-                <div class="pt-2 border-t border-borderSubtle space-y-2">
-                  <div class="grid grid-cols-4 gap-1.5">
-                    <a href="#install-build" onmouseenter="setSmartHint('Configure Windows auto-start, VoiceMeeter auto-launch & GitHub updates')" onmouseleave="resetSmartHint()" class="py-1.5 rounded bg-[#191922] hover:bg-[#242432] text-center text-[11px] font-bold text-textSecondary transition">Startup &amp; Updates</a>
-                    <a href="#keybinds" onmouseenter="setSmartHint('Customize keyboard shortcuts for channels, submix layers, FX, snapshots & toggles')" onmouseleave="resetSmartHint()" class="py-1.5 rounded bg-pillActive hover:bg-pillActiveHover text-center text-[11px] font-bold text-cyanAccent transition">Keybinds</a>
-                    <a href="#features" onmouseenter="setSmartHint('Open the full user manual and live shortcut reference')" onmouseleave="resetSmartHint()" class="py-1.5 rounded bg-[#191922] hover:bg-[#242432] text-center text-[11px] font-bold text-textSecondary transition">Features</a>
-                    <button onclick="simRestartEngine()" onmouseenter="setSmartHint('Manually restart VoiceMeeter\'s audio driver engine')" onmouseleave="resetSmartHint()" class="py-1.5 rounded bg-[#191922] hover:bg-[#242432] text-[11px] font-bold text-textSecondary transition cursor-pointer">Restart Engine</button>
+                <!-- Footer Divider & Action Buttons -->
+                <div class="pt-2.5 border-t border-borderSubtle space-y-2">
+                  <div class="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
+                    <a href="#install-build" class="px-2.5 py-2 sm:py-1.5 rounded bg-[#191922] hover:bg-[#242432] text-center text-[11px] font-bold text-textSecondary transition">Startup &amp; Updates</a>
+                    <a href="#keybinds" class="px-2.5 py-2 sm:py-1.5 rounded bg-pillActive hover:bg-pillActiveHover text-center text-[11px] font-bold text-cyanAccent transition">Keybinds</a>
+                    <a href="#features" class="px-2.5 py-2 sm:py-1.5 rounded bg-[#191922] hover:bg-[#242432] text-center text-[11px] font-bold text-textSecondary transition">Features</a>
+                    <button onclick="simRestartEngine()" class="px-2.5 py-2 sm:py-1.5 rounded bg-[#191922] hover:bg-[#242432] text-[11px] font-bold text-textSecondary transition cursor-pointer">Restart Engine</button>
                   </div>
-
-                  <div class="flex items-center justify-between gap-2 text-[11px]">
-                    <span id="smartFooterHint" class="text-textDim truncate">Ctrl + Alt + V: Panel  •  5 channel shortcuts active  •  Hover any pill for tips</span>
-                    <button onclick="simTogglePanelVisibility()" class="text-textMuted hover:text-textPrimary font-bold shrink-0 cursor-pointer">Hide to Tray</button>
+                  <div class="flex items-center justify-between text-[11px] text-textDim">
+                    <span id="simFooterHint">Ctrl + Alt + V: Panel • 5 channel shortcuts active</span>
+                    <button onclick="simTogglePanelVisibility()" class="font-bold text-textMuted hover:text-textPrimary transition cursor-pointer shrink-0 ml-2">Hide to Tray</button>
                   </div>
                 </div>
               </div>
@@ -401,55 +384,55 @@
             <!-- =========================================================== -->
             <!-- FLOATING POP-UP HUD (VMHeadUnitOSD)                         -->
             <!-- =========================================================== -->
-            <div id="headUnitOsd" class="osd-hidden absolute bottom-4 left-1/2 w-[calc(100%-2rem)] max-w-[390px] rounded-xl bg-canvas border border-[#18384A] shadow-osdHud overflow-hidden transition-all duration-200 z-20">
+            <div id="headUnitOsd" class="osd-hidden absolute bottom-3.5 left-1/2 w-[calc(100%-1.5rem)] max-w-[390px] rounded-xl bg-canvas border border-[#18384A] shadow-osdHud overflow-hidden transition-all duration-200 z-20">
               <div id="osdTopAccent" class="h-[3px] w-full bg-cyanAccent"></div>
               <div class="px-4 py-2.5">
                 <div class="flex items-center justify-between gap-2">
                   <span id="osdChannelTitle" class="text-sm font-bold text-textPrimary truncate">VAIO3</span>
-                  <span id="osdGainText" class="text-sm font-mono font-bold text-cyanAccent">+0.2 dB</span>
+                  <span id="osdGainText" class="text-sm font-mono font-bold text-cyanAccent">-14.5 dB</span>
                 </div>
                 <div class="flex items-center justify-between gap-2 mt-0.5">
-                  <span id="osdFxLabel" class="text-xs font-bold text-textMuted">FX  ◂  EQ Treble  ▸</span>
-                  <span id="osdFxValue" class="text-xs font-mono font-bold text-textPrimary">0.0 dB</span>
+                  <span id="osdFxLabel" class="text-xs font-bold text-textMuted">FX ◂ EQ Treble ▸</span>
+                  <span id="osdFxValue" class="text-xs font-mono font-bold text-textPrimary">+4.5 dB</span>
                 </div>
                 <div class="mt-2 h-[7px] w-full rounded-full bg-[#1E1E28] overflow-hidden">
-                  <div id="osdLevelBar" class="h-full bg-cyanAccent rounded-full transition-all duration-75" style="width: 83.6%"></div>
+                  <div id="osdLevelBar" class="h-full bg-cyanAccent rounded-full transition-all duration-75" style="width: 63.2%"></div>
                 </div>
               </div>
             </div>
 
           </div>
 
-          <!-- Simulator Interactive Control Bar (Below Window) -->
-          <div class="p-3 rounded-xl bg-elevated border border-borderSubtle flex flex-wrap items-center justify-between gap-2">
-            <!-- Volume & Mute Group -->
-            <div class="flex items-center gap-1.5">
-              <span class="text-[10px] font-mono uppercase text-textDim mr-1">Wheel:</span>
-              <button onclick="simWheelStep(-1)" class="px-2.5 py-1.5 rounded-lg bg-pillDark hover:bg-pillHover border border-borderSubtle text-xs font-mono font-semibold text-textPrimary active:scale-95 transition cursor-pointer">Vol −</button>
-              <button onclick="simWheelStep(1)" class="px-2.5 py-1.5 rounded-lg bg-pillDark hover:bg-pillHover border border-borderSubtle text-xs font-mono font-semibold text-textPrimary active:scale-95 transition cursor-pointer">Vol +</button>
-              <button onclick="simToggleMute()" class="px-2.5 py-1.5 rounded-lg bg-pillDark hover:bg-coralMute/15 border border-borderSubtle hover:border-coralMute/40 text-xs font-mono font-semibold text-coralMute active:scale-95 transition cursor-pointer">Mute</button>
+          <!-- Simulator Interactive Touch & Desktop Control Bar -->
+          <div class="p-3 rounded-xl bg-elevated border border-borderSubtle grid grid-cols-1 sm:grid-cols-3 gap-2">
+            <div class="flex items-center justify-between sm:justify-start gap-1.5">
+              <span class="text-[10px] font-mono uppercase text-textDim">Wheel:</span>
+              <div class="flex items-center gap-1.5">
+                <button onclick="simWheelStep(-1)" class="px-3 py-2 sm:py-1.5 rounded-lg bg-pillDark hover:bg-pillHover border border-borderSubtle text-xs font-mono font-semibold text-textPrimary active:scale-95 transition cursor-pointer">Vol −</button>
+                <button onclick="simWheelStep(1)" class="px-3 py-2 sm:py-1.5 rounded-lg bg-pillDark hover:bg-pillHover border border-borderSubtle text-xs font-mono font-semibold text-textPrimary active:scale-95 transition cursor-pointer">Vol +</button>
+                <button onclick="simToggleMute()" class="px-3 py-2 sm:py-1.5 rounded-lg bg-pillDark hover:bg-coralMute/15 border border-borderSubtle hover:border-coralMute/40 text-xs font-mono font-semibold text-coralMute active:scale-95 transition cursor-pointer">Mute</button>
+              </div>
             </div>
 
-            <!-- Channel & Submix Layer Group -->
-            <div class="flex items-center gap-1.5">
-              <span class="text-[10px] font-mono uppercase text-textDim mr-1">Target:</span>
-              <button onclick="simCycleChannel(-1)" title="Ctrl + Shift + Left" class="px-2 py-1.5 rounded-lg bg-pillDark hover:bg-pillHover border border-borderSubtle text-xs font-mono text-textSecondary hover:text-textPrimary active:scale-95 transition cursor-pointer">Prev Ch</button>
-              <button onclick="simCycleChannel(1)" title="Ctrl + Shift + Right" class="px-2 py-1.5 rounded-lg bg-pillDark hover:bg-pillHover border border-borderSubtle text-xs font-mono text-textSecondary hover:text-textPrimary active:scale-95 transition cursor-pointer">Next Ch</button>
-              <button onclick="simCycleLayer(1)" title="Ctrl + Shift + Up/Down" class="px-2 py-1.5 rounded-lg bg-[#261E12] hover:bg-[#382B19] border border-amberAccent/35 text-xs font-mono font-semibold text-amberAccent active:scale-95 transition cursor-pointer">Layer ▾</button>
+            <div class="flex items-center justify-between sm:justify-center gap-1.5">
+              <span class="text-[10px] font-mono uppercase text-textDim">Channel &amp; Layer:</span>
+              <div class="flex items-center gap-1.5">
+                <button onclick="simCycleChannel(-1)" class="px-2.5 py-2 sm:py-1.5 rounded-lg bg-pillDark hover:bg-pillHover border border-borderSubtle text-xs font-mono text-textSecondary hover:text-textPrimary active:scale-95 transition cursor-pointer">Prev</button>
+                <button onclick="simCycleChannel(1)" class="px-2.5 py-2 sm:py-1.5 rounded-lg bg-pillDark hover:bg-pillHover border border-borderSubtle text-xs font-mono text-textSecondary hover:text-textPrimary active:scale-95 transition cursor-pointer">Next</button>
+                <button onclick="simCycleLayer(1)" class="px-2.5 py-2 sm:py-1.5 rounded-lg bg-[#221B11] hover:bg-[#332614] border border-amberAccent/30 text-xs font-mono text-amberAccent active:scale-95 transition cursor-pointer">Layer</button>
+              </div>
             </div>
 
-            <!-- Solo FX Group -->
-            <div class="flex items-center gap-1.5">
-              <span class="text-[10px] font-mono uppercase text-textDim mr-1">Solo FX:</span>
-              <button onclick="simCycleFx(-1)" title="Ctrl + Alt + Left" class="px-2 py-1.5 rounded-lg bg-pillDark hover:bg-pillHover border border-borderSubtle text-xs font-mono text-textSecondary hover:text-cyanAccent active:scale-95 transition cursor-pointer">◂ FX</button>
-              <button onclick="simCycleFx(1)" title="Ctrl + Alt + Right" class="px-2 py-1.5 rounded-lg bg-pillDark hover:bg-pillHover border border-borderSubtle text-xs font-mono text-textSecondary hover:text-cyanAccent active:scale-95 transition cursor-pointer">FX ▸</button>
-              <button onclick="simAdjustFx(-1)" title="Ctrl + Alt + Down" class="px-2 py-1.5 rounded-lg bg-pillDark hover:bg-pillHover border border-borderSubtle text-xs font-mono text-textPrimary active:scale-95 transition cursor-pointer">FX −</button>
-              <button onclick="simAdjustFx(1)" title="Ctrl + Alt + Up" class="px-2 py-1.5 rounded-lg bg-pillDark hover:bg-pillHover border border-borderSubtle text-xs font-mono text-textPrimary active:scale-95 transition cursor-pointer">FX +</button>
+            <div class="flex items-center justify-between sm:justify-end gap-1.5">
+              <span class="text-[10px] font-mono uppercase text-textDim">Solo FX:</span>
+              <div class="flex items-center gap-1.5">
+                <button onclick="simCycleFx(-1)" class="px-2.5 py-2 sm:py-1.5 rounded-lg bg-pillDark hover:bg-pillHover border border-borderSubtle text-xs font-mono text-textSecondary hover:text-cyanAccent active:scale-95 transition cursor-pointer">◂ FX</button>
+                <button onclick="simCycleFx(1)" class="px-2.5 py-2 sm:py-1.5 rounded-lg bg-pillDark hover:bg-pillHover border border-borderSubtle text-xs font-mono text-textSecondary hover:text-cyanAccent active:scale-95 transition cursor-pointer">FX ▸</button>
+                <button onclick="simAdjustFx(-1)" class="px-2.5 py-2 sm:py-1.5 rounded-lg bg-pillDark hover:bg-pillHover border border-borderSubtle text-xs font-mono text-textPrimary active:scale-95 transition cursor-pointer">−</button>
+                <button onclick="simAdjustFx(1)" class="px-2.5 py-2 sm:py-1.5 rounded-lg bg-pillDark hover:bg-pillHover border border-borderSubtle text-xs font-mono text-textPrimary active:scale-95 transition cursor-pointer">+</button>
+              </div>
             </div>
           </div>
-          <p class="text-[11px] text-textDim px-1">
-            Tip: Roll your mouse wheel directly over any channel pill inside the simulator to test <strong class="text-textMuted">Hover-Scroll</strong> (±1.0&nbsp;dB, or <span class="kbd-key">Shift</span> + Wheel for ±0.2&nbsp;dB), <strong class="text-textMuted">Middle-Click</strong> any row to mute, or click <span class="kbd-key">✎</span> to rename any Virtual Input, Hardware Input, or Bus.
-          </p>
         </div>
 
       </div>
@@ -457,17 +440,17 @@
   </section>
 
   <!-- ===================================================================== -->
-  <!-- 3. 6-CARD FEATURE GRID (COMPLETE v1.0.0 – v1.2.2 CAPABILITIES)        -->
+  <!-- 3. 6-CARD FEATURE GRID                                                -->
   <!-- ===================================================================== -->
-  <section id="features" class="py-20 border-b border-borderSubtle">
+  <section id="features" class="py-16 sm:py-20 border-b border-borderSubtle">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="max-w-2xl mb-12">
+      <div class="max-w-2xl mb-10 sm:mb-12">
         <span class="text-xs font-mono font-semibold uppercase tracking-wider text-cyanAccent">Architecture &amp; Capabilities</span>
         <h2 class="text-2xl sm:text-3xl font-extrabold text-textPrimary mt-2 tracking-tight">
-          Every feature built into Potato Massah
+          Built for tactile volume knobs &amp; Potato submixing
         </h2>
         <p class="text-sm sm:text-base text-textMuted mt-3 leading-relaxed">
-          Engineered for tactile volume knobs, media wheels, and custom macro pads on Windows 10/11—combining direct 64-bit VoiceMeeter Potato control with non-intrusive audio automation.
+          Engineered around direct 64-bit <code class="font-mono text-xs text-cyanAccent">VoicemeeterRemote64.dll</code> calls—eliminating Windows master volume drift while adding submix layers, sidechain auto-ducking, and endpoint protection.
         </p>
       </div>
 
@@ -479,9 +462,9 @@
             <div class="w-10 h-10 rounded-xl bg-pillActive border border-cyanAccent/25 flex items-center justify-center text-cyanAccent mb-4">
               <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
             </div>
-            <h3 class="text-base font-bold text-textPrimary">Exponential Wheel Acceleration &amp; 20&nbsp;ms Smooth Glide</h3>
+            <h3 class="text-base font-bold text-textPrimary">Exponential Acceleration &amp; 20&nbsp;ms Smooth Glide</h3>
             <p class="text-xs sm:text-sm text-textMuted mt-2 leading-relaxed">
-              Slow single-notch clicks trim by <strong class="text-textPrimary">0.2&nbsp;dB</strong>, while rapid spins scale exponentially up to <strong class="text-textPrimary">4.5&nbsp;dB per notch</strong>. A <code class="font-mono text-xs text-cyanAccent">20ms</code> interpolation loop eases fader travel with instant direction-reversal braking.
+              Slow single-notch clicks trim by <strong class="text-textPrimary">0.2&nbsp;dB</strong>, while rapid wheel spins scale exponentially up to <strong class="text-textPrimary">4.5&nbsp;dB per notch</strong>. A <code class="font-mono text-xs text-cyanAccent">20ms</code> interpolation loop eases fader travel with instant direction-reversal braking.
             </p>
           </div>
           <div class="mt-5 pt-3 border-t border-borderSubtle/80 text-[11px] font-mono text-textDim flex justify-between">
@@ -496,14 +479,14 @@
             <div class="w-10 h-10 rounded-xl bg-[#261E12] border border-amberAccent/30 flex items-center justify-center text-amberAccent mb-4">
               <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/></svg>
             </div>
-            <h3 class="text-base font-bold text-textPrimary">Pro Drawer: Per-Bus Submix Gain Layers, Routing &amp; Snapshots</h3>
+            <h3 class="text-base font-bold text-textPrimary">Pro Drawer: Submix Layers, Routing &amp; Snapshots</h3>
             <p class="text-xs sm:text-sm text-textMuted mt-2 leading-relaxed">
-              Click <span class="kbd-key text-amberAccent">Pro ▾</span> or press <span class="kbd-key">Ctrl+Shift+▲/▼</span> to control Potato-exclusive <code class="font-mono text-xs text-amberAccent">GainLayer[0–7]</code> submixes per output bus, toggle <strong class="text-textPrimary">A1–B3</strong> strip routing live, save/recall <strong class="text-textPrimary">P1–P3</strong> mixer snapshots, and reset in one click.
+              Control Potato-exclusive <code class="font-mono text-xs text-amberAccent">GainLayer[0..7]</code> submixes (<span class="kbd-key">Ctrl+Shift+Up/Down</span>) so headphones (<strong class="text-textPrimary">A1</strong>) and stream/recording (<strong class="text-textPrimary">B1</strong>) have independent levels, toggle <strong class="text-textPrimary">A1–B3</strong> bus routing live, and save/load <strong class="text-textPrimary">P1–P3</strong> mixer snapshots.
             </p>
           </div>
           <div class="mt-5 pt-3 border-t border-borderSubtle/80 text-[11px] font-mono text-textDim flex justify-between">
-            <span>Strip[i].GainLayer[j]</span>
-            <span class="text-amberAccent">P1–P3 Snapshots</span>
+            <span>A1–B3 Routing Matrix</span>
+            <span class="text-amberAccent">3 Mixer Snapshots</span>
           </div>
         </div>
 
@@ -515,12 +498,12 @@
             </div>
             <h3 class="text-base font-bold text-textPrimary">Sidechain Auto-Ducking Studio</h3>
             <p class="text-xs sm:text-sm text-textMuted mt-2 leading-relaxed">
-              Full 5-stage dynamics envelope (<strong class="text-textPrimary">Duck Depth, Voice Threshold, Attack Speed, Hold Time, Release Speed</strong>) with live dual <code class="font-mono text-xs text-cyanAccent">dBFS</code> &amp; Gain Reduction meters, mute guard, 1.8s test audition button, and <strong class="text-textPrimary">Podcast, Gaming, Radio &amp; Tight</strong> presets.
+              Monitors your chosen mic with live <strong class="text-textPrimary">dBFS</strong> &amp; <strong class="text-textPrimary">Gain Reduction</strong> meters and lowers music or game channels (or a single bus layer) with configurable <strong class="text-textPrimary">Duck Depth, Threshold, Attack, Hold &amp; Release</strong>, mute guard, and 4 quick presets.
             </p>
           </div>
           <div class="mt-5 pt-3 border-t border-borderSubtle/80 text-[11px] font-mono text-textDim flex justify-between">
-            <span>Live dBFS + GR Meters</span>
-            <span class="text-cyanAccent">Per-Bus Layer Support</span>
+            <span>5-Stage Envelope</span>
+            <span class="text-cyanAccent">1.8s Curve Audition</span>
           </div>
         </div>
 
@@ -528,16 +511,16 @@
         <div class="rounded-2xl bg-elevated border border-borderSubtle p-6 flex flex-col justify-between hover:border-cyanAccent/35 transition-colors">
           <div>
             <div class="w-10 h-10 rounded-xl bg-pillActive border border-cyanAccent/25 flex items-center justify-center text-cyanAccent mb-4">
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
             </div>
             <h3 class="text-base font-bold text-textPrimary">Windows Default Device Lock ("Anti-Hijack") &amp; Auto-Reset</h3>
             <p class="text-xs sm:text-sm text-textMuted mt-2 leading-relaxed">
-              Locks Windows Playback &amp; Recording endpoints via Core Audio COM (<code class="font-mono text-xs text-cyanAccent">IPolicyConfig</code>) so newly connected controllers or monitors can't steal audio, and monitors <code class="font-mono text-xs text-textPrimary">KSCATEGORY_AUDIO</code> to auto-restart VoiceMeeter 1.8s after USB/Bluetooth reconnects.
+              Locks your Windows default Playback &amp; Recording endpoints via the native Core Audio COM API so newly plugged-in controllers, headsets, or monitors can't steal audio—and automatically restarts VoiceMeeter's audio engine <strong class="text-textPrimary">1.8s</strong> after device reconnects.
             </p>
           </div>
           <div class="mt-5 pt-3 border-t border-borderSubtle/80 text-[11px] font-mono text-textDim flex justify-between">
-            <span>WM_DEVICECHANGE</span>
-            <span class="text-emeraldOk">Fixes Red Flashing Strips</span>
+            <span>Core Audio COM Lock</span>
+            <span class="text-emeraldOk">PnP Auto-Restart</span>
           </div>
         </div>
 
@@ -547,7 +530,7 @@
             <div class="w-10 h-10 rounded-xl bg-pillActive border border-cyanAccent/25 flex items-center justify-center text-cyanAccent mb-4">
               <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/></svg>
             </div>
-            <h3 class="text-base font-bold text-textPrimary">Context-Aware Solo FX, 3-Band EQ &amp; Bus Returns</h3>
+            <h3 class="text-base font-bold text-textPrimary">Context-Aware Solo FX &amp; 3-Band Virtual EQ</h3>
             <p class="text-xs sm:text-sm text-textMuted mt-2 leading-relaxed">
               Navigate DSP chains with <span class="kbd-key">Ctrl+Alt+Arrows</span> (<span class="kbd-key">Shift</span> for 0.1 fine steps, <span class="kbd-key">Ctrl+Alt+0</span> reset): Hardware <strong class="text-textPrimary">Comp/Gate/Denoiser/Reverb/Delay/FX1–2</strong>, Virtual <strong class="text-textPrimary">3-band EQ</strong>, and Bus <strong class="text-textPrimary">FX Returns</strong>.
             </p>
@@ -564,14 +547,14 @@
             <div class="w-10 h-10 rounded-xl bg-pillActive border border-cyanAccent/25 flex items-center justify-center text-cyanAccent mb-4">
               <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
             </div>
-            <h3 class="text-base font-bold text-textPrimary">Floating Pop-Up HUD, Mouse Tricks &amp; Startup Tools</h3>
+            <h3 class="text-base font-bold text-textPrimary">Floating Pop-Up HUD &amp; Complete Mouse Control</h3>
             <p class="text-xs sm:text-sm text-textMuted mt-2 leading-relaxed">
-              Click-through bottom-center HUD (<code class="font-mono text-xs text-cyanAccent">+E0x20 +E0x08000000</code>), <strong class="text-textPrimary">Hover-Scroll</strong> (±1.0 / ±0.2&nbsp;dB), <strong class="text-textPrimary">Middle-Click Mute</strong>, renameable Virtual Inputs, inline dB/mute badges on all 16 rows, VoiceMeeter auto-launch/hide, and GitHub update checks.
+              Click-through bottom-center overlay (<code class="font-mono text-xs text-cyanAccent">+E0x20 +E0x08000000</code>) pops up whenever the Control Panel isn't focused. Inside the panel, <strong class="text-textPrimary">Hover-Scroll</strong> any row (±1.0&nbsp;dB, or <span class="kbd-key">Shift</span> ±0.2&nbsp;dB), <strong class="text-textPrimary">Middle-Click</strong> to mute, and rename any Virtual/Hardware Input or Output Bus (<span class="kbd-key">✎</span>).
             </p>
           </div>
           <div class="mt-5 pt-3 border-t border-borderSubtle/80 text-[11px] font-mono text-textDim flex justify-between">
-            <span>1.5s Auto-Fade HUD</span>
-            <span class="text-emeraldOk">Self-Healing Watchdog</span>
+            <span>Inline dB &amp; Mute Badges</span>
+            <span class="text-emeraldOk">Auto-Update Check</span>
           </div>
         </div>
 
@@ -582,20 +565,19 @@
   <!-- ===================================================================== -->
   <!-- 4. SEARCHABLE / FILTERABLE KEYBIND REFERENCE TABLE                    -->
   <!-- ===================================================================== -->
-  <section id="keybinds" class="py-20 border-b border-borderSubtle">
+  <section id="keybinds" class="py-16 sm:py-20 border-b border-borderSubtle">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div class="flex flex-col lg:flex-row lg:items-end justify-between gap-6 mb-8">
         <div>
           <span class="text-xs font-mono font-semibold uppercase tracking-wider text-cyanAccent">Interactive Keybind Manager</span>
           <h2 class="text-2xl sm:text-3xl font-extrabold text-textPrimary mt-2 tracking-tight">
-            Default Shortcuts, Mouse Tricks &amp; 16-Channel Rebinding
+            Default Shortcuts &amp; 16-Channel Rebinding
           </h2>
           <p class="text-sm text-textMuted mt-2 max-w-2xl">
-            Click <strong class="text-textPrimary">Keybinds</strong> in the Control Panel footer to capture any new multi-key combo live. In addition to the defaults below, all <strong class="text-textPrimary">16 I/O channels</strong> (<code class="font-mono text-xs text-cyanAccent">Strip[0–7]</code> &amp; <code class="font-mono text-xs text-cyanAccent">Bus[0–7]</code>) have dedicated rebindable slots.
+            Click <strong class="text-textPrimary">Keybinds</strong> in the Control Panel footer to capture any new multi-key combo live. All <strong class="text-textPrimary">16 I/O channels</strong> (<code class="font-mono text-xs text-cyanAccent">Strip[0–7]</code> &amp; <code class="font-mono text-xs text-cyanAccent">Bus[0–7]</code>), snapshots, and automation toggles have dedicated rebindable slots.
           </p>
         </div>
 
-        <!-- Search Input + Category Filter Pills -->
         <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
           <div class="relative">
             <input id="keybindSearchInput" type="text" oninput="applyKeybindFilters()" placeholder="Search action or shortcut..." class="w-full sm:w-56 pl-9 pr-3 py-2 rounded-xl bg-elevated border border-borderSubtle focus:border-cyanAccent focus:outline-none text-xs text-textPrimary placeholder-textDim" />
@@ -604,24 +586,22 @@
 
           <div class="flex flex-wrap items-center gap-1.5" id="keybindFilterPills">
             <button onclick="setKeybindCategory('all', this)" class="kb-pill px-3 py-1.5 rounded-lg text-xs font-bold bg-pillActive text-cyanAccent border border-cyanAccent/35 transition cursor-pointer">All</button>
-            <button onclick="setKeybindCategory('general', this)" class="kb-pill px-3 py-1.5 rounded-lg text-xs font-semibold bg-elevated text-textMuted border border-borderSubtle hover:text-textPrimary transition cursor-pointer">General &amp; Mouse</button>
-            <button onclick="setKeybindCategory('pro', this)" class="kb-pill px-3 py-1.5 rounded-lg text-xs font-semibold bg-elevated text-textMuted border border-borderSubtle hover:text-textPrimary transition cursor-pointer">Pro Layers &amp; Snapshots</button>
+            <button onclick="setKeybindCategory('general', this)" class="kb-pill px-3 py-1.5 rounded-lg text-xs font-semibold bg-elevated text-textMuted border border-borderSubtle hover:text-textPrimary transition cursor-pointer">General &amp; Layers</button>
             <button onclick="setKeybindCategory('fx', this)" class="kb-pill px-3 py-1.5 rounded-lg text-xs font-semibold bg-elevated text-textMuted border border-borderSubtle hover:text-textPrimary transition cursor-pointer">Solo FX</button>
-            <button onclick="setKeybindCategory('presets', this)" class="kb-pill px-3 py-1.5 rounded-lg text-xs font-semibold bg-elevated text-textMuted border border-borderSubtle hover:text-textPrimary transition cursor-pointer">Channel Presets</button>
+            <button onclick="setKeybindCategory('presets', this)" class="kb-pill px-3 py-1.5 rounded-lg text-xs font-semibold bg-elevated text-textMuted border border-borderSubtle hover:text-textPrimary transition cursor-pointer">Channels &amp; Snapshots</button>
           </div>
         </div>
       </div>
 
-      <!-- Keybind Table -->
       <div class="rounded-2xl bg-elevated border border-borderSubtle overflow-hidden shadow-xl">
         <div class="overflow-x-auto">
           <table class="w-full text-left border-collapse">
             <thead>
               <tr class="border-b border-borderSubtle bg-[#111117] text-[11px] font-bold uppercase tracking-wider text-textDim">
-                <th class="py-3.5 px-5">Action</th>
-                <th class="py-3.5 px-5">Default Shortcut</th>
-                <th class="py-3.5 px-5">Category</th>
-                <th class="py-3.5 px-5">Description</th>
+                <th class="py-3.5 px-4 sm:px-5">Action</th>
+                <th class="py-3.5 px-4 sm:px-5">Default Shortcut</th>
+                <th class="py-3.5 px-4 sm:px-5">Category</th>
+                <th class="py-3.5 px-4 sm:px-5">Description</th>
               </tr>
             </thead>
             <tbody id="keybindTableBody" class="divide-y divide-borderSubtle/70 text-sm"></tbody>
@@ -634,7 +614,7 @@
   <!-- ===================================================================== -->
   <!-- 5. INSTALLATION & COMPILATION GUIDE                                   -->
   <!-- ===================================================================== -->
-  <section id="install-build" class="py-20">
+  <section id="install-build" class="py-16 sm:py-20">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div class="max-w-2xl mb-10">
         <span class="text-xs font-mono font-semibold uppercase tracking-wider text-emeraldOk">Deployment &amp; Build</span>
@@ -646,7 +626,6 @@
         </p>
       </div>
 
-      <!-- Two-Column Guide -->
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
         <!-- Column 1: Standalone .EXE Release -->
@@ -660,17 +639,17 @@
             <h3 class="text-xl font-bold text-textPrimary">Standalone <code class="font-mono text-cyanAccent">.EXE</code> Release</h3>
 
             <p class="text-sm text-textMuted leading-relaxed">
-              Ideal if you just want to run <strong class="text-textPrimary">Potato Massah</strong> immediately with the custom pinch-knob icon pre-baked into the executable—no AutoHotkey installation required.
+              Run <strong class="text-textPrimary">Potato Massah</strong> immediately with the custom pinch-knob icon pre-baked into the executable—no AutoHotkey installation required.
             </p>
 
             <ol class="space-y-3 text-sm text-textSecondary pt-1">
               <li class="flex items-start gap-3">
                 <span class="w-6 h-6 rounded-md bg-pillDark border border-borderSubtle text-cyanAccent font-mono text-xs font-bold flex items-center justify-center shrink-0 mt-0.5">1</span>
-                <span><strong class="text-textPrimary">System Requirements:</strong> Windows 10 or Windows 11 (64-bit) with <strong class="text-textPrimary">VoiceMeeter Potato</strong> installed at <code class="font-mono text-xs text-cyanAccent">C:\Program Files (x86)\VB\Voicemeeter\</code>.</span>
+                <span><strong class="text-textPrimary">System Requirements:</strong> Windows 10 or Windows 11 (64-bit) with <strong class="text-textPrimary">VoiceMeeter Potato</strong> installed at <code class="font-mono text-xs text-cyanAccent break-all">C:\Program Files (x86)\VB\Voicemeeter\</code>.</span>
               </li>
               <li class="flex items-start gap-3">
                 <span class="w-6 h-6 rounded-md bg-pillDark border border-borderSubtle text-cyanAccent font-mono text-xs font-bold flex items-center justify-center shrink-0 mt-0.5">2</span>
-                <span><strong class="text-textPrimary">Download &amp; Run:</strong> Grab <code class="font-mono text-xs text-textPrimary">Potato Massah.exe</code> using the direct release button below and place it in its own folder (e.g., <code class="font-mono text-xs text-textMuted">C:\Tools\PotatoMassah\</code>).</span>
+                <span><strong class="text-textPrimary">Download &amp; Run:</strong> Grab <code class="font-mono text-xs text-textPrimary">Potato Massah.exe</code> using the release button below and place it in its own folder (e.g., <code class="font-mono text-xs text-textMuted">C:\Tools\PotatoMassah\</code>).</span>
               </li>
               <li class="flex items-start gap-3">
                 <span class="w-6 h-6 rounded-md bg-pillDark border border-borderSubtle text-cyanAccent font-mono text-xs font-bold flex items-center justify-center shrink-0 mt-0.5">3</span>
@@ -679,7 +658,7 @@
             </ol>
 
             <div class="pt-2">
-              <a data-exe-download="true" href="https://github.com/grandfirephoenix/Potato-Massah/releases/latest" target="_blank" rel="noopener noreferrer" class="w-full inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl text-sm font-bold bg-cyanAccent hover:bg-sky-300 text-canvas transition-all shadow-cyanGlow">
+              <a data-exe-download="true" href="https://github.com/grandfirephoenix/Potato-Massah/releases/latest" target="_blank" rel="noopener noreferrer" class="w-full inline-flex items-center justify-center gap-2 px-5 py-3.5 sm:py-3 rounded-xl text-sm font-bold bg-cyanAccent hover:bg-sky-300 text-canvas transition-all shadow-cyanGlow">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
                 <span data-exe-label="bottom">Download Potato Massah.exe (v1.2.2)</span>
               </a>
@@ -733,12 +712,12 @@
   </section>
 
   <!-- ===================================================================== -->
-  <!-- SINGLE CLEAN FOOTER                                                   -->
+  <!-- FOOTER                                                                -->
   <!-- ===================================================================== -->
   <footer class="border-t border-borderSubtle py-10 bg-[#0A0A0E]">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-textDim">
       <div class="flex flex-wrap items-center justify-center sm:justify-start gap-2.5">
-        <span class="font-bold text-textPrimary">Potato Massah (v1.2.2)</span>
+        <span class="font-bold text-textPrimary">Potato Massah</span>
         <span>•</span>
         <span>Copyright (c) 2026 Gabriel Harvey</span>
         <span>•</span>
@@ -752,7 +731,7 @@
   </footer>
 
   <!-- ===================================================================== -->
-  <!-- MODAL 1: INLINE CHANNEL RENAME DIALOG (NO PROMPT() USED)              -->
+  <!-- MODAL 1: INLINE CHANNEL RENAME DIALOG                                 -->
   <!-- ===================================================================== -->
   <div id="renameModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/75 backdrop-blur-sm p-4">
     <div class="w-full max-w-sm rounded-2xl bg-canvas border border-borderSubtle shadow-2xl overflow-hidden">
@@ -772,19 +751,18 @@
   </div>
 
   <!-- ===================================================================== -->
-  <!-- MODAL 2: COMPLETE AUTOHOTKEY V2 SOURCE VIEWER                         -->
+  <!-- MODAL 2: AUTOHOTKEY V2 ARCHITECTURE & SOURCE VIEWER                   -->
   <!-- ===================================================================== -->
   <div id="sourceModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/80 backdrop-blur-sm p-4">
     <div class="w-full max-w-4xl rounded-2xl bg-canvas border border-borderSubtle shadow-2xl overflow-hidden flex flex-col max-h-[88vh]">
       <div class="h-[2px] w-full bg-cyanAccent"></div>
-      <div class="px-5 py-3.5 bg-elevated border-b border-borderSubtle flex items-center justify-between gap-3">
+      <div class="px-5 py-3.5 bg-elevated border-b border-borderSubtle flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h3 class="text-sm font-bold text-textPrimary">PotatoMassah.ahk — AutoHotkey v2 Source Preview (v1.2.2)</h3>
+          <h3 class="text-sm font-bold text-textPrimary">PotatoMassah.ahk — Core Engine Architecture (v1.2.2)</h3>
           <p class="text-xs text-textMuted mt-0.5">Compile with Ahk2Exe using Base File: v2.0.x U64 AutoHotkey64.exe</p>
         </div>
         <div class="flex items-center gap-2">
-          <button onclick="copySourceCode()" class="px-3.5 py-1.5 rounded-lg bg-cyanAccent hover:bg-sky-300 text-canvas text-xs font-bold transition cursor-pointer">Copy Code</button>
-          <button onclick="downloadAhkSource()" class="px-3.5 py-1.5 rounded-lg bg-pillDark hover:bg-pillHover border border-borderSubtle text-textPrimary text-xs font-semibold transition cursor-pointer">Download .AHK</button>
+          <a href="https://github.com/grandfirephoenix/Potato-Massah/blob/main/PotatoMassah.ahk" target="_blank" rel="noopener noreferrer" class="px-3.5 py-1.5 rounded-lg bg-cyanAccent hover:bg-sky-300 text-canvas text-xs font-bold transition">Open Full File on GitHub ↗</a>
           <button onclick="closeSourceModal()" class="w-8 h-8 rounded-lg bg-pillDark hover:bg-coralMute/20 text-textMuted hover:text-coralMute flex items-center justify-center text-sm font-bold transition cursor-pointer" aria-label="Close">✕</button>
         </div>
       </div>
@@ -795,7 +773,7 @@
   </div>
 
   <!-- ===================================================================== -->
-  <!-- TOAST NOTIFICATION (REPLACES ALERT)                                   -->
+  <!-- TOAST NOTIFICATION                                                    -->
   <!-- ===================================================================== -->
   <div id="toastNotification" class="fixed bottom-5 right-5 z-50 translate-y-16 opacity-0 pointer-events-none transition-all duration-200 px-4 py-3 rounded-xl bg-elevated border border-cyanAccent/40 shadow-osdHud flex items-center gap-2.5 text-xs font-semibold text-textPrimary">
     <span class="w-2 h-2 rounded-full bg-cyanAccent"></span>
@@ -803,39 +781,26 @@
   </div>
 
   <!-- ===================================================================== -->
-  <!-- JAVASCRIPT: SIMULATOR ENGINE, KEYBIND MATRIX & GITHUB RELEASE CHECK   -->
+  <!-- JAVASCRIPT: SIMULATOR ENGINE, KEYBIND MATRIX & RELEASE RESOLVER       -->
   <!-- ===================================================================== -->
   <script>
-    // -------------------------------------------------------------------------
-    // 1. CHANNEL STATE & PRO DRAWER DATA (v1.2.2)
-    // -------------------------------------------------------------------------
     const simChannels = [
-      // Virtual Inputs (Now renameable!)
-      { param: 'Strip[5]', name: 'Voicemeeter VAIO', defName: 'Voicemeeter VAIO', group: 'virtual',  gain:  0.0, muted: false, fxIdx: 0, fxVals: [0.0, 0.0, 0.0], layerIdx: 0, layerGains: [0,0,0,0,0,0,0,0], routes: {A1:true,A2:false,A3:false,A4:false,A5:false,B1:false,B2:false,B3:false} },
-      { param: 'Strip[6]', name: 'Voicemeeter AUX',  defName: 'Voicemeeter AUX',  group: 'virtual',  gain: -30.0, muted: false, fxIdx: 0, fxVals: [0.0, 0.0, 0.0], layerIdx: 0, layerGains: [0,0,0,0,0,0,0,0], routes: {A1:true,A2:false,A3:false,A4:false,A5:false,B1:true,B2:false,B3:false} },
-      { param: 'Strip[7]', name: 'VAIO3',            defName: 'VAIO3',            group: 'virtual',  gain: -14.5, muted: false, fxIdx: 0, fxVals: [4.5, 0.0, 0.0], layerIdx: 0, layerGains: [0,0,0,0,0,0,0,0], routes: {A1:true,A2:false,A3:false,A4:true,A5:false,B1:false,B2:false,B3:false} },
-      // Hardware Inputs
-      { param: 'Strip[0]', name: 'Mic Input',        defName: 'Hardware In 1',    group: 'hardware', gain: -11.3, muted: false, fxIdx: 0, fxVals: [2.4, 1.5, 1.0, 0.0, 0.0, 0.0, 0.0], layerIdx: 0, layerGains: [0,0,0,0,0,0,0,0], routes: {A1:false,A2:false,A3:false,A4:false,A5:false,B1:true,B2:true,B3:false} },
-      { param: 'Strip[1]', name: 'Hardware In 2',    defName: 'Hardware In 2',    group: 'hardware', gain:  0.0, muted: false, fxIdx: 0, fxVals: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], layerIdx: 0, layerGains: [0,0,0,0,0,0,0,0], routes: {A1:true,A2:false,A3:false,A4:false,A5:false,B1:false,B2:false,B3:false} },
-      { param: 'Strip[2]', name: 'Hardware In 3',    defName: 'Hardware In 3',    group: 'hardware', gain:  0.0, muted: false, fxIdx: 0, fxVals: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], layerIdx: 0, layerGains: [0,0,0,0,0,0,0,0], routes: {A1:true,A2:false,A3:false,A4:false,A5:false,B1:false,B2:false,B3:false} },
-      { param: 'Strip[3]', name: 'Hardware In 4',    defName: 'Hardware In 4',    group: 'hardware', gain:  0.0, muted: false, fxIdx: 0, fxVals: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], layerIdx: 0, layerGains: [0,0,0,0,0,0,0,0], routes: {A1:true,A2:false,A3:false,A4:false,A5:false,B1:false,B2:false,B3:false} },
-      { param: 'Strip[4]', name: 'Hardware In 5',    defName: 'Hardware In 5',    group: 'hardware', gain:  0.0, muted: false, fxIdx: 0, fxVals: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], layerIdx: 0, layerGains: [0,0,0,0,0,0,0,0], routes: {A1:true,A2:false,A3:false,A4:false,A5:false,B1:false,B2:false,B3:false} },
-      // Output Buses
-      { param: 'Bus[0]',   name: 'Side Speakers',    defName: 'A1',               group: 'bus',      gain:  0.0, muted: false, fxIdx: 0, fxVals: [0.0, 0.0, 0.0, 0.0], layerIdx: 0, layerGains: [], routes: {} },
-      { param: 'Bus[1]',   name: 'Rear Speaker',     defName: 'A2',               group: 'bus',      gain: -1.0, muted: false, fxIdx: 0, fxVals: [0.0, 0.0, 0.0, 0.0], layerIdx: 0, layerGains: [], routes: {} },
-      { param: 'Bus[2]',   name: 'Center Speaker',   defName: 'A3',               group: 'bus',      gain:  0.0, muted: false, fxIdx: 0, fxVals: [0.0, 0.0, 0.0, 0.0], layerIdx: 0, layerGains: [], routes: {} },
-      { param: 'Bus[3]',   name: 'A4',               defName: 'A4',               group: 'bus',      gain:  0.0, muted: false, fxIdx: 0, fxVals: [0.0, 0.0, 0.0, 0.0], layerIdx: 0, layerGains: [], routes: {} },
-      { param: 'Bus[4]',   name: 'A5',               defName: 'A5',               group: 'bus',      gain:  0.0, muted: false, fxIdx: 0, fxVals: [0.0, 0.0, 0.0, 0.0], layerIdx: 0, layerGains: [], routes: {} },
-      { param: 'Bus[5]',   name: 'B1',               defName: 'B1',               group: 'bus',      gain:  0.0, muted: false, fxIdx: 0, fxVals: [0.0, 0.0, 0.0, 0.0], layerIdx: 0, layerGains: [], routes: {} },
-      { param: 'Bus[6]',   name: 'B2',               defName: 'B2',               group: 'bus',      gain:  0.0, muted: false, fxIdx: 0, fxVals: [0.0, 0.0, 0.0, 0.0], layerIdx: 0, layerGains: [], routes: {} },
-      { param: 'Bus[7]',   name: 'B3',               defName: 'B3',               group: 'bus',      gain: -8.0, muted: false, fxIdx: 0, fxVals: [0.0, 0.0, 0.0, 0.0], layerIdx: 0, layerGains: [], routes: {} },
-    ];
-
-    const outputBusList = [
-      { param: 'Bus[0]', code: 'A1' }, { param: 'Bus[1]', code: 'A2' },
-      { param: 'Bus[2]', code: 'A3' }, { param: 'Bus[3]', code: 'A4' },
-      { param: 'Bus[4]', code: 'A5' }, { param: 'Bus[5]', code: 'B1' },
-      { param: 'Bus[6]', code: 'B2' }, { param: 'Bus[7]', code: 'B3' },
+      { param: 'Strip[5]', name: 'Voicemeeter VAIO', defName: 'Voicemeeter VAIO', group: 'virtual',  gain:   0.0, muted: false, fxIdx: 0, fxVals: [0.0, 0.0, 0.0], routes: {A1:true, A2:false, A3:false, A4:false, A5:false, B1:false, B2:false, B3:false} },
+      { param: 'Strip[6]', name: 'Voicemeeter AUX',  defName: 'Voicemeeter AUX',  group: 'virtual',  gain: -30.0, muted: false, fxIdx: 0, fxVals: [0.0, 0.0, 0.0], routes: {A1:true, A2:false, A3:false, A4:false, A5:false, B1:false, B2:false, B3:false} },
+      { param: 'Strip[7]', name: 'VAIO3',            defName: 'VAIO3',            group: 'virtual',  gain: -14.5, muted: false, fxIdx: 0, fxVals: [4.5, 0.0, 0.0], routes: {A1:true, A2:true,  A3:true,  A4:true,  A5:true,  B1:false, B2:false, B3:false} },
+      { param: 'Strip[0]', name: 'Mic Input',        defName: 'Hardware In 1',    group: 'hardware', gain: -11.3, muted: false, fxIdx: 0, fxVals: [2.4, 1.5, 1.0, 0.0, 0.0, 0.0, 0.0], routes: {A1:false, A2:false, A3:false, A4:false, A5:false, B1:true, B2:true, B3:false} },
+      { param: 'Strip[1]', name: 'Hardware In 2',    defName: 'Hardware In 2',    group: 'hardware', gain:   0.0, muted: false, fxIdx: 0, fxVals: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], routes: {A1:true, A2:false, A3:false, A4:false, A5:false, B1:false, B2:false, B3:false} },
+      { param: 'Strip[2]', name: 'Hardware In 3',    defName: 'Hardware In 3',    group: 'hardware', gain:   0.0, muted: false, fxIdx: 0, fxVals: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], routes: {A1:true, A2:false, A3:false, A4:false, A5:false, B1:false, B2:false, B3:false} },
+      { param: 'Strip[3]', name: 'Hardware In 4',    defName: 'Hardware In 4',    group: 'hardware', gain:   0.0, muted: false, fxIdx: 0, fxVals: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], routes: {A1:true, A2:false, A3:false, A4:false, A5:false, B1:false, B2:false, B3:false} },
+      { param: 'Strip[4]', name: 'Hardware In 5',    defName: 'Hardware In 5',    group: 'hardware', gain:   0.0, muted: false, fxIdx: 0, fxVals: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], routes: {A1:true, A2:false, A3:false, A4:false, A5:false, B1:false, B2:false, B3:false} },
+      { param: 'Bus[0]',   name: 'Side Speakers',    defName: 'A1',               group: 'bus',      gain:   0.0, muted: false, fxIdx: 0, fxVals: [0.0, 0.0, 0.0, 0.0], routes: {} },
+      { param: 'Bus[1]',   name: 'Rear Speaker',     defName: 'A2',               group: 'bus',      gain:  -1.0, muted: false, fxIdx: 0, fxVals: [0.0, 0.0, 0.0, 0.0], routes: {} },
+      { param: 'Bus[2]',   name: 'Center Speaker',   defName: 'A3',               group: 'bus',      gain:   0.0, muted: false, fxIdx: 0, fxVals: [0.0, 0.0, 0.0, 0.0], routes: {} },
+      { param: 'Bus[3]',   name: 'A4',               defName: 'A4',               group: 'bus',      gain:   0.0, muted: false, fxIdx: 0, fxVals: [0.0, 0.0, 0.0, 0.0], routes: {} },
+      { param: 'Bus[4]',   name: 'A5',               defName: 'A5',               group: 'bus',      gain:   0.0, muted: false, fxIdx: 0, fxVals: [0.0, 0.0, 0.0, 0.0], routes: {} },
+      { param: 'Bus[5]',   name: 'B1',               defName: 'B1',               group: 'bus',      gain:   0.0, muted: false, fxIdx: 0, fxVals: [0.0, 0.0, 0.0, 0.0], routes: {} },
+      { param: 'Bus[6]',   name: 'B2',               defName: 'B2',               group: 'bus',      gain:   0.0, muted: false, fxIdx: 0, fxVals: [0.0, 0.0, 0.0, 0.0], routes: {} },
+      { param: 'Bus[7]',   name: 'B3',               defName: 'B3',               group: 'bus',      gain:  -8.0, muted: false, fxIdx: 0, fxVals: [0.0, 0.0, 0.0, 0.0], routes: {} },
     ];
 
     const fxDefinitions = {
@@ -861,6 +826,27 @@
       ]
     };
 
+    const outputBusNames = ['A1', 'A2', 'A3', 'A4', 'A5', 'B1', 'B2', 'B3'];
+    const submixLayers = [
+      'Master Gain (All Routed Buses)',
+      'A1 (Side Speakers) Submix Only',
+      'A2 (Rear Speaker) Submix Only',
+      'A3 (Center Speaker) Submix Only',
+      'A4 Submix Only',
+      'A5 Submix Only',
+      'B1 Submix Only',
+      'B2 Submix Only',
+      'B3 Submix Only'
+    ];
+
+    const snapshots = [
+      { saved: false, gains: {}, routes: {} },
+      { saved: false, gains: {}, routes: {} },
+      { saved: false, gains: {}, routes: {} }
+    ];
+
+    const automationState = { autoReset: true, antiHijack: true, autoDuck: true };
+
     const MIN_STEP = 0.2;
     const MAX_STEP = 4.5;
     const SLOW_MS  = 250.0;
@@ -868,18 +854,12 @@
     const GLIDE_FACTOR = 0.35;
 
     let isSingleTargetMode = true;
+    let showAdvancedPanel = false;
     let isPanelVisible = true;
-    let isProDrawerOpen = false;
     let activeTargets = ['Strip[7]'];
+    let activeLayerIdx = 0;
     const targetGains = new Map();
     simChannels.forEach(c => targetGains.set(c.param, c.gain));
-
-    const autoStates = { autoReset: true, antiHijack: true, autoDuck: true };
-    const snapshots = [
-      { saved: true,  gains: {}, routes: {} },
-      { saved: false, gains: {}, routes: {} },
-      { saved: false, gains: {}, routes: {} }
-    ];
 
     let lastWheelTick = 0;
     let lastWheelDir = 0;
@@ -887,25 +867,8 @@
     let osdTimeout = null;
     let renamingParam = null;
 
-    const DEFAULT_SMART_HINT = 'Ctrl + Alt + V: Panel  •  5 channel shortcuts active  •  Hover any pill for tips';
-
     function getChannelObj(param) {
       return simChannels.find(c => c.param === param);
-    }
-
-    function getChannelActiveGain(ch) {
-      if (isSingleTargetMode && activeTargets.length === 1 && activeTargets[0] === ch.param && ch.group !== 'bus' && ch.layerIdx > 0) {
-        return ch.layerGains[ch.layerIdx - 1] || 0.0;
-      }
-      return ch.gain;
-    }
-
-    function setChannelActiveGain(ch, val) {
-      if (isSingleTargetMode && activeTargets.length === 1 && activeTargets[0] === ch.param && ch.group !== 'bus' && ch.layerIdx > 0) {
-        ch.layerGains[ch.layerIdx - 1] = val;
-      } else {
-        ch.gain = val;
-      }
     }
 
     function fmtDb(val, compact = false) {
@@ -920,41 +883,7 @@
         : clean.toFixed(1);
     }
 
-    function setSmartHint(text) {
-      const el = document.getElementById('smartFooterHint');
-      if (!el) return;
-      el.textContent = text;
-      el.className = 'text-cyanAccent truncate';
-    }
-
-    function resetSmartHint() {
-      const el = document.getElementById('smartFooterHint');
-      if (!el) return;
-      el.textContent = DEFAULT_SMART_HINT;
-      el.className = 'text-textDim truncate';
-    }
-
-    function setAutoDesc(key) {
-      const box = document.getElementById('autoDescBox');
-      if (!box) return;
-      if (key === 'autoReset') {
-        box.className = 'px-2.5 py-1.5 rounded bg-[#13131A] text-[10px] text-cyanAccent leading-snug min-h-[2.3rem] flex items-center';
-        box.textContent = 'Auto-Reset: Automatically restarts VoiceMeeter\'s audio engine 1.8s after a USB, HDMI, or Bluetooth audio device reconnects (fixes red flashing strips).';
-      } else if (key === 'antiHijack') {
-        box.className = 'px-2.5 py-1.5 rounded bg-[#13131A] text-[10px] text-cyanAccent leading-snug min-h-[2.3rem] flex items-center';
-        box.textContent = 'Anti-Hijack: Locks your Windows default playback & recording devices so newly plugged-in gear can\'t steal audio. (Right-click to choose locked devices)';
-      } else if (key === 'autoDuck') {
-        box.className = 'px-2.5 py-1.5 rounded bg-[#13131A] text-[10px] text-cyanAccent leading-snug min-h-[2.3rem] flex items-center';
-        box.textContent = 'Auto-Duck: Automatically lowers music or game volume while you speak into your mic. (Right-click to open 5-stage dynamics & target setup)';
-      } else {
-        box.className = 'px-2.5 py-1.5 rounded bg-[#13131A] text-[10px] text-textDim leading-snug min-h-[2.3rem] flex items-center';
-        box.textContent = 'Hover an option above to see what it does  •  Right-click Anti-Hijack or Auto-Duck to configure';
-      }
-    }
-
-    // -------------------------------------------------------------------------
-    // 2. EXPONENTIAL ACCELERATION & 20MS SMOOTH GLIDE ENGINE
-    // -------------------------------------------------------------------------
+    // Exponential Acceleration & 20 ms Smooth Glide
     function simWheelStep(dir) {
       if (activeTargets.length === 0) return;
 
@@ -979,7 +908,7 @@
       if (dir !== lastWheelDir) {
         activeTargets.forEach(p => {
           const ch = getChannelObj(p);
-          if (ch) targetGains.set(p, getChannelActiveGain(ch));
+          if (ch) targetGains.set(p, ch.gain);
         });
       }
 
@@ -1015,13 +944,12 @@
       let stillMoving = false;
       activeTargets.forEach(p => {
         const ch = getChannelObj(p);
-        const cur = getChannelActiveGain(ch);
         const tgt = targetGains.get(p);
-        const diff = tgt - cur;
+        const diff = tgt - ch.gain;
         if (Math.abs(diff) <= 0.05) {
-          setChannelActiveGain(ch, Math.round(tgt * 100) / 100);
+          ch.gain = Math.round(tgt * 100) / 100;
         } else {
-          setChannelActiveGain(ch, Math.round((cur + diff * GLIDE_FACTOR) * 100) / 100);
+          ch.gain = Math.round((ch.gain + diff * GLIDE_FACTOR) * 100) / 100;
           stillMoving = true;
         }
       });
@@ -1035,7 +963,7 @@
       }
     }
 
-    // Hover-Scroll support over individual channel pills inside simulator
+    // Hover-Scroll & Middle-Click Mute inside Simulator
     const simStage = document.getElementById('simulatorStage');
     simStage.addEventListener('wheel', (e) => {
       e.preventDefault();
@@ -1045,20 +973,28 @@
         const param = pill.dataset.simParam;
         const ch = getChannelObj(param);
         const step = e.shiftKey ? 0.2 : 1.0;
-        const cur = getChannelActiveGain(ch);
-        const next = Math.round(Math.max(-60.0, Math.min(12.0, cur + dir * step)) * 10) / 10;
-        setChannelActiveGain(ch, next);
-        targetGains.set(param, next);
+        ch.gain = Math.round(Math.max(-60.0, Math.min(12.0, ch.gain + dir * step)) * 10) / 10;
+        targetGains.set(param, ch.gain);
         renderSimulator();
-        showToast(`${ch.name}: ${fmtDb(next)} (${e.shiftKey ? 'Fine ±0.2 dB' : 'Hover-Scroll'})`);
+        showToast(`${ch.name}: ${fmtDb(ch.gain)} (Hover-Scroll)`);
         return;
       }
       simWheelStep(dir);
     }, { passive: false });
 
-    // -------------------------------------------------------------------------
-    // 3. SIMULATOR ACTIONS (PRO DRAWER, LAYERS, ROUTES, SNAPSHOTS, MUTE, RENAME)
-    // -------------------------------------------------------------------------
+    simStage.addEventListener('auxclick', (e) => {
+      if (e.button === 1) {
+        const pill = e.target.closest('[data-sim-param]');
+        if (pill && isPanelVisible) {
+          e.preventDefault();
+          const ch = getChannelObj(pill.dataset.simParam);
+          ch.muted = !ch.muted;
+          renderSimulator();
+          showToast(`${ch.name}: ${ch.muted ? 'MUTED' : 'UNMUTED'}`);
+        }
+      }
+    });
+
     function simTogglePanelVisibility() {
       isPanelVisible = !isPanelVisible;
       const winEl = document.getElementById('nativeWindowReplica');
@@ -1077,120 +1013,111 @@
       }
     }
 
-    function simToggleProDrawer() {
-      isProDrawerOpen = !isProDrawerOpen;
-      renderSimulator();
-    }
-
-    function simCycleLayer(dir = 1) {
-      if (!isSingleTargetMode || activeTargets.length !== 1) {
-        showToast('Enable Single-Target Mode to select Bus Gain Layers');
-        return;
-      }
-      const ch = getChannelObj(activeTargets[0]);
-      if (ch.group === 'bus') {
-        showToast('Gain Layers apply to Input Strips (Virtual & Hardware)');
-        return;
-      }
-      if (!isProDrawerOpen) isProDrawerOpen = true;
-      ch.layerIdx = (ch.layerIdx + dir + (outputBusList.length + 1)) % (outputBusList.length + 1);
-      targetGains.set(ch.param, getChannelActiveGain(ch));
-      renderSimulator();
-      triggerHeadUnitOsd('layer');
-    }
-
-    function simToggleBusRoute(busCode) {
-      if (!isSingleTargetMode || activeTargets.length !== 1) {
-        showToast('Select a single Input Strip to toggle A1–B3 routing');
-        return;
-      }
-      const ch = getChannelObj(activeTargets[0]);
-      if (ch.group === 'bus') {
-        showToast('Select an Input Strip to toggle its A1–B3 routing');
-        return;
-      }
-      ch.routes[busCode] = !ch.routes[busCode];
-      renderSimulator();
-      showToast(`${ch.name}  →  ${busCode}: ${ch.routes[busCode] ? 'ON' : 'OFF'}`);
-    }
-
-    function simResetLayers() {
-      const ch = getChannelObj(activeTargets[0]);
-      if (!ch || ch.group === 'bus') return;
-      ch.layerGains = [0, 0, 0, 0, 0, 0, 0, 0];
-      ch.layerIdx = 0;
-      targetGains.set(ch.param, ch.gain);
-      renderSimulator();
-      showToast(`Reset all A1–B3 submix layers on ${ch.name} to 0.0 dB`);
-    }
-
-    function simResetRoutes() {
-      const ch = getChannelObj(activeTargets[0]);
-      if (!ch || ch.group === 'bus') return;
-      outputBusList.forEach(b => { ch.routes[b.code] = (b.code === 'A1'); });
-      renderSimulator();
-      showToast(`Reset ${ch.name} routing to default (A1 ON)`);
-    }
-
-    function simDefaultMixer() {
-      simChannels.forEach(c => {
-        c.gain = 0.0;
-        c.muted = false;
-        c.layerIdx = 0;
-        if (c.group !== 'bus') {
-          c.layerGains = [0, 0, 0, 0, 0, 0, 0, 0];
-          outputBusList.forEach(b => { c.routes[b.code] = (b.code === 'A1'); });
-        }
-        targetGains.set(c.param, 0.0);
-      });
-      renderSimulator();
-      showToast('All 16 faders, submix layers, and A1 routes restored to default!');
-    }
-
-    function simSaveSnapshot(idx) {
-      const snap = snapshots[idx - 1];
-      snap.saved = true;
-      simChannels.forEach(c => {
-        snap.gains[c.param] = c.gain;
-        snap.routes[c.param] = { ...c.routes };
-      });
-      renderSimulator();
-      showToast(`Saved current mixer faders & routes to Snapshot P${idx}!`);
-    }
-
-    function simLoadSnapshot(idx) {
-      const snap = snapshots[idx - 1];
-      if (!snap.saved) {
-        showToast(`Snapshot P${idx} is empty — right-click P${idx} to save current state`);
-        return;
-      }
-      simChannels.forEach(c => {
-        if (snap.gains[c.param] !== undefined) {
-          c.gain = snap.gains[c.param];
-          targetGains.set(c.param, getChannelActiveGain(c));
-        }
-        if (snap.routes[c.param]) {
-          c.routes = { ...snap.routes[c.param] };
-        }
-      });
-      renderSimulator();
-      showToast(`Loaded Mixer Snapshot P${idx}!`);
-    }
-
-    function simToggleAuto(key) {
-      autoStates[key] = !autoStates[key];
-      renderSimulator();
-      const labels = { autoReset: 'Auto-Reset on Device Reconnect', antiHijack: 'Windows Device Anti-Hijack', autoDuck: 'Sidechain Auto-Ducking' };
-      showToast(`${labels[key]}: ${autoStates[key] ? 'ON' : 'OFF'}`);
-    }
-
     function simToggleExclusive() {
       isSingleTargetMode = !isSingleTargetMode;
       if (isSingleTargetMode && activeTargets.length > 1) {
         activeTargets = [activeTargets[0]];
       }
-      activeTargets.forEach(p => targetGains.set(p, getChannelActiveGain(getChannelObj(p))));
       renderSimulator();
+    }
+
+    function simToggleProDrawer() {
+      showAdvancedPanel = !showAdvancedPanel;
+      renderSimulator();
+    }
+
+    function simCycleLayer(dir) {
+      if (!isSingleTargetMode || activeTargets.length !== 1) {
+        showToast('Enable Single-Target Mode to select Bus Gain Layers');
+        return;
+      }
+      const primary = getChannelObj(activeTargets[0]);
+      if (primary.group === 'bus') {
+        showToast('Gain Layers apply to Virtual & Hardware Input Strips');
+        return;
+      }
+      activeLayerIdx = (activeLayerIdx + dir + submixLayers.length) % submixLayers.length;
+      if (!showAdvancedPanel) showAdvancedPanel = true;
+      renderSimulator();
+      triggerHeadUnitOsd('layer');
+    }
+
+    function simToggleBusRoute(busName) {
+      const primary = getChannelObj(activeTargets[0]);
+      if (!primary || primary.group === 'bus') {
+        showToast('Select a single Input Strip to toggle A1–B3 routing');
+        return;
+      }
+      primary.routes[busName] = !primary.routes[busName];
+      renderSimulator();
+      showToast(`${primary.name} → ${busName}: ${primary.routes[busName] ? 'ON' : 'OFF'}`);
+    }
+
+    function simResetLayers() {
+      activeLayerIdx = 0;
+      renderSimulator();
+      showToast('Reset all A1–B3 submix layers to 0.0 dB');
+    }
+
+    function simResetRoutes() {
+      const primary = getChannelObj(activeTargets[0]);
+      if (!primary || primary.group === 'bus') return;
+      outputBusNames.forEach(b => primary.routes[b] = (b === 'A1'));
+      renderSimulator();
+      showToast(`Reset ${primary.name} routing to A1 only`);
+    }
+
+    function simResetDefaultMixer() {
+      simChannels.forEach(c => {
+        c.gain = 0.0;
+        targetGains.set(c.param, 0.0);
+        if (c.group !== 'bus') {
+          outputBusNames.forEach(b => c.routes[b] = (b === 'A1'));
+        }
+      });
+      activeLayerIdx = 0;
+      renderSimulator();
+      showToast('All faders, layers, and A1 routes restored to default');
+    }
+
+    function simSaveSnapshot(idx, event) {
+      if (event) event.preventDefault();
+      const snap = snapshots[idx - 1];
+      snap.saved = true;
+      snap.gains = {};
+      snap.routes = {};
+      simChannels.forEach(c => {
+        snap.gains[c.param] = c.gain;
+        if (c.group !== 'bus') snap.routes[c.param] = { ...c.routes };
+      });
+      renderSimulator();
+      showToast(`Saved current mixer state to Snapshot P${idx}`);
+    }
+
+    function simLoadSnapshot(idx) {
+      const snap = snapshots[idx - 1];
+      if (!snap.saved) {
+        simSaveSnapshot(idx);
+        return;
+      }
+      simChannels.forEach(c => {
+        if (snap.gains[c.param] !== undefined) {
+          c.gain = snap.gains[c.param];
+          targetGains.set(c.param, c.gain);
+        }
+        if (c.group !== 'bus' && snap.routes[c.param]) {
+          c.routes = { ...snap.routes[c.param] };
+        }
+      });
+      renderSimulator();
+      showToast(`Loaded Mixer Snapshot P${idx}`);
+    }
+
+    function simToggleAutomation(key) {
+      automationState[key] = !automationState[key];
+      renderSimulator();
+      const labels = { autoReset: 'Auto-Reset on Reconnect', antiHijack: 'Windows Device Anti-Hijack', autoDuck: 'Sidechain Auto-Ducking' };
+      showToast(`${labels[key]}: ${automationState[key] ? 'ON' : 'OFF'}`);
     }
 
     function simSelectChannel(param) {
@@ -1212,7 +1139,7 @@
       }
 
       const ch = getChannelObj(param);
-      targetGains.set(param, getChannelActiveGain(ch));
+      targetGains.set(param, ch.gain);
       renderSimulator();
     }
 
@@ -1221,9 +1148,8 @@
       const idx = simChannels.findIndex(c => c.param === curParam);
       const nextIdx = (idx + dir + simChannels.length) % simChannels.length;
       isSingleTargetMode = true;
-      const nextCh = simChannels[nextIdx];
-      activeTargets = [nextCh.param];
-      targetGains.set(nextCh.param, getChannelActiveGain(nextCh));
+      activeTargets = [simChannels[nextIdx].param];
+      targetGains.set(simChannels[nextIdx].param, simChannels[nextIdx].gain);
       renderSimulator();
       triggerHeadUnitOsd('volume');
     }
@@ -1238,21 +1164,11 @@
       triggerHeadUnitOsd('volume');
     }
 
-    function simMiddleClickMute(param, event) {
-      if (event.button === 1) {
-        event.preventDefault();
-        const ch = getChannelObj(param);
-        ch.muted = !ch.muted;
-        renderSimulator();
-        showToast(`${ch.name}: ${ch.muted ? 'MUTED' : 'UNMUTED'} (Middle-Click)`);
-      }
-    }
-
     function simResetGain(param, event) {
       if (event) event.stopPropagation();
       const ch = getChannelObj(param);
       if (!ch) return;
-      setChannelActiveGain(ch, 0.0);
+      ch.gain = 0.0;
       targetGains.set(param, 0.0);
       renderSimulator();
       if (activeTargets.includes(param)) {
@@ -1270,7 +1186,7 @@
       const ch = getChannelObj(activeTargets[0]);
       const list = fxDefinitions[ch.group];
       ch.fxIdx = (ch.fxIdx + dir + list.length) % list.length;
-      renderHeroCard();
+      renderSimulator();
       triggerHeadUnitOsd('fx');
     }
 
@@ -1284,7 +1200,7 @@
       const cur = ch.fxVals[ch.fxIdx] || 0.0;
       const next = Math.round(Math.max(fxObj.min, Math.min(fxObj.max, cur + dir * fxObj.step)) * 10) / 10;
       ch.fxVals[ch.fxIdx] = Math.abs(next) < 0.05 ? 0.0 : next;
-      renderHeroCard();
+      renderSimulator();
       triggerHeadUnitOsd('fx');
     }
 
@@ -1323,9 +1239,7 @@
       showToast(`Label updated: ${ch.param} → "${ch.name}"`);
     }
 
-    // -------------------------------------------------------------------------
-    // 4. FLOATING POP-UP HUD & CONTROL PANEL RENDERERS
-    // -------------------------------------------------------------------------
+    // Floating Pop-Up HUD Renderer
     function triggerHeadUnitOsd(mode = 'volume') {
       const osd = document.getElementById('headUnitOsd');
       const stripe = document.getElementById('osdTopAccent');
@@ -1337,29 +1251,22 @@
 
       const primary = getChannelObj(activeTargets[0]);
       const anyMuted = activeTargets.some(p => getChannelObj(p).muted);
-      const layerIdx = (isSingleTargetMode && activeTargets.length === 1 && primary.group !== 'bus') ? primary.layerIdx : 0;
-      const curGain = getChannelActiveGain(primary);
+      const isLayerActive = isSingleTargetMode && primary.group !== 'bus' && activeLayerIdx > 0;
 
-      if (activeTargets.length > 1) {
-        titleEl.textContent = `${primary.name}  +${activeTargets.length - 1} linked`;
-      } else if (layerIdx > 0) {
-        const bObj = outputBusList[layerIdx - 1];
-        const bCh = getChannelObj(bObj.param);
-        titleEl.textContent = `${primary.name}  →  ${bCh ? bCh.name : bObj.code}`;
-      } else {
-        titleEl.textContent = primary.name;
-      }
+      titleEl.textContent = activeTargets.length > 1
+        ? `${primary.name}  +${activeTargets.length - 1} linked`
+        : (isLayerActive ? `${primary.name} → ${outputBusNames[activeLayerIdx - 1]}` : primary.name);
 
       if (anyMuted) {
         gainEl.textContent = 'MUTED';
         gainEl.className = 'text-sm font-mono font-bold text-coralMute';
         stripe.className = 'h-[3px] w-full bg-coralMute';
-      } else if (layerIdx > 0) {
-        gainEl.textContent = fmtDb(curGain);
+      } else if (isLayerActive) {
+        gainEl.textContent = fmtDb(primary.gain);
         gainEl.className = 'text-sm font-mono font-bold text-amberAccent';
         stripe.className = 'h-[3px] w-full bg-amberAccent';
       } else {
-        gainEl.textContent = fmtDb(curGain);
+        gainEl.textContent = fmtDb(primary.gain);
         gainEl.className = 'text-sm font-mono font-bold text-cyanAccent';
         stripe.className = 'h-[3px] w-full bg-cyanAccent';
       }
@@ -1368,10 +1275,10 @@
         const fxObj = fxDefinitions[primary.group][primary.fxIdx];
         const fxVal = primary.fxVals[primary.fxIdx] || 0.0;
 
-        if (mode === 'layer' && layerIdx > 0) {
-          fxLblEl.textContent = `Pro Submix Layer  (${outputBusList[layerIdx - 1].code})`;
+        if (mode === 'layer' && isLayerActive) {
+          fxLblEl.textContent = `Pro Submix Layer (${outputBusNames[activeLayerIdx - 1]})`;
           fxLblEl.className = 'text-xs font-bold text-amberAccent';
-          fxValEl.textContent = `GainLayer[${layerIdx - 1}]`;
+          fxValEl.textContent = `GainLayer[${activeLayerIdx - 1}]`;
         } else {
           fxLblEl.textContent = `FX  ◂  ${fxObj.label}  ▸`;
           fxLblEl.className = mode === 'fx' ? 'text-xs font-bold text-cyanAccent' : 'text-xs font-bold text-textMuted';
@@ -1383,15 +1290,15 @@
           barEl.style.width = `${pct}%`;
           barEl.className = 'h-full bg-cyanAccent rounded-full transition-all duration-75';
         } else {
-          const pct = Math.max(0, Math.min(100, ((curGain + 60.0) / 72.0) * 100));
+          const pct = Math.max(0, Math.min(100, ((primary.gain + 60.0) / 72.0) * 100));
           barEl.style.width = `${pct}%`;
-          barEl.className = `h-full ${anyMuted ? 'bg-coralMute' : (layerIdx > 0 ? 'bg-amberAccent' : 'bg-cyanAccent')} rounded-full transition-all duration-75`;
+          barEl.className = `h-full ${anyMuted ? 'bg-coralMute' : (isLayerActive ? 'bg-amberAccent' : 'bg-cyanAccent')} rounded-full transition-all duration-75`;
         }
       } else {
         fxLblEl.textContent = 'Multi-Target Group Mode';
         fxLblEl.className = 'text-xs font-normal text-textDim';
         fxValEl.textContent = `${activeTargets.length} ch`;
-        const pct = Math.max(0, Math.min(100, ((curGain + 60.0) / 72.0) * 100));
+        const pct = Math.max(0, Math.min(100, ((primary.gain + 60.0) / 72.0) * 100));
         barEl.style.width = `${pct}%`;
         barEl.className = `h-full ${anyMuted ? 'bg-coralMute' : 'bg-cyanAccent'} rounded-full transition-all duration-75`;
       }
@@ -1406,57 +1313,53 @@
       }, 1500);
     }
 
-    function renderHeroCard() {
+    function renderSimulator() {
       const modeBtn = document.getElementById('modeTogglePill');
-      const muteBtn = document.getElementById('heroMutePill');
-      const proBtn = document.getElementById('proDrawerToggleBtn');
-      const proSec = document.getElementById('proDrawerSection');
-      const layerPill = document.getElementById('simLayerPill');
+      const proBtn = document.getElementById('proDrawerBtn');
+      const proContainer = document.getElementById('proDrawerContainer');
+      const muteBtn = document.getElementById('heroMuteBtn');
       const linesEl = document.getElementById('heroActiveLines');
       const subEl = document.getElementById('heroSubLine');
       const stripeEl = document.getElementById('heroTopStripe');
+      const layerPill = document.getElementById('layerPillSim');
 
-      if (isSingleTargetMode) {
-        modeBtn.textContent = '◉  Single-Target';
-        modeBtn.className = 'px-2.5 py-0.5 rounded bg-[#1B2B3A] hover:bg-[#23384C] text-[10px] font-bold text-cyanAccent transition cursor-pointer';
-      } else {
-        modeBtn.textContent = '◎  Multi-Group';
-        modeBtn.className = 'px-2.5 py-0.5 rounded bg-[#22222E] hover:bg-[#2C2C3B] text-[10px] font-bold text-textMuted transition cursor-pointer';
-      }
+      modeBtn.textContent = isSingleTargetMode ? '◉ Single-Target' : '◎ Multi-Group';
+      modeBtn.className = isSingleTargetMode
+        ? 'px-2.5 py-1 rounded bg-[#1B2B3A] hover:bg-[#23384C] text-[11px] font-bold text-cyanAccent transition cursor-pointer'
+        : 'px-2.5 py-1 rounded bg-[#22222E] hover:bg-[#2C2C3B] text-[11px] font-bold text-textMuted transition cursor-pointer';
 
-      proBtn.textContent = isProDrawerOpen ? 'Pro ▴' : 'Pro ▾';
-      proBtn.className = isProDrawerOpen
-        ? 'px-2 py-0.5 rounded bg-[#332614] hover:bg-[#3F2F18] text-[10px] font-bold text-amberAccent transition cursor-pointer'
-        : 'px-2 py-0.5 rounded bg-[#261E12] hover:bg-[#3F2F18] text-[10px] font-bold text-amberAccent transition cursor-pointer';
+      proBtn.textContent = showAdvancedPanel ? 'Pro ▴' : 'Pro ▾';
+      proBtn.className = showAdvancedPanel
+        ? 'px-2.5 py-1 rounded bg-[#332614] hover:bg-[#3F2F18] text-[11px] font-bold text-amberAccent transition cursor-pointer'
+        : 'px-2.5 py-1 rounded bg-[#261E12] hover:bg-[#3F2F18] text-[11px] font-bold text-amberAccent transition cursor-pointer';
 
-      if (isProDrawerOpen) proSec.classList.remove('hidden');
-      else proSec.classList.add('hidden');
+      if (showAdvancedPanel) proContainer.classList.remove('hidden');
+      else proContainer.classList.add('hidden');
+
+      const primary = getChannelObj(activeTargets[0]);
+      const isLayerActive = isSingleTargetMode && primary && primary.group !== 'bus' && activeLayerIdx > 0;
 
       let anyMuted = false;
-      const primary = getChannelObj(activeTargets[0]);
-      const layerIdx = (isSingleTargetMode && activeTargets.length === 1 && primary && primary.group !== 'bus') ? primary.layerIdx : 0;
-
       linesEl.innerHTML = activeTargets.map(param => {
         const ch = getChannelObj(param);
         if (ch.muted) anyMuted = true;
-        const g = getChannelActiveGain(ch);
-        const colCls = ch.muted ? 'text-coralMute' : (layerIdx > 0 ? 'text-amberAccent' : 'text-cyanAccent');
+        const textCol = ch.muted ? 'text-coralMute' : (isLayerActive ? 'text-amberAccent' : 'text-cyanAccent');
         return `
-          <div class="text-xs sm:text-sm font-bold ${colCls}">
-            •  ${ch.name}   —   ${fmtDb(g)}${ch.muted ? '   [MUTED]' : ''}
+          <div class="text-xs sm:text-sm font-bold ${textCol}">
+            •  ${ch.name}   —   ${fmtDb(ch.gain)}${ch.muted ? '   [MUTED]' : ''}
           </div>
         `;
       }).join('');
 
       if (anyMuted) {
         muteBtn.textContent = 'MUTED';
-        muteBtn.className = 'px-2 py-0.5 rounded bg-[#3A1A20] hover:bg-[#4D222A] text-[10px] font-bold text-coralMute transition cursor-pointer';
-        stripeEl.className = 'h-[2px] w-full bg-coralMute transition-colors';
+        muteBtn.className = 'px-2.5 py-1 rounded bg-[#3A1A20] text-[11px] font-bold text-coralMute transition cursor-pointer';
       } else {
         muteBtn.textContent = 'MUTE';
-        muteBtn.className = 'px-2 py-0.5 rounded bg-[#1E1E28] hover:bg-[#2A2A38] text-[10px] font-bold text-textMuted transition cursor-pointer';
-        stripeEl.className = `h-[2px] w-full ${layerIdx > 0 ? 'bg-amberAccent' : 'bg-cyanAccent'} transition-colors`;
+        muteBtn.className = 'px-2.5 py-1 rounded bg-[#1E1E28] hover:bg-pillHover text-[11px] font-bold text-textMuted transition cursor-pointer';
       }
+
+      stripeEl.className = `h-[2px] w-full ${anyMuted ? 'bg-coralMute' : (isLayerActive ? 'bg-amberAccent' : 'bg-cyanAccent')} transition-colors`;
 
       if (isSingleTargetMode && activeTargets.length === 1) {
         const fxObj = fxDefinitions[primary.group][primary.fxIdx];
@@ -1464,139 +1367,105 @@
         subEl.textContent = `↳  FX:  ${fxObj.label}   [ ${fmtFx(fxObj, fxVal)} ]`;
 
         if (primary.group !== 'bus') {
-          if (layerIdx === 0) {
-            layerPill.textContent = '↳  Layer:  Master Gain  (All Routed Buses)';
-            layerPill.className = 'px-2.5 py-1 rounded bg-[#221B11] hover:bg-[#2E2416] text-[11px] font-bold text-textSecondary cursor-pointer transition';
-          } else {
-            const bObj = outputBusList[layerIdx - 1];
-            const bCh = getChannelObj(bObj.param);
-            layerPill.textContent = `↳  Layer:  ${bObj.code} (${bCh ? bCh.name : bObj.code}) Submix Only`;
-            layerPill.className = 'px-2.5 py-1 rounded bg-[#332614] hover:bg-[#42311A] text-[11px] font-bold text-amberAccent cursor-pointer transition';
-          }
+          layerPill.textContent = `↳  Layer:  ${submixLayers[activeLayerIdx]}`;
+          layerPill.className = isLayerActive
+            ? 'px-2.5 py-1.5 rounded bg-[#332614] hover:bg-[#42311A] text-[11px] font-bold text-amberAccent cursor-pointer transition'
+            : 'px-2.5 py-1.5 rounded bg-[#221B11] hover:bg-[#2E2416] text-[11px] font-bold text-textSecondary cursor-pointer transition';
         } else {
           layerPill.textContent = '↳  Output Bus Master Fader';
-          layerPill.className = 'px-2.5 py-1 rounded bg-[#221B11] text-[11px] font-bold text-textMuted';
+          layerPill.className = 'px-2.5 py-1.5 rounded bg-[#221B11] text-[11px] font-bold text-textMuted';
         }
       } else {
         subEl.textContent = `${activeTargets.length} channels linked   •   Spread-Locked (-60.0 to +12.0 dB)`;
         layerPill.textContent = '↳  Multi-Target Master Faders';
       }
 
-      // Render Routing Matrix (A1-B3)
-      const rGrid = document.getElementById('simRoutingGrid');
-      const isStrip = (isSingleTargetMode && activeTargets.length === 1 && primary.group !== 'bus');
-      rGrid.innerHTML = outputBusList.map(b => {
-        const isOn = isStrip && primary.routes[b.code];
-        const cls = !isStrip
-          ? 'bg-[#16161E] text-zinc-600 cursor-not-allowed'
-          : (isOn ? 'bg-[#332614] hover:bg-[#45331B] text-amberAccent cursor-pointer' : 'bg-[#1A1A22] hover:bg-[#242430] text-textDim cursor-pointer');
-        return `<button onclick="simToggleBusRoute('${b.code}')" onmouseenter="setSmartHint('Click to toggle sending selected strip to ${b.code} • Amber = ON, Grey = OFF')" onmouseleave="resetSmartHint()" class="py-1 rounded text-[10px] font-bold transition ${cls}">${b.code}</button>`;
+      // Routing Grid (A1-B3)
+      const isStrip = primary && primary.group !== 'bus';
+      document.getElementById('simRoutingGrid').innerHTML = outputBusNames.map(bName => {
+        const isOn = isStrip && primary.routes && primary.routes[bName];
+        return `<button onclick="simToggleBusRoute('${bName}')" class="py-1.5 sm:py-1 rounded text-[11px] font-bold transition cursor-pointer ${isOn ? 'bg-[#332614] text-amberAccent' : (isStrip ? 'bg-[#1A1A22] text-textDim hover:bg-[#242430]' : 'bg-pillDark text-zinc-600')}">${bName}</button>`;
       }).join('');
 
-      // Render Snapshots (P1-P3)
-      const sGrid = document.getElementById('simSnapshotsGrid');
-      sGrid.innerHTML = snapshots.map((s, idx) => {
-        const n = idx + 1;
-        const cls = s.saved
-          ? 'bg-[#261E12] hover:bg-[#382B19] text-amberAccent'
-          : 'bg-[#1E1E28] hover:bg-[#282836] text-textDim';
-        return `<button onclick="simLoadSnapshot(${n})" oncontextmenu="event.preventDefault(); simSaveSnapshot(${n})" onmouseenter="setSmartHint('Snapshot P${n} • Left-click: Load mixer faders & routes • Right-click: Save current state')" onmouseleave="resetSmartHint()" class="py-1 px-1.5 rounded text-[10px] font-bold transition cursor-pointer ${cls}">${s.saved ? '●' : '○'} P${n}: ${s.saved ? 'Saved' : 'Empty'}</button>`;
+      // Snapshots Grid (P1-P3)
+      document.getElementById('simSnapshotGrid').innerHTML = snapshots.map((s, idx) => {
+        const num = idx + 1;
+        return `<button onclick="simLoadSnapshot(${num})" oncontextmenu="simSaveSnapshot(${num}, event)" class="py-1.5 sm:py-1 px-2 rounded text-[11px] font-bold transition cursor-pointer truncate ${s.saved ? 'bg-[#261E12] text-amberAccent' : 'bg-[#1E1E28] text-textDim hover:bg-[#282836]'}">${s.saved ? `● P${num}: Saved` : `○ P${num}: Save`}</button>`;
       }).join('');
-    }
 
-    function renderSimulator() {
-      renderHeroCard();
-
-      // Update Automation Pill styles
-      const updateAutoPill = (id, label, on) => {
-        const el = document.getElementById(id);
-        if (!el) return;
-        el.textContent = `${on ? '●' : '○'} ${label}: ${on ? 'ON' : 'OFF'}`;
-        el.className = on
-          ? 'py-1.5 px-2 rounded bg-pillActive hover:bg-pillActiveHover text-[11px] font-bold text-cyanAccent transition cursor-pointer'
-          : 'py-1.5 px-2 rounded bg-pillDark hover:bg-pillHover text-[11px] font-bold text-textDim transition cursor-pointer';
-      };
-      updateAutoPill('pillAutoReset', 'Auto-Reset', autoStates.autoReset);
-      updateAutoPill('pillAntiHijack', 'Anti-Hijack', autoStates.antiHijack);
-      updateAutoPill('pillAutoDuck', 'Auto-Duck', autoStates.autoDuck);
-
-      const virtEl = document.getElementById('simVirtualList');
-      const hwEl = document.getElementById('simHardwareGrid');
-      const busEl = document.getElementById('simBusesGrid');
-
-      const rowHint = 'Click: Target wheel • Scroll: ±1.0 dB (Shift + Scroll: ±0.2 dB) • Middle-click: Mute • Right-click: Rename';
-
-      virtEl.innerHTML = simChannels.filter(c => c.group === 'virtual').map(ch => {
+      // Virtual Inputs
+      document.getElementById('simVirtualList').innerHTML = simChannels.filter(c => c.group === 'virtual').map(ch => {
         const active = activeTargets.includes(ch.param);
-        const g = getChannelActiveGain(ch);
-        const badgeText = ch.muted ? 'MUTED' : fmtDb(g, false);
-        const badgeColor = ch.muted ? 'text-coralMute' : (active ? (ch.layerIdx > 0 ? 'text-amberAccent' : 'text-cyanAccent') : 'text-textMuted');
+        const dbCol = ch.muted ? 'text-coralMute' : (active ? (isLayerActive ? 'text-amberAccent' : 'text-cyanAccent') : 'text-textMuted');
         return `
-          <div class="flex items-center gap-1">
-            <div data-sim-param="${ch.param}" onmousedown="simMiddleClickMute('${ch.param}', event)" onclick="simSelectChannel('${ch.param}')" oncontextmenu="openRenameModal('${ch.param}', event)" onmouseenter="setSmartHint('${rowHint}')" onmouseleave="resetSmartHint()" class="flex-1 flex items-center justify-between px-2.5 py-1.5 rounded ${active ? 'bg-pillActive hover:bg-pillActiveHover' : 'bg-pillDark hover:bg-pillHover'} cursor-pointer transition min-w-0">
+          <div class="flex items-center gap-1.5">
+            <div data-sim-param="${ch.param}" onclick="simSelectChannel('${ch.param}')" class="flex-1 flex items-center justify-between px-2.5 py-2 sm:py-1.5 rounded ${active ? 'bg-pillActive hover:bg-pillActiveHover' : 'bg-pillDark hover:bg-pillHover'} cursor-pointer transition min-w-0">
               <div class="flex items-center gap-2 min-w-0">
-                <span class="text-xs font-bold ${active ? 'text-cyanAccent' : 'text-zinc-600'}">${active ? '●' : '○'}</span>
+                <span class="text-xs font-bold shrink-0 ${active ? 'text-cyanAccent' : 'text-zinc-600'}">${active ? '●' : '○'}</span>
                 <span class="text-xs ${active ? 'font-bold text-textPrimary' : 'text-textSecondary'} truncate">${ch.name}</span>
               </div>
-              <div class="flex items-center gap-2.5 shrink-0">
-                <span class="text-[11px] font-mono ${active ? 'text-cyanAccent' : 'text-zinc-600'}">${ch.param}</span>
-                <span class="text-[11px] font-mono font-bold ${badgeColor} w-14 text-right">${badgeText}</span>
+              <div class="flex items-center gap-2.5 shrink-0 ml-2">
+                <span class="hidden sm:inline text-[11px] font-mono ${active ? 'text-cyanAccent' : 'text-zinc-600'}">${ch.param}</span>
+                <span class="text-[11px] font-mono font-bold ${dbCol}">${ch.muted ? 'MUTED' : fmtDb(ch.gain)}</span>
               </div>
             </div>
-            <button onclick="openRenameModal('${ch.param}', event)" onmouseenter="setSmartHint('Rename ${ch.name} (e.g. System, Discord, Music)')" onmouseleave="resetSmartHint()" class="w-6 py-1.5 rounded bg-[#1C1C26] hover:bg-[#282836] text-[11px] text-textMuted hover:text-textPrimary transition cursor-pointer">✎</button>
-            <button onclick="simResetGain('${ch.param}', event)" onmouseenter="setSmartHint('Reset ${ch.name} fader to 0.0 dB')" onmouseleave="resetSmartHint()" class="w-8 py-1.5 rounded bg-[#1C1C26] hover:bg-[#282836] text-[11px] font-bold text-textMuted hover:text-textPrimary transition cursor-pointer">0dB</button>
+            <button onclick="openRenameModal('${ch.param}', event)" title="Rename Channel" class="w-7 py-2 sm:py-1.5 rounded bg-[#1C1C26] hover:bg-[#282836] text-[11px] text-textMuted hover:text-textPrimary transition cursor-pointer shrink-0">✎</button>
+            <button onclick="simResetGain('${ch.param}', event)" class="w-10 py-2 sm:py-1.5 rounded bg-[#1C1C26] hover:bg-[#282836] text-[11px] font-bold text-textMuted hover:text-textPrimary transition cursor-pointer shrink-0">0dB</button>
           </div>
         `;
       }).join('');
 
+      // Compact Grid Builder (Hardware Inputs & Output Buses)
       const buildCompactRow = (ch) => {
         const active = activeTargets.includes(ch.param);
-        const g = getChannelActiveGain(ch);
-        const badgeText = ch.muted ? 'MUTED' : fmtDb(g, true);
-        const badgeColor = ch.muted ? 'text-coralMute' : (active ? (ch.layerIdx > 0 && ch.group !== 'bus' ? 'text-amberAccent' : 'text-cyanAccent') : 'text-textMuted');
+        const dbCol = ch.muted ? 'text-coralMute' : (active ? (isLayerActive ? 'text-amberAccent' : 'text-cyanAccent') : 'text-textMuted');
         return `
           <div class="flex items-center gap-1">
-            <div data-sim-param="${ch.param}" onmousedown="simMiddleClickMute('${ch.param}', event)" onclick="simSelectChannel('${ch.param}')" oncontextmenu="openRenameModal('${ch.param}', event)" onmouseenter="setSmartHint('${rowHint}')" onmouseleave="resetSmartHint()" class="flex-1 flex items-center justify-between gap-1.5 px-2.5 py-1.5 rounded ${active ? 'bg-pillActive hover:bg-pillActiveHover' : 'bg-pillDark hover:bg-pillHover'} cursor-pointer transition min-w-0">
+            <div data-sim-param="${ch.param}" onclick="simSelectChannel('${ch.param}')" class="flex-1 flex items-center justify-between gap-1.5 px-2.5 py-2 sm:py-1.5 rounded ${active ? 'bg-pillActive hover:bg-pillActiveHover' : 'bg-pillDark hover:bg-pillHover'} cursor-pointer transition min-w-0">
               <div class="flex items-center gap-1.5 min-w-0">
                 <span class="text-xs font-bold shrink-0 ${active ? 'text-cyanAccent' : 'text-zinc-600'}">${active ? '●' : '○'}</span>
                 <span class="text-xs ${active ? 'font-bold text-textPrimary' : 'text-textSecondary'} truncate">${ch.name}</span>
               </div>
-              <span class="text-[10px] font-mono font-bold ${badgeColor} shrink-0">${badgeText}</span>
+              <span class="text-[11px] font-mono font-bold shrink-0 ${dbCol}">${ch.muted ? 'MUTED' : fmtDb(ch.gain, true)}</span>
             </div>
-            <button onclick="openRenameModal('${ch.param}', event)" onmouseenter="setSmartHint('Rename ${ch.name}')" onmouseleave="resetSmartHint()" class="w-6 py-1.5 rounded bg-[#1C1C26] hover:bg-[#282836] text-[11px] text-textMuted hover:text-textPrimary transition cursor-pointer">✎</button>
-            <button onclick="simResetGain('${ch.param}', event)" onmouseenter="setSmartHint('Reset ${ch.name} fader to 0.0 dB')" onmouseleave="resetSmartHint()" class="w-8 py-1.5 rounded bg-[#1C1C26] hover:bg-[#282836] text-[11px] font-bold text-textMuted hover:text-textPrimary transition cursor-pointer">0dB</button>
+            <button onclick="openRenameModal('${ch.param}', event)" title="Rename Channel" class="w-6 py-2 sm:py-1.5 rounded bg-[#1C1C26] hover:bg-[#282836] text-[11px] text-textMuted hover:text-textPrimary transition cursor-pointer shrink-0">✎</button>
+            <button onclick="simResetGain('${ch.param}', event)" title="Reset to 0.0 dB" class="w-8 py-2 sm:py-1.5 rounded bg-[#1C1C26] hover:bg-[#282836] text-[11px] font-bold text-textMuted hover:text-textPrimary transition cursor-pointer shrink-0">0dB</button>
           </div>
         `;
       };
 
-      hwEl.innerHTML = simChannels.filter(c => c.group === 'hardware').map(buildCompactRow).join('');
-      busEl.innerHTML = simChannels.filter(c => c.group === 'bus').map(buildCompactRow).join('');
+      document.getElementById('simHardwareGrid').innerHTML = simChannels.filter(c => c.group === 'hardware').map(buildCompactRow).join('');
+      document.getElementById('simBusesGrid').innerHTML = simChannels.filter(c => c.group === 'bus').map(buildCompactRow).join('');
+
+      // Automation Toggles
+      const updateAutoPill = (id, label, on) => {
+        const el = document.getElementById(id);
+        el.textContent = `${on ? '●' : '○'} ${label}: ${on ? 'ON' : 'OFF'}`;
+        el.className = on
+          ? 'px-2.5 py-2 sm:py-1.5 rounded bg-pillActive text-center text-[11px] font-bold text-cyanAccent transition cursor-pointer'
+          : 'px-2.5 py-2 sm:py-1.5 rounded bg-pillDark text-center text-[11px] font-bold text-textDim transition cursor-pointer';
+      };
+      updateAutoPill('simAutoResetPill', 'Auto-Reset', automationState.autoReset);
+      updateAutoPill('simAntiHijackPill', 'Anti-Hijack', automationState.antiHijack);
+      updateAutoPill('simAutoDuckPill', 'Auto-Duck', automationState.autoDuck);
     }
 
-    // -------------------------------------------------------------------------
-    // 5. KEYBIND REFERENCE TABLE (SEARCH + FILTER PILLS)
-    // -------------------------------------------------------------------------
+    // Keybind Reference Table
     const keybindData = [
       { action: 'Toggle Control Panel', keys: ['Ctrl', 'Alt', 'V'], cat: 'general', desc: 'Shows or hides the VoiceMeeter Potato Massah control window.' },
       { action: 'Target: Previous Channel', keys: ['Ctrl', 'Shift', 'Left'], cat: 'general', desc: 'Steps backward through all 16 I/O channels in Single-Target Mode.' },
       { action: 'Target: Next Channel', keys: ['Ctrl', 'Shift', 'Right'], cat: 'general', desc: 'Steps forward through all 16 I/O channels in Single-Target Mode.' },
+      { action: 'Bus Layer: Previous / Next', keys: ['Ctrl', 'Shift', 'Up / Down'], cat: 'general', desc: 'Switches selected input strip between Master Gain and A1–B3 submix layers.' },
       { action: 'Hardware Volume Wheel', keys: ['Volume_Up', 'Volume_Down'], cat: 'general', desc: 'Intercepts OS media volume keys for 0.2–4.5 dB exponential 20 ms smooth glide.' },
       { action: 'Hardware Mute Toggle', keys: ['Volume_Mute'], cat: 'general', desc: 'Toggles mute on active target(s), sets coral-red header bar, and updates tray icon.' },
-      { action: 'GUI Row Hover-Scroll', keys: ['Wheel Up / Down', 'Shift + Wheel'], cat: 'general', desc: 'Trims any hovered channel row by ±1.0 dB (or ±0.2 dB with Shift) without changing target.' },
-      { action: 'GUI Row Quick Mute', keys: ['Middle-Click'], cat: 'general', desc: 'Middle-clicking any channel pill inside the Control Panel toggles mute immediately.' },
-      { action: 'Bus Submix Layer: Previous', keys: ['Ctrl', 'Shift', 'Up'], cat: 'pro', desc: 'Cycles backward through Master Gain and A1–B3 submix layers on the selected input strip.' },
-      { action: 'Bus Submix Layer: Next', keys: ['Ctrl', 'Shift', 'Down'], cat: 'pro', desc: 'Cycles forward through Master Gain and A1–B3 submix layers on the selected input strip.' },
-      { action: 'Load Mixer Snapshot P1–P3', keys: ['Rebindable in Keybinds'], cat: 'pro', desc: 'Dedicated hotkey slots for loading Mixer Snapshots P1, P2, and P3 (faders + A1–B3 routes).' },
-      { action: 'Toggle Auto-Duck / Anti-Hijack', keys: ['Rebindable in Keybinds'], cat: 'pro', desc: 'Dedicated hotkey slots to toggle Sidechain Auto-Ducking or Windows Device Anti-Hijack.' },
-      { action: 'Solo FX: Previous Effect', keys: ['Ctrl', 'Alt', 'Left'], cat: 'fx', desc: 'Cycles backward through the active channel’s DSP effects or 3-band EQ.' },
-      { action: 'Solo FX: Next Effect', keys: ['Ctrl', 'Alt', 'Right'], cat: 'fx', desc: 'Cycles forward through the active channel’s DSP effects or 3-band EQ.' },
-      { action: 'Solo FX: Increase', keys: ['Ctrl', 'Alt', 'Up'], cat: 'fx', desc: 'Increases the selected Solo FX parameter and triggers the Floating Pop-Up HUD.' },
-      { action: 'Solo FX: Decrease', keys: ['Ctrl', 'Alt', 'Down'], cat: 'fx', desc: 'Decreases the selected Solo FX parameter and triggers the Floating Pop-Up HUD.' },
-      { action: 'Solo FX: Fine Increase / Decrease', keys: ['Ctrl', 'Alt', 'Shift', 'Up / Down'], cat: 'fx', desc: 'Micro-adjusts the selected Solo FX parameter in 0.1 increments.' },
+      { action: 'GUI Row Hover-Scroll & Mute', keys: ['Wheel', 'Shift + Wheel', 'Middle-Click'], cat: 'general', desc: 'Trims any hovered channel row (±1.0 dB, or ±0.2 dB with Shift) or mutes via middle-click.' },
+      { action: 'Solo FX: Previous / Next Effect', keys: ['Ctrl', 'Alt', 'Left / Right'], cat: 'fx', desc: 'Cycles through the active channel’s DSP effects, bus returns, or 3-band EQ.' },
+      { action: 'Solo FX: Adjust Value', keys: ['Ctrl', 'Alt', 'Up / Down'], cat: 'fx', desc: 'Increases or decreases the selected Solo FX parameter and triggers the Floating HUD.' },
+      { action: 'Solo FX: Fine Adjust (±0.1)', keys: ['Ctrl', 'Alt', 'Shift', 'Up / Down'], cat: 'fx', desc: 'Micro-adjusts the selected Solo FX parameter in 0.1 increments.' },
       { action: 'Solo FX: Reset to 0', keys: ['Ctrl', 'Alt', '0'], cat: 'fx', desc: 'Resets the currently selected FX send, return, or EQ band back to 0.0.' },
       { action: 'Preset: VAIO3 (Strip[7])', keys: ['Shift', '1'], cat: 'presets', desc: 'Immediately focuses Single-Target Mode on VAIO3.' },
       { action: 'Preset: Hardware In 1 (Strip[0])', keys: ['Shift', '2'], cat: 'presets', desc: 'Immediately focuses Single-Target Mode on Hardware In 1.' },
-      { action: 'All 16 I/O Channel Slots', keys: ['Rebindable in Keybinds'], cat: 'presets', desc: 'Every Virtual Input (3), Hardware Input (5), and Output Bus (8) can be bound to any key combo.' },
+      { action: 'Snapshots P1–P3 & Automation', keys: ['Rebindable in Keybinds'], cat: 'presets', desc: 'Dedicated hotkey slots for all 16 I/O channels, Snapshots P1–P3, Auto-Ducking, and Anti-Hijack.' },
     ];
 
     let activeKbCat = 'all';
@@ -1617,10 +1486,9 @@
       const tbody = document.getElementById('keybindTableBody');
 
       const catBadges = {
-        general: '<span class="px-2 py-0.5 rounded text-[11px] font-mono bg-pillActive text-cyanAccent">General &amp; Mouse</span>',
-        pro:     '<span class="px-2 py-0.5 rounded text-[11px] font-mono bg-[#332614] text-amberAccent">Pro &amp; Automation</span>',
+        general: '<span class="px-2 py-0.5 rounded text-[11px] font-mono bg-pillActive text-cyanAccent">General &amp; Layers</span>',
         fx:      '<span class="px-2 py-0.5 rounded text-[11px] font-mono bg-purple-500/15 text-purple-300">Solo FX</span>',
-        presets: '<span class="px-2 py-0.5 rounded text-[11px] font-mono bg-emeraldOk/15 text-emeraldOk">Channel Presets</span>'
+        presets: '<span class="px-2 py-0.5 rounded text-[11px] font-mono bg-emeraldOk/15 text-emeraldOk">Channels &amp; Snaps</span>'
       };
 
       const rows = keybindData.filter(item => {
@@ -1639,65 +1507,47 @@
 
       tbody.innerHTML = rows.map(r => `
         <tr class="hover:bg-[#191922] transition-colors">
-          <td class="py-3 px-5 font-semibold text-textPrimary whitespace-nowrap">${r.action}</td>
-          <td class="py-3 px-5 whitespace-nowrap">
+          <td class="py-3 px-4 sm:px-5 font-semibold text-textPrimary whitespace-nowrap">${r.action}</td>
+          <td class="py-3 px-4 sm:px-5 whitespace-nowrap">
             <div class="flex flex-wrap items-center gap-1">
               ${r.keys.map((k, idx) => `${idx > 0 ? '<span class="text-textDim text-xs">+</span>' : ''}<span class="kbd-key">${k}</span>`).join('')}
             </div>
           </td>
-          <td class="py-3 px-5 whitespace-nowrap">${catBadges[r.cat]}</td>
-          <td class="py-3 px-5 text-xs text-textMuted leading-relaxed">${r.desc}</td>
+          <td class="py-3 px-4 sm:px-5 whitespace-nowrap">${catBadges[r.cat]}</td>
+          <td class="py-3 px-4 sm:px-5 text-xs text-textMuted leading-relaxed min-w-[240px]">${r.desc}</td>
         </tr>
       `).join('');
     }
 
-    // -------------------------------------------------------------------------
-    // 6. AUTOHOTKEY V2 SOURCE SNIPPET FOR MODAL PREVIEW
-    // -------------------------------------------------------------------------
-    const potatoMassahAhkSource = `#Requires AutoHotkey v2.0
+    const architecturePreview = `#Requires AutoHotkey v2.0
 #SingleInstance Force
 InstallKeybdHook()
 ;@Ahk2Exe-SetMainIcon Potato.ico
 
 ; ==============================================================================
-; VoiceMeeter Potato Massah (v1.2.2)
-; Hardware Volume Wheel, Submix Gain Layers, Sidechain Auto-Ducking & Anti-Hijack
-; Full source available at: https://github.com/grandfirephoenix/Potato-Massah
+; VoiceMeeter Potato Massah (v1.2.2) — Core Architecture Overview
 ; ==============================================================================
-APP_VERSION    := "v1.2.2"
-GITHUB_REPO    := "grandfirephoenix/Potato-Massah"
-customIconPath := A_ScriptDir "\\Potato.ico"
-mutedIconPath  := A_ScriptDir "\\icon_muted.ico"
+; 1. 64-Bit Native DLL Bridge (VoicemeeterRemote64.dll)
+;    Direct VBVMR_Login, VBVMR_GetParameterFloat, VBVMR_SetParameterFloat,
+;    and VBVMR_GetLevel calls with zero external dependencies.
+;
+; 2. Exponential Wheel Acceleration & 20 ms Smooth Glide Engine
+;    - Single clicks adjust by 0.2 dB; fast wheel spins scale up to 4.5 dB/notch
+;    - 20 ms interpolation timer with instant direction-reversal braking
+;    - Spread-locked clamping (-60.0 to +12.0 dB) in Multi-Group Mode
+;
+; 3. Pro Drawer: Per-Bus Submix Layers, Routing Matrix & Snapshots
+;    - Strip[i].GainLayer[0..7] independent submix faders for A1–A5 & B1–B3
+;    - Live A1–B3 output routing toggles and P1–P3 full-mixer snapshots
+;
+; 4. Automation & Protection Suite
+;    - Sidechain Auto-Ducking with 5-stage envelope (Depth, Threshold, Attack,
+;      Hold, Release), mute guard, and real-time dBFS / Gain Reduction meters
+;    - Windows Default Device Lock ("Anti-Hijack") via Core Audio COM API
+;    - PnP WM_DEVICECHANGE watcher for automatic audio engine recovery`;
 
-dllPath := "C:\\Program Files (x86)\\VB\\Voicemeeter\\VoicemeeterRemote64.dll"
-hModule := DllCall("LoadLibrary", "Str", dllPath, "Ptr")
-if !hModule {
-    MsgBox("Could not load VoicemeeterRemote64.dll. Check your VoiceMeeter installation path.")
-    ExitApp()
-}
+    document.getElementById('sourceCodeDisplay').textContent = architecturePreview;
 
-pLogin    := DllCall("GetProcAddress", "Ptr", hModule, "AStr", "VBVMR_Login", "Ptr")
-pLogout   := DllCall("GetProcAddress", "Ptr", hModule, "AStr", "VBVMR_Logout", "Ptr")
-pGetType  := DllCall("GetProcAddress", "Ptr", hModule, "AStr", "VBVMR_GetVoicemeeterType", "Ptr")
-pIsDirty  := DllCall("GetProcAddress", "Ptr", hModule, "AStr", "VBVMR_IsParametersDirty", "Ptr")
-pGetFloat := DllCall("GetProcAddress", "Ptr", hModule, "AStr", "VBVMR_GetParameterFloat", "Ptr")
-pSetFloat := DllCall("GetProcAddress", "Ptr", hModule, "AStr", "VBVMR_SetParameterFloat", "Ptr")
-pGetLevel := DllCall("GetProcAddress", "Ptr", hModule, "AStr", "VBVMR_GetLevel", "Ptr")
-
-DllCall(pLogin)
-
-; Exponential Scroll Acceleration + 20 ms Smooth Glide Interpolation
-; Per-Bus Submix Gain Layers: Strip[i].GainLayer[0..7] (Ctrl+Shift+Up/Down)
-; Sidechain Auto-Ducking: 5-stage dynamics envelope (Depth, Threshold, Attack, Hold, Release)
-; Windows Default Device Lock ("Anti-Hijack"): IMMDeviceEnumerator + IPolicyConfig COM
-; Auto-Reset on Device Reconnect: WM_DEVICECHANGE filtered to KSCATEGORY_AUDIO
-`;
-
-    document.getElementById('sourceCodeDisplay').textContent = potatoMassahAhkSource;
-
-    // -------------------------------------------------------------------------
-    // 7. MODALS, TOASTS & CLIPBOARD HELPERS
-    // -------------------------------------------------------------------------
     let toastTimer = null;
 
     function showToast(message) {
@@ -1728,39 +1578,6 @@ DllCall(pLogin)
       modal.classList.add('hidden');
     }
 
-    function copySourceCode() {
-      const textarea = document.createElement('textarea');
-      textarea.value = potatoMassahAhkSource;
-      textarea.setAttribute('readonly', '');
-      textarea.style.position = 'fixed';
-      textarea.style.opacity = '0';
-      document.body.appendChild(textarea);
-      textarea.select();
-      try {
-        document.execCommand('copy');
-        showToast('Copied PotatoMassah.ahk snippet to clipboard');
-      } catch (err) {
-        showToast('Unable to copy automatically — select text in viewer');
-      }
-      document.body.removeChild(textarea);
-    }
-
-    function downloadAhkSource() {
-      const blob = new Blob([potatoMassahAhkSource], { type: 'text/plain;charset=utf-8' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'PotatoMassah.ahk';
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-      showToast('Downloading PotatoMassah.ahk...');
-    }
-
-    // -------------------------------------------------------------------------
-    // 8. RESOLVE DIRECT .EXE FROM GITHUB RELEASES API
-    // -------------------------------------------------------------------------
     async function resolveLatestReleaseExe() {
       const fallbackUrl = 'https://github.com/grandfirephoenix/Potato-Massah/releases/latest';
       try {
@@ -1806,7 +1623,7 @@ DllCall(pLogin)
           metaRow.classList.remove('hidden');
         }
       } catch (err) {
-        // Keep static GitHub Releases links if offline or rate-limited
+        // Gracefully keep static release links
       }
     }
 
