@@ -3,10 +3,10 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Potato Massah — Hardware Volume Wheel &amp; Submix Controller for VoiceMeeter Potato</title>
-  <meta name="description" content="Open-source 64-bit AutoHotkey v2 hardware volume wheel, submix layer, sidechain auto-ducking &amp; device anti-hijack controller for VoiceMeeter Potato with 20 ms smooth fader glide and a Floating Pop-Up HUD." />
-  <meta property="og:title" content="Potato Massah — Hardware Volume Wheel &amp; Submix Controller" />
-  <meta property="og:description" content="Direct 64-bit VoicemeeterRemote64.dll control with 20 ms smooth glide, per-bus submix layers, sidechain auto-ducking, and Windows default device anti-hijack." />
+  <title>Potato Massah — Hardware Volume Wheel, MIDI &amp; Submix Controller for VoiceMeeter Potato</title>
+  <meta name="description" content="Open-source 64-bit AutoHotkey v2 hardware volume wheel, submix layer, MIDI learn, push-to-talk, sidechain auto-ducking &amp; device anti-hijack controller for VoiceMeeter Potato with 20 ms smooth fader glide and a Floating Pop-Up HUD." />
+  <meta property="og:title" content="Potato Massah — Hardware Volume Wheel, MIDI &amp; Submix Controller" />
+  <meta property="og:description" content="Direct 64-bit VoicemeeterRemote64.dll control with 20 ms smooth glide, per-bus submix layers, MIDI learn, push-to-talk, sidechain auto-ducking, and Windows default device anti-hijack." />
   <meta property="og:image" content="screenshot.png" />
   <link rel="icon" type="image/x-icon" href="Potato.ico" />
   <script src="https://cdn.tailwindcss.com"></script>
@@ -129,7 +129,7 @@
         <div class="flex items-center gap-2 min-w-0">
           <span class="font-bold text-base sm:text-lg tracking-tight text-textPrimary truncate">Potato Massah</span>
           <span class="hidden sm:inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-mono font-medium bg-elevated border border-borderSubtle text-cyanAccent shrink-0">
-            v1.2.2 • Win64 / AHK v2
+            v1.4.4 • Win64 / AHK v2
           </span>
         </div>
       </a>
@@ -172,18 +172,18 @@
           </div>
 
           <h1 class="text-2xl sm:text-4xl lg:text-[2.55rem] font-extrabold tracking-tight text-textPrimary leading-[1.16]">
-            Hardware Volume Wheel, Submix Layers &amp; Automation for <span class="text-cyanAccent">VoiceMeeter Potato</span>
+            Hardware Volume Wheel, MIDI Learn &amp; Submixes for <span class="text-cyanAccent">VoiceMeeter Potato</span>
           </h1>
 
           <p class="text-sm sm:text-base text-textMuted leading-relaxed">
-            <strong class="text-textPrimary font-semibold">Potato Massah</strong> intercepts Windows media volume keys (<code class="font-mono text-xs px-1.5 py-0.5 rounded bg-elevated border border-borderSubtle text-cyanAccent">Volume_Up</code>, <code class="font-mono text-xs px-1.5 py-0.5 rounded bg-elevated border border-borderSubtle text-cyanAccent">Volume_Down</code>, <code class="font-mono text-xs px-1.5 py-0.5 rounded bg-elevated border border-borderSubtle text-cyanAccent">Volume_Mute</code>) and drives <code class="font-mono text-xs px-1.5 py-0.5 rounded bg-elevated border border-borderSubtle text-textPrimary">VoicemeeterRemote64.dll</code> directly—delivering 20&nbsp;ms smooth fader glide, per-bus submix layers, sidechain auto-ducking, Windows default device anti-hijack, and a non-focus-stealing floating HUD.
+            <strong class="text-textPrimary font-semibold">Potato Massah</strong> intercepts Windows media volume keys (<code class="font-mono text-xs px-1.5 py-0.5 rounded bg-elevated border border-borderSubtle text-cyanAccent">Volume_Up</code>, <code class="font-mono text-xs px-1.5 py-0.5 rounded bg-elevated border border-borderSubtle text-cyanAccent">Volume_Down</code>, <code class="font-mono text-xs px-1.5 py-0.5 rounded bg-elevated border border-borderSubtle text-cyanAccent">Volume_Mute</code>) and drives <code class="font-mono text-xs px-1.5 py-0.5 rounded bg-elevated border border-borderSubtle text-textPrimary">VoicemeeterRemote64.dll</code> plus <code class="font-mono text-xs px-1.5 py-0.5 rounded bg-elevated border border-borderSubtle text-amberAccent">winmm.dll</code> MIDI—delivering 20&nbsp;ms smooth fader glide, per-bus submix layers, Push-to-Talk mic control, sidechain auto-ducking, Windows default device anti-hijack, and a floating HUD.
           </p>
 
           <!-- Primary & Secondary CTAs -->
           <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 pt-1">
             <a data-exe-download="true" href="https://github.com/grandfirephoenix/Potato-Massah/releases/latest" target="_blank" rel="noopener noreferrer" class="inline-flex items-center justify-center gap-2 px-5 py-3.5 sm:py-3 rounded-xl text-sm font-bold bg-cyanAccent hover:bg-sky-300 text-canvas transition-all shadow-cyanGlow">
               <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
-              <span data-exe-label="hero">Download Potato Massah.exe (v1.2.2)</span>
+              <span data-exe-label="hero">Download Potato Massah.exe (v1.4.4)</span>
             </a>
 
             <a href="https://github.com/grandfirephoenix/Potato-Massah/blob/main/PotatoMassah.ahk" target="_blank" rel="noopener noreferrer" class="inline-flex items-center justify-center gap-2 px-5 py-3.5 sm:py-3 rounded-xl text-sm font-semibold bg-elevated hover:bg-pillHover text-textPrimary border border-borderSubtle hover:border-cyanAccent/40 transition-all">
@@ -193,26 +193,26 @@
           </div>
           <div id="releaseMetaRow" class="hidden text-xs font-mono text-textMuted flex items-center gap-2">
             <span class="w-1.5 h-1.5 rounded-full bg-emeraldOk"></span>
-            <span id="releaseMetaText">Latest Release: v1.2.2</span>
+            <span id="releaseMetaText">Latest Release: v1.4.4</span>
           </div>
 
           <!-- Key Technical Specs Grid -->
           <div class="grid grid-cols-2 gap-2.5 pt-1">
             <div class="p-3 rounded-xl bg-elevated border border-borderSubtle">
-              <div class="text-[10px] font-bold uppercase tracking-wider text-textDim">Submix Layers</div>
-              <div class="text-xs font-mono font-semibold text-amberAccent mt-0.5 truncate">GainLayer[0..7] (A1–B3)</div>
+              <div class="text-[10px] font-bold uppercase tracking-wider text-textDim">MIDI &amp; Encoders</div>
+              <div class="text-xs font-mono font-semibold text-amberAccent mt-0.5 truncate">Abs/Rel • Log Taper • Pads</div>
             </div>
             <div class="p-3 rounded-xl bg-elevated border border-borderSubtle">
-              <div class="text-[10px] font-bold uppercase tracking-wider text-textDim">Automation Suite</div>
-              <div class="text-xs font-mono font-semibold text-cyanAccent mt-0.5 truncate">Auto-Duck &amp; Anti-Hijack</div>
+              <div class="text-[10px] font-bold uppercase tracking-wider text-textDim">Mix &amp; Clip Suite</div>
+              <div class="text-xs font-mono font-semibold text-cyanAccent mt-0.5 truncate">Solo [S] • Mono [M] • Clip</div>
+            </div>
+            <div class="p-3 rounded-xl bg-elevated border border-borderSubtle">
+              <div class="text-[10px] font-bold uppercase tracking-wider text-textDim">Voice &amp; Protection</div>
+              <div class="text-xs font-mono font-semibold text-textPrimary mt-0.5 truncate">PTT Mic • Auto-Duck • Lock</div>
             </div>
             <div class="p-3 rounded-xl bg-elevated border border-borderSubtle">
               <div class="text-[10px] font-bold uppercase tracking-wider text-textDim">Native Bridge</div>
-              <div class="text-xs font-mono font-semibold text-textPrimary mt-0.5 truncate">VoicemeeterRemote64.dll</div>
-            </div>
-            <div class="p-3 rounded-xl bg-elevated border border-borderSubtle">
-              <div class="text-[10px] font-bold uppercase tracking-wider text-textDim">Footprint</div>
-              <div class="text-xs font-mono font-semibold text-emeraldOk mt-0.5 truncate">Zero External Dependencies</div>
+              <div class="text-xs font-mono font-semibold text-emeraldOk mt-0.5 truncate">VoicemeeterRemote64.dll</div>
             </div>
           </div>
 
@@ -253,7 +253,7 @@
               <div>
                 <div class="text-sm font-bold text-textPrimary">Control Panel Minimized to System Tray</div>
                 <p class="text-xs text-textMuted mt-1 max-w-md mx-auto">
-                  Adjust volume, mute, submix layers, or Solo FX using the controls below to preview the floating <strong class="text-textPrimary">Pop-Up HUD</strong> overlay.
+                  Adjust volume, mute, submix layers, MIDI controls, or Solo FX using the controls below to preview the floating <strong class="text-textPrimary">Pop-Up HUD</strong> overlay.
                 </p>
               </div>
               <button onclick="simTogglePanelVisibility()" class="px-4 py-2 rounded-lg bg-pillActive hover:bg-pillActiveHover border border-cyanAccent/35 text-xs font-bold text-cyanAccent transition cursor-pointer">
@@ -292,11 +292,12 @@
                   <div id="heroTopStripe" class="h-[2px] w-full bg-cyanAccent transition-colors"></div>
                   <div class="p-3 space-y-2">
                     <div class="flex flex-wrap items-center justify-between gap-2">
-                      <span class="text-[10px] font-bold uppercase tracking-wider text-textDim">ACTIVE WHEEL TARGET</span>
+                      <span class="text-[10px] font-bold uppercase tracking-wider text-textDim">ACTIVE TARGET</span>
                       <div class="flex items-center gap-1.5">
                         <button id="heroMuteBtn" onclick="simToggleMute()" class="px-2.5 py-1 rounded bg-[#1E1E28] hover:bg-pillHover text-[11px] font-bold text-textMuted transition cursor-pointer">MUTE</button>
+                        <button id="heroSoloBtn" onclick="simToggleHeroSolo()" class="px-2.5 py-1 rounded bg-[#1E1E28] hover:bg-[#2E2614] text-[11px] font-bold text-textMuted transition cursor-pointer">SOLO</button>
                         <button id="modeTogglePill" onclick="simToggleExclusive()" class="px-2.5 py-1 rounded bg-[#1B2B3A] hover:bg-[#23384C] text-[11px] font-bold text-cyanAccent transition cursor-pointer">
-                          ◉ Single-Target
+                          ◉ Single
                         </button>
                         <button id="proDrawerBtn" onclick="simToggleProDrawer()" class="px-2.5 py-1 rounded bg-[#261E12] hover:bg-[#3F2F18] text-[11px] font-bold text-amberAccent transition cursor-pointer">
                           Pro ▾
@@ -343,13 +344,13 @@
                   <div id="simVirtualList" class="space-y-1.5"></div>
                 </div>
 
-                <!-- Section 2: HARDWARE INPUTS -->
+                <!-- Section 2: HARDWARE INPUTS (with Solo [S]) -->
                 <div>
                   <div class="text-[10px] font-bold uppercase tracking-wider text-textDim mb-1.5">HARDWARE INPUTS</div>
                   <div id="simHardwareGrid" class="grid grid-cols-1 sm:grid-cols-2 gap-1.5"></div>
                 </div>
 
-                <!-- Section 3: OUTPUT BUSES -->
+                <!-- Section 3: OUTPUT BUSES (with Mono [M]) -->
                 <div>
                   <div class="text-[10px] font-bold uppercase tracking-wider text-textDim mb-1.5">OUTPUT BUSES</div>
                   <div id="simBusesGrid" class="grid grid-cols-1 sm:grid-cols-2 gap-1.5"></div>
@@ -358,24 +359,26 @@
                 <!-- Section 4: AUTOMATION & PROTECTION -->
                 <div class="pt-1 border-t border-borderSubtle">
                   <div class="text-[10px] font-bold uppercase tracking-wider text-textDim mb-1.5">AUTOMATION &amp; PROTECTION</div>
-                  <div class="grid grid-cols-1 sm:grid-cols-3 gap-1.5">
-                    <button id="simAutoResetPill" onclick="simToggleAutomation('autoReset')" class="px-2.5 py-2 sm:py-1.5 rounded bg-pillActive text-center text-[11px] font-bold text-cyanAccent transition cursor-pointer">● Auto-Reset: ON</button>
-                    <button id="simAntiHijackPill" onclick="simToggleAutomation('antiHijack')" class="px-2.5 py-2 sm:py-1.5 rounded bg-pillActive text-center text-[11px] font-bold text-cyanAccent transition cursor-pointer">● Anti-Hijack: ON</button>
-                    <button id="simAutoDuckPill" onclick="simToggleAutomation('autoDuck')" class="px-2.5 py-2 sm:py-1.5 rounded bg-pillActive text-center text-[11px] font-bold text-cyanAccent transition cursor-pointer">● Auto-Duck: ON</button>
+                  <div class="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
+                    <button id="simAutoResetPill" onclick="simToggleAutomation('autoReset')" class="px-2 py-2 sm:py-1.5 rounded bg-pillActive text-center text-[11px] font-bold text-cyanAccent transition cursor-pointer">● Auto-Reset: ON</button>
+                    <button id="simAntiHijackPill" onclick="simToggleAutomation('antiHijack')" class="px-2 py-2 sm:py-1.5 rounded bg-pillActive text-center text-[11px] font-bold text-cyanAccent transition cursor-pointer">● Anti-Hijack: ON</button>
+                    <button id="simAutoDuckPill" onclick="simToggleAutomation('autoDuck')" class="px-2 py-2 sm:py-1.5 rounded bg-pillActive text-center text-[11px] font-bold text-cyanAccent transition cursor-pointer">● Auto-Duck: ON</button>
+                    <button id="simPttPill" onclick="simToggleAutomation('ptt')" class="px-2 py-2 sm:py-1.5 rounded bg-pillDark text-center text-[11px] font-bold text-textDim transition cursor-pointer">○ PTT: OFF</button>
                   </div>
                 </div>
 
                 <!-- Footer Divider & Action Buttons -->
                 <div class="pt-2.5 border-t border-borderSubtle space-y-2">
-                  <div class="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
-                    <a href="#install-build" class="px-2.5 py-2 sm:py-1.5 rounded bg-[#191922] hover:bg-[#242432] text-center text-[11px] font-bold text-textSecondary transition">Startup &amp; Updates</a>
-                    <a href="#keybinds" class="px-2.5 py-2 sm:py-1.5 rounded bg-pillActive hover:bg-pillActiveHover text-center text-[11px] font-bold text-cyanAccent transition">Keybinds</a>
-                    <a href="#features" class="px-2.5 py-2 sm:py-1.5 rounded bg-[#191922] hover:bg-[#242432] text-center text-[11px] font-bold text-textSecondary transition">Features</a>
-                    <button onclick="simRestartEngine()" class="px-2.5 py-2 sm:py-1.5 rounded bg-[#191922] hover:bg-[#242432] text-[11px] font-bold text-textSecondary transition cursor-pointer">Restart Engine</button>
+                  <div class="grid grid-cols-2 sm:grid-cols-5 gap-1.5">
+                    <a href="#install-build" class="px-2 py-2 sm:py-1.5 rounded bg-[#191922] hover:bg-[#242432] text-center text-[11px] font-bold text-textSecondary transition">Startup</a>
+                    <a href="#keybinds" class="px-2 py-2 sm:py-1.5 rounded bg-pillActive hover:bg-pillActiveHover text-center text-[11px] font-bold text-cyanAccent transition">Keybinds</a>
+                    <button onclick="openMidiModal()" class="px-2 py-2 sm:py-1.5 rounded bg-[#261E12] hover:bg-[#382B19] text-center text-[11px] font-bold text-amberAccent transition cursor-pointer">MIDI Learn</button>
+                    <a href="#features" class="px-2 py-2 sm:py-1.5 rounded bg-[#191922] hover:bg-[#242432] text-center text-[11px] font-bold text-textSecondary transition">Features</a>
+                    <button onclick="simRestartEngine()" class="px-2 py-2 sm:py-1.5 rounded bg-[#191922] hover:bg-[#242432] text-[11px] font-bold text-textSecondary transition cursor-pointer">Restart</button>
                   </div>
-                  <div class="flex items-center justify-between text-[11px] text-textDim">
+                  <div class="flex items-start justify-between gap-3 text-[11px] text-textDim leading-snug">
                     <span id="simFooterHint">Ctrl + Alt + V: Panel • 5 channel shortcuts active</span>
-                    <button onclick="simTogglePanelVisibility()" class="font-bold text-textMuted hover:text-textPrimary transition cursor-pointer shrink-0 ml-2">Hide to Tray</button>
+                    <button onclick="simTogglePanelVisibility()" class="font-bold text-textMuted hover:text-textPrimary transition cursor-pointer shrink-0">Hide to Tray</button>
                   </div>
                 </div>
               </div>
@@ -440,120 +443,154 @@
   </section>
 
   <!-- ===================================================================== -->
-  <!-- 3. 6-CARD FEATURE GRID                                                -->
+  <!-- 3. 8-CARD FEATURE GRID                                                -->
   <!-- ===================================================================== -->
   <section id="features" class="py-16 sm:py-20 border-b border-borderSubtle">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div class="max-w-2xl mb-10 sm:mb-12">
         <span class="text-xs font-mono font-semibold uppercase tracking-wider text-cyanAccent">Architecture &amp; Capabilities</span>
         <h2 class="text-2xl sm:text-3xl font-extrabold text-textPrimary mt-2 tracking-tight">
-          Built for tactile volume knobs &amp; Potato submixing
+          Built for tactile volume knobs, MIDI &amp; Potato submixing
         </h2>
         <p class="text-sm sm:text-base text-textMuted mt-3 leading-relaxed">
-          Engineered around direct 64-bit <code class="font-mono text-xs text-cyanAccent">VoicemeeterRemote64.dll</code> calls—eliminating Windows master volume drift while adding submix layers, sidechain auto-ducking, and endpoint protection.
+          Engineered around direct 64-bit <code class="font-mono text-xs text-cyanAccent">VoicemeeterRemote64.dll</code> and <code class="font-mono text-xs text-amberAccent">winmm.dll</code> MIDI calls—delivering smooth fader glide, submix layers, Push-to-Talk, auto-ducking, and endpoint protection.
         </p>
       </div>
 
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
 
         <!-- Card 1 -->
-        <div class="rounded-2xl bg-elevated border border-borderSubtle p-6 flex flex-col justify-between hover:border-cyanAccent/35 transition-colors">
+        <div class="rounded-2xl bg-elevated border border-borderSubtle p-5 flex flex-col justify-between hover:border-cyanAccent/35 transition-colors">
           <div>
             <div class="w-10 h-10 rounded-xl bg-pillActive border border-cyanAccent/25 flex items-center justify-center text-cyanAccent mb-4">
               <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
             </div>
-            <h3 class="text-base font-bold text-textPrimary">Exponential Acceleration &amp; 20&nbsp;ms Smooth Glide</h3>
-            <p class="text-xs sm:text-sm text-textMuted mt-2 leading-relaxed">
-              Slow single-notch clicks trim by <strong class="text-textPrimary">0.2&nbsp;dB</strong>, while rapid wheel spins scale exponentially up to <strong class="text-textPrimary">4.5&nbsp;dB per notch</strong>. A <code class="font-mono text-xs text-cyanAccent">20ms</code> interpolation loop eases fader travel with instant direction-reversal braking.
+            <h3 class="text-base font-bold text-textPrimary">Exponential Wheel &amp; 20&nbsp;ms Glide</h3>
+            <p class="text-xs text-textMuted mt-2 leading-relaxed">
+              Slow single clicks trim by <strong class="text-textPrimary">0.2&nbsp;dB</strong>; fast wheel spins scale up to <strong class="text-textPrimary">4.5&nbsp;dB/notch</strong> with a <code class="font-mono text-cyanAccent">20ms</code> glide loop and direction-reversal braking.
             </p>
           </div>
-          <div class="mt-5 pt-3 border-t border-borderSubtle/80 text-[11px] font-mono text-textDim flex justify-between">
-            <span>minStep: 0.2 dB</span>
-            <span class="text-cyanAccent">maxStep: 4.5 dB</span>
+          <div class="mt-4 pt-3 border-t border-borderSubtle/80 text-[11px] font-mono text-textDim flex justify-between">
+            <span>0.2–4.5 dB</span>
+            <span class="text-cyanAccent">20 ms Glide</span>
           </div>
         </div>
 
         <!-- Card 2 -->
-        <div class="rounded-2xl bg-elevated border border-borderSubtle p-6 flex flex-col justify-between hover:border-amberAccent/40 transition-colors">
+        <div class="rounded-2xl bg-elevated border border-borderSubtle p-5 flex flex-col justify-between hover:border-amberAccent/40 transition-colors">
           <div>
             <div class="w-10 h-10 rounded-xl bg-[#261E12] border border-amberAccent/30 flex items-center justify-center text-amberAccent mb-4">
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/></svg>
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/></svg>
             </div>
-            <h3 class="text-base font-bold text-textPrimary">Pro Drawer: Submix Layers, Routing &amp; Snapshots</h3>
-            <p class="text-xs sm:text-sm text-textMuted mt-2 leading-relaxed">
-              Control Potato-exclusive <code class="font-mono text-xs text-amberAccent">GainLayer[0..7]</code> submixes (<span class="kbd-key">Ctrl+Shift+Up/Down</span>) so headphones (<strong class="text-textPrimary">A1</strong>) and stream/recording (<strong class="text-textPrimary">B1</strong>) have independent levels, toggle <strong class="text-textPrimary">A1–B3</strong> bus routing live, and save/load <strong class="text-textPrimary">P1–P3</strong> mixer snapshots.
+            <h3 class="text-base font-bold text-textPrimary">1-Click MIDI Learn &amp; Encoders</h3>
+            <p class="text-xs text-textMuted mt-2 leading-relaxed">
+              Bind sliders, knobs, <strong class="text-textPrimary">Absolute</strong> or <strong class="text-textPrimary">Relative (+/-)</strong> endless dials, <strong class="text-textPrimary">Linear</strong> or <strong class="text-textPrimary">Log Taper</strong> curves, custom <strong class="text-textPrimary">Min/Max</strong> bounds, FX/EQ, and drum pads (<strong class="text-textPrimary">Mute / Snaps / PTT</strong>).
             </p>
           </div>
-          <div class="mt-5 pt-3 border-t border-borderSubtle/80 text-[11px] font-mono text-textDim flex justify-between">
-            <span>A1–B3 Routing Matrix</span>
-            <span class="text-amberAccent">3 Mixer Snapshots</span>
+          <div class="mt-4 pt-3 border-t border-borderSubtle/80 text-[11px] font-mono text-textDim flex justify-between">
+            <span>Abs/Rel • Log</span>
+            <span class="text-amberAccent">Pads &amp; FX</span>
           </div>
         </div>
 
         <!-- Card 3 -->
-        <div class="rounded-2xl bg-elevated border border-borderSubtle p-6 flex flex-col justify-between hover:border-cyanAccent/35 transition-colors">
+        <div class="rounded-2xl bg-elevated border border-borderSubtle p-5 flex flex-col justify-between hover:border-cyanAccent/35 transition-colors">
           <div>
             <div class="w-10 h-10 rounded-xl bg-pillActive border border-cyanAccent/25 flex items-center justify-center text-cyanAccent mb-4">
               <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"/></svg>
             </div>
-            <h3 class="text-base font-bold text-textPrimary">Sidechain Auto-Ducking Studio</h3>
-            <p class="text-xs sm:text-sm text-textMuted mt-2 leading-relaxed">
-              Monitors your chosen mic with live <strong class="text-textPrimary">dBFS</strong> &amp; <strong class="text-textPrimary">Gain Reduction</strong> meters and lowers music or game channels (or a single bus layer) with configurable <strong class="text-textPrimary">Duck Depth, Threshold, Attack, Hold &amp; Release</strong>, mute guard, and 4 quick presets.
+            <h3 class="text-base font-bold text-textPrimary">Push-to-Talk &amp; Auto-Ducking</h3>
+            <p class="text-xs text-textMuted mt-2 leading-relaxed">
+              Keep your chosen mic strip auto-muted until you hold your <strong class="text-textPrimary">PTT</strong> key, or run 5-stage <strong class="text-textPrimary">Sidechain Auto-Ducking</strong> with live <strong class="text-textPrimary">dBFS</strong> &amp; <strong class="text-textPrimary">GR</strong> meters.
             </p>
           </div>
-          <div class="mt-5 pt-3 border-t border-borderSubtle/80 text-[11px] font-mono text-textDim flex justify-between">
-            <span>5-Stage Envelope</span>
-            <span class="text-cyanAccent">1.8s Curve Audition</span>
+          <div class="mt-4 pt-3 border-t border-borderSubtle/80 text-[11px] font-mono text-textDim flex justify-between">
+            <span>PTT Mic Hold</span>
+            <span class="text-cyanAccent">5-Stage Duck</span>
           </div>
         </div>
 
         <!-- Card 4 -->
-        <div class="rounded-2xl bg-elevated border border-borderSubtle p-6 flex flex-col justify-between hover:border-cyanAccent/35 transition-colors">
+        <div class="rounded-2xl bg-elevated border border-borderSubtle p-5 flex flex-col justify-between hover:border-amberAccent/40 transition-colors">
           <div>
-            <div class="w-10 h-10 rounded-xl bg-pillActive border border-cyanAccent/25 flex items-center justify-center text-cyanAccent mb-4">
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+            <div class="w-10 h-10 rounded-xl bg-[#261E12] border border-amberAccent/30 flex items-center justify-center text-amberAccent mb-4">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/></svg>
             </div>
-            <h3 class="text-base font-bold text-textPrimary">Windows Default Device Lock ("Anti-Hijack") &amp; Auto-Reset</h3>
-            <p class="text-xs sm:text-sm text-textMuted mt-2 leading-relaxed">
-              Locks your Windows default Playback &amp; Recording endpoints via the native Core Audio COM API so newly plugged-in controllers, headsets, or monitors can't steal audio—and automatically restarts VoiceMeeter's audio engine <strong class="text-textPrimary">1.8s</strong> after device reconnects.
+            <h3 class="text-base font-bold text-textPrimary">Pro Drawer: Layers &amp; Snapshots</h3>
+            <p class="text-xs text-textMuted mt-2 leading-relaxed">
+              Switch input strips between <strong class="text-textPrimary">Master Gain</strong> and <code class="font-mono text-amberAccent">GainLayer[0..7]</code> submixes, toggle <strong class="text-textPrimary">A1–B3</strong> routes live, and save/load <strong class="text-textPrimary">P1–P3</strong> mixer snapshots.
             </p>
           </div>
-          <div class="mt-5 pt-3 border-t border-borderSubtle/80 text-[11px] font-mono text-textDim flex justify-between">
-            <span>Core Audio COM Lock</span>
-            <span class="text-emeraldOk">PnP Auto-Restart</span>
+          <div class="mt-4 pt-3 border-t border-borderSubtle/80 text-[11px] font-mono text-textDim flex justify-between">
+            <span>A1–B3 Submixes</span>
+            <span class="text-amberAccent">P1–P3 Snaps</span>
           </div>
         </div>
 
         <!-- Card 5 -->
-        <div class="rounded-2xl bg-elevated border border-borderSubtle p-6 flex flex-col justify-between hover:border-cyanAccent/35 transition-colors">
+        <div class="rounded-2xl bg-elevated border border-borderSubtle p-5 flex flex-col justify-between hover:border-cyanAccent/35 transition-colors">
+          <div>
+            <div class="w-10 h-10 rounded-xl bg-pillActive border border-cyanAccent/25 flex items-center justify-center text-cyanAccent mb-4">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+            </div>
+            <h3 class="text-base font-bold text-textPrimary">Anti-Hijack &amp; PnP Auto-Reset</h3>
+            <p class="text-xs text-textMuted mt-2 leading-relaxed">
+              Locks Windows default Playback &amp; Recording endpoints via Core Audio COM and restarts VoiceMeeter's audio engine <strong class="text-textPrimary">1.8s</strong> after USB/HDMI/Bluetooth reconnects.
+            </p>
+          </div>
+          <div class="mt-4 pt-3 border-t border-borderSubtle/80 text-[11px] font-mono text-textDim flex justify-between">
+            <span>COM Endpoint Lock</span>
+            <span class="text-emeraldOk">PnP Recovery</span>
+          </div>
+        </div>
+
+        <!-- Card 6 -->
+        <div class="rounded-2xl bg-elevated border border-borderSubtle p-5 flex flex-col justify-between hover:border-cyanAccent/35 transition-colors">
+          <div>
+            <div class="w-10 h-10 rounded-xl bg-pillActive border border-cyanAccent/25 flex items-center justify-center text-cyanAccent mb-4">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2z"/></svg>
+            </div>
+            <h3 class="text-base font-bold text-textPrimary">Solo [S], Mono [M] &amp; Clip Alerts</h3>
+            <p class="text-xs text-textMuted mt-2 leading-relaxed">
+              Isolate hardware strips with <strong class="text-textPrimary">[S]</strong> Solo, check phase with <strong class="text-textPrimary">[M]</strong> Mono on output buses, and catch debounced <strong class="text-textPrimary">0.0&nbsp;dBFS</strong> peak clipping without false blips.
+            </p>
+          </div>
+          <div class="mt-4 pt-3 border-t border-borderSubtle/80 text-[11px] font-mono text-textDim flex justify-between">
+            <span>Strip Solo • Bus Mono</span>
+            <span class="text-coralMute">Clip Debounce</span>
+          </div>
+        </div>
+
+        <!-- Card 7 -->
+        <div class="rounded-2xl bg-elevated border border-borderSubtle p-5 flex flex-col justify-between hover:border-cyanAccent/35 transition-colors">
           <div>
             <div class="w-10 h-10 rounded-xl bg-pillActive border border-cyanAccent/25 flex items-center justify-center text-cyanAccent mb-4">
               <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/></svg>
             </div>
-            <h3 class="text-base font-bold text-textPrimary">Context-Aware Solo FX &amp; 3-Band Virtual EQ</h3>
-            <p class="text-xs sm:text-sm text-textMuted mt-2 leading-relaxed">
-              Navigate DSP chains with <span class="kbd-key">Ctrl+Alt+Arrows</span> (<span class="kbd-key">Shift</span> for 0.1 fine steps, <span class="kbd-key">Ctrl+Alt+0</span> reset): Hardware <strong class="text-textPrimary">Comp/Gate/Denoiser/Reverb/Delay/FX1–2</strong>, Virtual <strong class="text-textPrimary">3-band EQ</strong>, and Bus <strong class="text-textPrimary">FX Returns</strong>.
+            <h3 class="text-base font-bold text-textPrimary">Context-Aware Solo FX &amp; EQ</h3>
+            <p class="text-xs text-textMuted mt-2 leading-relaxed">
+              Adjust <strong class="text-textPrimary">Comp/Gate/Denoiser/Reverb/Delay/FX1–2</strong> on hardware strips, <strong class="text-textPrimary">3-band EQ</strong> on virtual strips, and <strong class="text-textPrimary">FX Returns</strong> on buses via <span class="kbd-key">Ctrl+Alt+Arrows</span>.
             </p>
           </div>
-          <div class="mt-5 pt-3 border-t border-borderSubtle/80 text-[11px] font-mono text-textDim flex justify-between">
+          <div class="mt-4 pt-3 border-t border-borderSubtle/80 text-[11px] font-mono text-textDim flex justify-between">
             <span>Fine Step: ±0.1</span>
             <span class="text-cyanAccent">Auto-Matched Chain</span>
           </div>
         </div>
 
-        <!-- Card 6 -->
-        <div class="rounded-2xl bg-elevated border border-borderSubtle p-6 flex flex-col justify-between hover:border-cyanAccent/35 transition-colors">
+        <!-- Card 8 -->
+        <div class="rounded-2xl bg-elevated border border-borderSubtle p-5 flex flex-col justify-between hover:border-cyanAccent/35 transition-colors">
           <div>
             <div class="w-10 h-10 rounded-xl bg-pillActive border border-cyanAccent/25 flex items-center justify-center text-cyanAccent mb-4">
               <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
             </div>
-            <h3 class="text-base font-bold text-textPrimary">Floating Pop-Up HUD &amp; Complete Mouse Control</h3>
-            <p class="text-xs sm:text-sm text-textMuted mt-2 leading-relaxed">
-              Click-through bottom-center overlay (<code class="font-mono text-xs text-cyanAccent">+E0x20 +E0x08000000</code>) pops up whenever the Control Panel isn't focused. Inside the panel, <strong class="text-textPrimary">Hover-Scroll</strong> any row (±1.0&nbsp;dB, or <span class="kbd-key">Shift</span> ±0.2&nbsp;dB), <strong class="text-textPrimary">Middle-Click</strong> to mute, and rename any Virtual/Hardware Input or Output Bus (<span class="kbd-key">✎</span>).
+            <h3 class="text-base font-bold text-textPrimary">Floating HUD &amp; Mouse Ergonomics</h3>
+            <p class="text-xs text-textMuted mt-2 leading-relaxed">
+              A beautiful bottom-center HUD tracks wheel, layer, FX, and MIDI changes when the menu is unfocused. When in the menu; hover-scroll (<span class="kbd-key">Shift</span> fine), middle-click mute, and rename any strip (<span class="kbd-key">✎</span>). Now with a hints/tips box.
             </p>
           </div>
-          <div class="mt-5 pt-3 border-t border-borderSubtle/80 text-[11px] font-mono text-textDim flex justify-between">
-            <span>Inline dB &amp; Mute Badges</span>
+          <div class="mt-4 pt-3 border-t border-borderSubtle/80 text-[11px] font-mono text-textDim flex justify-between">
+            <span>HUD + Mouse Controls</span>
             <span class="text-emeraldOk">Auto-Update Check</span>
           </div>
         </div>
@@ -574,7 +611,7 @@
             Default Shortcuts &amp; 16-Channel Rebinding
           </h2>
           <p class="text-sm text-textMuted mt-2 max-w-2xl">
-            Click <strong class="text-textPrimary">Keybinds</strong> in the Control Panel footer to capture any new multi-key combo live. All <strong class="text-textPrimary">16 I/O channels</strong> (<code class="font-mono text-xs text-cyanAccent">Strip[0–7]</code> &amp; <code class="font-mono text-xs text-cyanAccent">Bus[0–7]</code>), snapshots, and automation toggles have dedicated rebindable slots.
+            Click <strong class="text-textPrimary">Keybinds</strong> in the Control Panel footer to capture any new multi-key combo live. All <strong class="text-textPrimary">16 I/O channels</strong> (<code class="font-mono text-xs text-cyanAccent">Strip[0–7]</code> &amp; <code class="font-mono text-xs text-cyanAccent">Bus[0–7]</code>), Push-to-Talk, snapshots, and automation toggles have dedicated rebindable slots.
           </p>
         </div>
 
@@ -588,7 +625,7 @@
             <button onclick="setKeybindCategory('all', this)" class="kb-pill px-3 py-1.5 rounded-lg text-xs font-bold bg-pillActive text-cyanAccent border border-cyanAccent/35 transition cursor-pointer">All</button>
             <button onclick="setKeybindCategory('general', this)" class="kb-pill px-3 py-1.5 rounded-lg text-xs font-semibold bg-elevated text-textMuted border border-borderSubtle hover:text-textPrimary transition cursor-pointer">General &amp; Layers</button>
             <button onclick="setKeybindCategory('fx', this)" class="kb-pill px-3 py-1.5 rounded-lg text-xs font-semibold bg-elevated text-textMuted border border-borderSubtle hover:text-textPrimary transition cursor-pointer">Solo FX</button>
-            <button onclick="setKeybindCategory('presets', this)" class="kb-pill px-3 py-1.5 rounded-lg text-xs font-semibold bg-elevated text-textMuted border border-borderSubtle hover:text-textPrimary transition cursor-pointer">Channels &amp; Snapshots</button>
+            <button onclick="setKeybindCategory('presets', this)" class="kb-pill px-3 py-1.5 rounded-lg text-xs font-semibold bg-elevated text-textMuted border border-borderSubtle hover:text-textPrimary transition cursor-pointer">Channels, PTT &amp; Snaps</button>
           </div>
         </div>
       </div>
@@ -633,7 +670,7 @@
           <div class="space-y-4">
             <div class="flex items-center justify-between">
               <span class="px-2.5 py-1 rounded-md bg-pillActive border border-cyanAccent/30 text-xs font-mono font-bold text-cyanAccent">Option A • End Users</span>
-              <span id="installReleaseBadge" class="text-xs font-mono text-textDim">v1.2.2 • Standalone</span>
+              <span id="installReleaseBadge" class="text-xs font-mono text-textDim">v1.4.4 • Standalone</span>
             </div>
 
             <h3 class="text-xl font-bold text-textPrimary">Standalone <code class="font-mono text-cyanAccent">.EXE</code> Release</h3>
@@ -653,14 +690,14 @@
               </li>
               <li class="flex items-start gap-3">
                 <span class="w-6 h-6 rounded-md bg-pillDark border border-borderSubtle text-cyanAccent font-mono text-xs font-bold flex items-center justify-center shrink-0 mt-0.5">3</span>
-                <span><strong class="text-textPrimary">Portable Persistence:</strong> On first launch, the app automatically creates <code class="font-mono text-xs text-cyanAccent">volume_settings.ini</code> in the same directory to store your active targets, custom channel names, snapshots, automation rules, and keybinds.</span>
+                <span><strong class="text-textPrimary">Portable Persistence:</strong> On first launch, the app automatically creates <code class="font-mono text-xs text-cyanAccent">volume_settings.ini</code> in the same directory to store your active targets, custom channel names, MIDI mappings, PTT settings, snapshots, automation rules, and keybinds.</span>
               </li>
             </ol>
 
             <div class="pt-2">
               <a data-exe-download="true" href="https://github.com/grandfirephoenix/Potato-Massah/releases/latest" target="_blank" rel="noopener noreferrer" class="w-full inline-flex items-center justify-center gap-2 px-5 py-3.5 sm:py-3 rounded-xl text-sm font-bold bg-cyanAccent hover:bg-sky-300 text-canvas transition-all shadow-cyanGlow">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
-                <span data-exe-label="bottom">Download Potato Massah.exe (v1.2.2)</span>
+                <span data-exe-label="bottom">Download Potato Massah.exe (v1.4.4)</span>
               </a>
             </div>
           </div>
@@ -751,14 +788,78 @@
   </div>
 
   <!-- ===================================================================== -->
-  <!-- MODAL 2: AUTOHOTKEY V2 ARCHITECTURE & SOURCE VIEWER                   -->
+  <!-- MODAL 2: MIDI LEARN DEMO DIALOG                                       -->
+  <!-- ===================================================================== -->
+  <div id="midiModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+    <div class="w-full max-w-md rounded-2xl bg-canvas border border-borderSubtle shadow-2xl overflow-hidden">
+      <div class="h-[2px] w-full bg-amberAccent"></div>
+      <div class="p-5 space-y-4">
+        <div class="flex items-center justify-between">
+          <div>
+            <h3 class="text-sm font-bold text-textPrimary">1-Click MIDI Learn Preview (winmm.dll)</h3>
+            <p class="text-xs text-textMuted mt-0.5">Test fader range, dial mode, curve, or pad triggers in the HUD.</p>
+          </div>
+          <button onclick="closeMidiModal()" class="w-7 h-7 rounded-lg bg-elevated hover:bg-pillHover text-textMuted hover:text-textPrimary text-xs font-bold transition cursor-pointer">✕</button>
+        </div>
+
+        <div class="grid grid-cols-2 gap-2.5 text-xs">
+          <div>
+            <label class="block text-[10px] font-bold uppercase tracking-wider text-textDim mb-1">Target Channel</label>
+            <select id="midiDemoTarget" class="w-full px-2.5 py-2 rounded-lg bg-elevated border border-borderSubtle text-textPrimary">
+              <option value="Strip[7]">VAIO3 (Strip[7])</option>
+              <option value="Strip[5]">Voicemeeter VAIO (Strip[5])</option>
+              <option value="Strip[6]">Voicemeeter AUX (Strip[6])</option>
+              <option value="Strip[0]">Mic Input (Strip[0])</option>
+              <option value="Bus[0]">Side Speakers (Bus[0])</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-[10px] font-bold uppercase tracking-wider text-textDim mb-1">Dial &amp; Curve</label>
+            <select id="midiDemoCurve" class="w-full px-2.5 py-2 rounded-lg bg-elevated border border-borderSubtle text-textPrimary">
+              <option value="lin">Absolute • Linear dB</option>
+              <option value="log">Absolute • Log Taper</option>
+              <option value="rel">Relative (+/-) • +1.0 dB</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-2.5 text-xs">
+          <div>
+            <label class="block text-[10px] font-bold uppercase tracking-wider text-textDim mb-1">Min (dB)</label>
+            <input id="midiDemoMin" type="number" step="0.5" value="-24" class="w-full px-2.5 py-1.5 rounded-lg bg-elevated border border-borderSubtle font-mono text-textPrimary" />
+          </div>
+          <div>
+            <label class="block text-[10px] font-bold uppercase tracking-wider text-textDim mb-1">Max (dB)</label>
+            <input id="midiDemoMax" type="number" step="0.5" value="0" class="w-full px-2.5 py-1.5 rounded-lg bg-elevated border border-borderSubtle font-mono text-textPrimary" />
+          </div>
+        </div>
+
+        <div>
+          <div class="flex items-center justify-between text-[11px] font-mono text-textMuted mb-1">
+            <span>Simulated CC1 Slider (0..127)</span>
+            <span id="midiDemoCcVal" class="text-amberAccent">CC 64</span>
+          </div>
+          <input id="midiDemoSlider" type="range" min="0" max="127" value="64" oninput="simApplyMidiSlider(Number(this.value))" class="w-full accent-amber-400 cursor-pointer" />
+        </div>
+
+        <div class="grid grid-cols-3 gap-2 pt-1">
+          <button onclick="simTriggerMidiPad('mute')" class="py-2 px-2 rounded-lg bg-elevated hover:bg-pillHover border border-borderSubtle text-[11px] font-bold text-coralMute transition cursor-pointer">Pad: Mute</button>
+          <button onclick="simTriggerMidiPad('snap1')" class="py-2 px-2 rounded-lg bg-elevated hover:bg-pillHover border border-borderSubtle text-[11px] font-bold text-amberAccent transition cursor-pointer">Pad: Snap P1</button>
+          <button onclick="simTriggerMidiPad('ptt')" class="py-2 px-2 rounded-lg bg-elevated hover:bg-pillHover border border-borderSubtle text-[11px] font-bold text-emeraldOk transition cursor-pointer">Pad: PTT</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================================================================== -->
+  <!-- MODAL 3: AUTOHOTKEY V2 ARCHITECTURE & SOURCE VIEWER                   -->
   <!-- ===================================================================== -->
   <div id="sourceModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/80 backdrop-blur-sm p-4">
     <div class="w-full max-w-4xl rounded-2xl bg-canvas border border-borderSubtle shadow-2xl overflow-hidden flex flex-col max-h-[88vh]">
       <div class="h-[2px] w-full bg-cyanAccent"></div>
       <div class="px-5 py-3.5 bg-elevated border-b border-borderSubtle flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h3 class="text-sm font-bold text-textPrimary">PotatoMassah.ahk — Core Engine Architecture (v1.2.2)</h3>
+          <h3 class="text-sm font-bold text-textPrimary">PotatoMassah.ahk — Core Engine Architecture (v1.4.4)</h3>
           <p class="text-xs text-textMuted mt-0.5">Compile with Ahk2Exe using Base File: v2.0.x U64 AutoHotkey64.exe</p>
         </div>
         <div class="flex items-center gap-2">
@@ -785,22 +886,22 @@
   <!-- ===================================================================== -->
   <script>
     const simChannels = [
-      { param: 'Strip[5]', name: 'Voicemeeter VAIO', defName: 'Voicemeeter VAIO', group: 'virtual',  gain:   0.0, muted: false, fxIdx: 0, fxVals: [0.0, 0.0, 0.0], routes: {A1:true, A2:false, A3:false, A4:false, A5:false, B1:false, B2:false, B3:false} },
-      { param: 'Strip[6]', name: 'Voicemeeter AUX',  defName: 'Voicemeeter AUX',  group: 'virtual',  gain: -30.0, muted: false, fxIdx: 0, fxVals: [0.0, 0.0, 0.0], routes: {A1:true, A2:false, A3:false, A4:false, A5:false, B1:false, B2:false, B3:false} },
-      { param: 'Strip[7]', name: 'VAIO3',            defName: 'VAIO3',            group: 'virtual',  gain: -14.5, muted: false, fxIdx: 0, fxVals: [4.5, 0.0, 0.0], routes: {A1:true, A2:true,  A3:true,  A4:true,  A5:true,  B1:false, B2:false, B3:false} },
-      { param: 'Strip[0]', name: 'Mic Input',        defName: 'Hardware In 1',    group: 'hardware', gain: -11.3, muted: false, fxIdx: 0, fxVals: [2.4, 1.5, 1.0, 0.0, 0.0, 0.0, 0.0], routes: {A1:false, A2:false, A3:false, A4:false, A5:false, B1:true, B2:true, B3:false} },
-      { param: 'Strip[1]', name: 'Hardware In 2',    defName: 'Hardware In 2',    group: 'hardware', gain:   0.0, muted: false, fxIdx: 0, fxVals: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], routes: {A1:true, A2:false, A3:false, A4:false, A5:false, B1:false, B2:false, B3:false} },
-      { param: 'Strip[2]', name: 'Hardware In 3',    defName: 'Hardware In 3',    group: 'hardware', gain:   0.0, muted: false, fxIdx: 0, fxVals: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], routes: {A1:true, A2:false, A3:false, A4:false, A5:false, B1:false, B2:false, B3:false} },
-      { param: 'Strip[3]', name: 'Hardware In 4',    defName: 'Hardware In 4',    group: 'hardware', gain:   0.0, muted: false, fxIdx: 0, fxVals: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], routes: {A1:true, A2:false, A3:false, A4:false, A5:false, B1:false, B2:false, B3:false} },
-      { param: 'Strip[4]', name: 'Hardware In 5',    defName: 'Hardware In 5',    group: 'hardware', gain:   0.0, muted: false, fxIdx: 0, fxVals: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], routes: {A1:true, A2:false, A3:false, A4:false, A5:false, B1:false, B2:false, B3:false} },
-      { param: 'Bus[0]',   name: 'Side Speakers',    defName: 'A1',               group: 'bus',      gain:   0.0, muted: false, fxIdx: 0, fxVals: [0.0, 0.0, 0.0, 0.0], routes: {} },
-      { param: 'Bus[1]',   name: 'Rear Speaker',     defName: 'A2',               group: 'bus',      gain:  -1.0, muted: false, fxIdx: 0, fxVals: [0.0, 0.0, 0.0, 0.0], routes: {} },
-      { param: 'Bus[2]',   name: 'Center Speaker',   defName: 'A3',               group: 'bus',      gain:   0.0, muted: false, fxIdx: 0, fxVals: [0.0, 0.0, 0.0, 0.0], routes: {} },
-      { param: 'Bus[3]',   name: 'A4',               defName: 'A4',               group: 'bus',      gain:   0.0, muted: false, fxIdx: 0, fxVals: [0.0, 0.0, 0.0, 0.0], routes: {} },
-      { param: 'Bus[4]',   name: 'A5',               defName: 'A5',               group: 'bus',      gain:   0.0, muted: false, fxIdx: 0, fxVals: [0.0, 0.0, 0.0, 0.0], routes: {} },
-      { param: 'Bus[5]',   name: 'B1',               defName: 'B1',               group: 'bus',      gain:   0.0, muted: false, fxIdx: 0, fxVals: [0.0, 0.0, 0.0, 0.0], routes: {} },
-      { param: 'Bus[6]',   name: 'B2',               defName: 'B2',               group: 'bus',      gain:   0.0, muted: false, fxIdx: 0, fxVals: [0.0, 0.0, 0.0, 0.0], routes: {} },
-      { param: 'Bus[7]',   name: 'B3',               defName: 'B3',               group: 'bus',      gain:  -8.0, muted: false, fxIdx: 0, fxVals: [0.0, 0.0, 0.0, 0.0], routes: {} },
+      { param: 'Strip[5]', name: 'Voicemeeter VAIO', defName: 'Voicemeeter VAIO', group: 'virtual',  gain:   0.0, muted: false, solo: false, mono: false, fxIdx: 0, fxVals: [0.0, 0.0, 0.0], routes: {A1:true, A2:false, A3:false, A4:false, A5:false, B1:false, B2:false, B3:false} },
+      { param: 'Strip[6]', name: 'Voicemeeter AUX',  defName: 'Voicemeeter AUX',  group: 'virtual',  gain: -30.0, muted: false, solo: false, mono: false, fxIdx: 0, fxVals: [0.0, 0.0, 0.0], routes: {A1:true, A2:false, A3:false, A4:false, A5:false, B1:false, B2:false, B3:false} },
+      { param: 'Strip[7]', name: 'VAIO3',            defName: 'VAIO3',            group: 'virtual',  gain: -14.5, muted: false, solo: false, mono: false, fxIdx: 0, fxVals: [4.5, 0.0, 0.0], routes: {A1:true, A2:true,  A3:true,  A4:true,  A5:true,  B1:false, B2:false, B3:false} },
+      { param: 'Strip[0]', name: 'Mic Input',        defName: 'Hardware In 1',    group: 'hardware', gain: -11.3, muted: false, solo: false, mono: false, fxIdx: 0, fxVals: [2.4, 1.5, 1.0, 0.0, 0.0, 0.0, 0.0], routes: {A1:false, A2:false, A3:false, A4:false, A5:false, B1:true, B2:true, B3:false} },
+      { param: 'Strip[1]', name: 'Hardware In 2',    defName: 'Hardware In 2',    group: 'hardware', gain:   0.0, muted: false, solo: false, mono: false, fxIdx: 0, fxVals: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], routes: {A1:true, A2:false, A3:false, A4:false, A5:false, B1:false, B2:false, B3:false} },
+      { param: 'Strip[2]', name: 'Hardware In 3',    defName: 'Hardware In 3',    group: 'hardware', gain:   0.0, muted: false, solo: false, mono: false, fxIdx: 0, fxVals: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], routes: {A1:true, A2:false, A3:false, A4:false, A5:false, B1:false, B2:false, B3:false} },
+      { param: 'Strip[3]', name: 'Hardware In 4',    defName: 'Hardware In 4',    group: 'hardware', gain:   0.0, muted: false, solo: false, mono: false, fxIdx: 0, fxVals: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], routes: {A1:true, A2:false, A3:false, A4:false, A5:false, B1:false, B2:false, B3:false} },
+      { param: 'Strip[4]', name: 'Hardware In 5',    defName: 'Hardware In 5',    group: 'hardware', gain:   0.0, muted: false, solo: false, mono: false, fxIdx: 0, fxVals: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], routes: {A1:true, A2:false, A3:false, A4:false, A5:false, B1:false, B2:false, B3:false} },
+      { param: 'Bus[0]',   name: 'Side Speakers',    defName: 'A1',               group: 'bus',      gain:   0.0, muted: false, solo: false, mono: false, fxIdx: 0, fxVals: [0.0, 0.0, 0.0, 0.0], routes: {} },
+      { param: 'Bus[1]',   name: 'Rear Speaker',     defName: 'A2',               group: 'bus',      gain:  -1.0, muted: false, solo: false, mono: false, fxIdx: 0, fxVals: [0.0, 0.0, 0.0, 0.0], routes: {} },
+      { param: 'Bus[2]',   name: 'Center Speaker',   defName: 'A3',               group: 'bus',      gain:   0.0, muted: false, solo: false, mono: false, fxIdx: 0, fxVals: [0.0, 0.0, 0.0, 0.0], routes: {} },
+      { param: 'Bus[3]',   name: 'A4',               defName: 'A4',               group: 'bus',      gain:   0.0, muted: false, solo: false, mono: false, fxIdx: 0, fxVals: [0.0, 0.0, 0.0, 0.0], routes: {} },
+      { param: 'Bus[4]',   name: 'A5',               defName: 'A5',               group: 'bus',      gain:   0.0, muted: false, solo: false, mono: false, fxIdx: 0, fxVals: [0.0, 0.0, 0.0, 0.0], routes: {} },
+      { param: 'Bus[5]',   name: 'B1',               defName: 'B1',               group: 'bus',      gain:   0.0, muted: false, solo: false, mono: false, fxIdx: 0, fxVals: [0.0, 0.0, 0.0, 0.0], routes: {} },
+      { param: 'Bus[6]',   name: 'B2',               defName: 'B2',               group: 'bus',      gain:   0.0, muted: false, solo: false, mono: false, fxIdx: 0, fxVals: [0.0, 0.0, 0.0, 0.0], routes: {} },
+      { param: 'Bus[7]',   name: 'B3',               defName: 'B3',               group: 'bus',      gain:  -8.0, muted: false, solo: false, mono: false, fxIdx: 0, fxVals: [0.0, 0.0, 0.0, 0.0], routes: {} },
     ];
 
     const fxDefinitions = {
@@ -845,7 +946,7 @@
       { saved: false, gains: {}, routes: {} }
     ];
 
-    const automationState = { autoReset: true, antiHijack: true, autoDuck: true };
+    const automationState = { autoReset: true, antiHijack: true, autoDuck: true, ptt: false };
 
     const MIN_STEP = 0.2;
     const MAX_STEP = 4.5;
@@ -883,7 +984,6 @@
         : clean.toFixed(1);
     }
 
-    // Exponential Acceleration & 20 ms Smooth Glide
     function simWheelStep(dir) {
       if (activeTargets.length === 0) return;
 
@@ -963,7 +1063,6 @@
       }
     }
 
-    // Hover-Scroll & Middle-Click Mute inside Simulator
     const simStage = document.getElementById('simulatorStage');
     simStage.addEventListener('wheel', (e) => {
       e.preventDefault();
@@ -1070,6 +1169,8 @@
     function simResetDefaultMixer() {
       simChannels.forEach(c => {
         c.gain = 0.0;
+        c.solo = false;
+        c.mono = false;
         targetGains.set(c.param, 0.0);
         if (c.group !== 'bus') {
           outputBusNames.forEach(b => c.routes[b] = (b === 'A1'));
@@ -1113,10 +1214,43 @@
       showToast(`Loaded Mixer Snapshot P${idx}`);
     }
 
+    function simToggleRowSolo(param, event) {
+      if (event) event.stopPropagation();
+      const ch = getChannelObj(param);
+      if (!ch || ch.group === 'bus') return;
+      ch.solo = !ch.solo;
+      renderSimulator();
+      showToast(`${ch.name} Solo (PFL): ${ch.solo ? 'ON' : 'OFF'}`);
+    }
+
+    function simToggleHeroSolo() {
+      const primary = getChannelObj(activeTargets[0]);
+      if (!primary || primary.group === 'bus') {
+        showToast('Select an Input Strip to toggle Solo (PFL)');
+        return;
+      }
+      primary.solo = !primary.solo;
+      renderSimulator();
+      showToast(`${primary.name} Solo (PFL): ${primary.solo ? 'ON' : 'OFF'}`);
+    }
+
+    function simToggleRowMono(param, event) {
+      if (event) event.stopPropagation();
+      const ch = getChannelObj(param);
+      if (!ch || ch.group !== 'bus') return;
+      ch.mono = !ch.mono;
+      renderSimulator();
+      showToast(`${ch.name} Mono: ${ch.mono ? 'ON' : 'OFF'}`);
+    }
+
     function simToggleAutomation(key) {
       automationState[key] = !automationState[key];
+      if (key === 'ptt') {
+        const mic = getChannelObj('Strip[0]');
+        if (mic) mic.muted = automationState.ptt;
+      }
       renderSimulator();
-      const labels = { autoReset: 'Auto-Reset on Reconnect', antiHijack: 'Windows Device Anti-Hijack', autoDuck: 'Sidechain Auto-Ducking' };
+      const labels = { autoReset: 'Auto-Reset on Reconnect', antiHijack: 'Windows Device Anti-Hijack', autoDuck: 'Sidechain Auto-Ducking', ptt: 'Push-to-Talk (Mic Auto-Mute)' };
       showToast(`${labels[key]}: ${automationState[key] ? 'ON' : 'OFF'}`);
     }
 
@@ -1208,7 +1342,68 @@
       showToast('Sent Command.Restart = 1.0 to VoiceMeeter Potato');
     }
 
-    // Inline Custom Rename Modal
+    // MIDI Demo Modal Controls
+    function openMidiModal() {
+      const modal = document.getElementById('midiModal');
+      if (!modal) return;
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    function closeMidiModal() {
+      const modal = document.getElementById('midiModal');
+      if (!modal) return;
+      modal.classList.remove('flex');
+      modal.classList.add('hidden');
+    }
+
+    function simApplyMidiSlider(ccVal) {
+      document.getElementById('midiDemoCcVal').textContent = `CC ${ccVal}`;
+      const param = document.getElementById('midiDemoTarget').value;
+      const modeCurve = document.getElementById('midiDemoCurve').value;
+      const minDb = Number(document.getElementById('midiDemoMin').value) || -60;
+      const maxDb = Number(document.getElementById('midiDemoMax').value) || 0;
+      const ch = getChannelObj(param);
+      if (!ch) return;
+
+      if (modeCurve === 'rel') {
+        const delta = ccVal >= 65 ? (ccVal - 64) * 0.25 : (ccVal < 64 ? -(64 - ccVal) * 0.25 : 0);
+        ch.gain = Math.round(Math.max(minDb, Math.min(maxDb, ch.gain + delta)) * 10) / 10;
+      } else {
+        const norm = Math.max(0, Math.min(1, ccVal / 127));
+        const curved = modeCurve === 'log' ? Math.pow(norm, 1.35) : norm;
+        ch.gain = Math.round((minDb + curved * (maxDb - minDb)) * 10) / 10;
+      }
+      targetGains.set(param, ch.gain);
+      renderSimulator();
+      triggerHeadUnitOsd('volume');
+    }
+
+    function simTriggerMidiPad(kind) {
+      const param = document.getElementById('midiDemoTarget').value;
+      const ch = getChannelObj(param);
+      if (kind === 'mute' && ch) {
+        ch.muted = !ch.muted;
+        renderSimulator();
+        showToast(`MIDI Pad → ${ch.name}: ${ch.muted ? 'MUTED' : 'UNMUTED'}`);
+      } else if (kind === 'snap1') {
+        simSaveSnapshot(1);
+        simLoadSnapshot(1);
+      } else if (kind === 'ptt') {
+        const mic = getChannelObj('Strip[0]');
+        if (mic) {
+          mic.muted = false;
+          renderSimulator();
+          showToast('MIDI Pad PTT → Mic Unmuted (Hold)');
+          setTimeout(() => {
+            if (automationState.ptt) mic.muted = true;
+            renderSimulator();
+          }, 1200);
+        }
+      }
+      triggerHeadUnitOsd('volume');
+    }
+
     function openRenameModal(param, event) {
       if (event) event.stopPropagation();
       renamingParam = param;
@@ -1239,7 +1434,6 @@
       showToast(`Label updated: ${ch.param} → "${ch.name}"`);
     }
 
-    // Floating Pop-Up HUD Renderer
     function triggerHeadUnitOsd(mode = 'volume') {
       const osd = document.getElementById('headUnitOsd');
       const stripe = document.getElementById('osdTopAccent');
@@ -1315,6 +1509,7 @@
 
     function renderSimulator() {
       const modeBtn = document.getElementById('modeTogglePill');
+      const soloBtn = document.getElementById('heroSoloBtn');
       const proBtn = document.getElementById('proDrawerBtn');
       const proContainer = document.getElementById('proDrawerContainer');
       const muteBtn = document.getElementById('heroMuteBtn');
@@ -1323,7 +1518,7 @@
       const stripeEl = document.getElementById('heroTopStripe');
       const layerPill = document.getElementById('layerPillSim');
 
-      modeBtn.textContent = isSingleTargetMode ? '◉ Single-Target' : '◎ Multi-Group';
+      modeBtn.textContent = isSingleTargetMode ? '◉ Single' : '◎ Group';
       modeBtn.className = isSingleTargetMode
         ? 'px-2.5 py-1 rounded bg-[#1B2B3A] hover:bg-[#23384C] text-[11px] font-bold text-cyanAccent transition cursor-pointer'
         : 'px-2.5 py-1 rounded bg-[#22222E] hover:bg-[#2C2C3B] text-[11px] font-bold text-textMuted transition cursor-pointer';
@@ -1338,6 +1533,11 @@
 
       const primary = getChannelObj(activeTargets[0]);
       const isLayerActive = isSingleTargetMode && primary && primary.group !== 'bus' && activeLayerIdx > 0;
+      const isSoloActive = Boolean(primary && primary.group !== 'bus' && primary.solo);
+
+      soloBtn.className = isSoloActive
+        ? 'px-2.5 py-1 rounded bg-[#423114] text-[11px] font-bold text-[#FBBF24] transition cursor-pointer'
+        : 'px-2.5 py-1 rounded bg-[#1E1E28] hover:bg-[#2E2614] text-[11px] font-bold text-textMuted transition cursor-pointer';
 
       let anyMuted = false;
       linesEl.innerHTML = activeTargets.map(param => {
@@ -1380,20 +1580,17 @@
         layerPill.textContent = '↳  Multi-Target Master Faders';
       }
 
-      // Routing Grid (A1-B3)
       const isStrip = primary && primary.group !== 'bus';
       document.getElementById('simRoutingGrid').innerHTML = outputBusNames.map(bName => {
         const isOn = isStrip && primary.routes && primary.routes[bName];
         return `<button onclick="simToggleBusRoute('${bName}')" class="py-1.5 sm:py-1 rounded text-[11px] font-bold transition cursor-pointer ${isOn ? 'bg-[#332614] text-amberAccent' : (isStrip ? 'bg-[#1A1A22] text-textDim hover:bg-[#242430]' : 'bg-pillDark text-zinc-600')}">${bName}</button>`;
       }).join('');
 
-      // Snapshots Grid (P1-P3)
       document.getElementById('simSnapshotGrid').innerHTML = snapshots.map((s, idx) => {
         const num = idx + 1;
         return `<button onclick="simLoadSnapshot(${num})" oncontextmenu="simSaveSnapshot(${num}, event)" class="py-1.5 sm:py-1 px-2 rounded text-[11px] font-bold transition cursor-pointer truncate ${s.saved ? 'bg-[#261E12] text-amberAccent' : 'bg-[#1E1E28] text-textDim hover:bg-[#282836]'}">${s.saved ? `● P${num}: Saved` : `○ P${num}: Save`}</button>`;
       }).join('');
 
-      // Virtual Inputs
       document.getElementById('simVirtualList').innerHTML = simChannels.filter(c => c.group === 'virtual').map(ch => {
         const active = activeTargets.includes(ch.param);
         const dbCol = ch.muted ? 'text-coralMute' : (active ? (isLayerActive ? 'text-amberAccent' : 'text-cyanAccent') : 'text-textMuted');
@@ -1415,10 +1612,12 @@
         `;
       }).join('');
 
-      // Compact Grid Builder (Hardware Inputs & Output Buses)
       const buildCompactRow = (ch) => {
         const active = activeTargets.includes(ch.param);
         const dbCol = ch.muted ? 'text-coralMute' : (active ? (isLayerActive ? 'text-amberAccent' : 'text-cyanAccent') : 'text-textMuted');
+        const extraBtn = ch.group === 'hardware'
+          ? `<button onclick="simToggleRowSolo('${ch.param}', event)" title="Solo (PFL)" class="w-5 py-2 sm:py-1.5 rounded text-[10px] font-bold transition cursor-pointer shrink-0 ${ch.solo ? 'bg-[#423114] text-[#FBBF24]' : 'bg-[#1C1C26] hover:bg-[#2E2614] text-textMuted'}">S</button>`
+          : `<button onclick="simToggleRowMono('${ch.param}', event)" title="Mono Check" class="w-5 py-2 sm:py-1.5 rounded text-[10px] font-bold transition cursor-pointer shrink-0 ${ch.mono ? 'bg-[#193B4D] text-cyanAccent' : 'bg-[#1C1C26] hover:bg-[#152E38] text-textMuted'}">M</button>`;
         return `
           <div class="flex items-center gap-1">
             <div data-sim-param="${ch.param}" onclick="simSelectChannel('${ch.param}')" class="flex-1 flex items-center justify-between gap-1.5 px-2.5 py-2 sm:py-1.5 rounded ${active ? 'bg-pillActive hover:bg-pillActiveHover' : 'bg-pillDark hover:bg-pillHover'} cursor-pointer transition min-w-0">
@@ -1428,6 +1627,7 @@
               </div>
               <span class="text-[11px] font-mono font-bold shrink-0 ${dbCol}">${ch.muted ? 'MUTED' : fmtDb(ch.gain, true)}</span>
             </div>
+            ${extraBtn}
             <button onclick="openRenameModal('${ch.param}', event)" title="Rename Channel" class="w-6 py-2 sm:py-1.5 rounded bg-[#1C1C26] hover:bg-[#282836] text-[11px] text-textMuted hover:text-textPrimary transition cursor-pointer shrink-0">✎</button>
             <button onclick="simResetGain('${ch.param}', event)" title="Reset to 0.0 dB" class="w-8 py-2 sm:py-1.5 rounded bg-[#1C1C26] hover:bg-[#282836] text-[11px] font-bold text-textMuted hover:text-textPrimary transition cursor-pointer shrink-0">0dB</button>
           </div>
@@ -1437,20 +1637,19 @@
       document.getElementById('simHardwareGrid').innerHTML = simChannels.filter(c => c.group === 'hardware').map(buildCompactRow).join('');
       document.getElementById('simBusesGrid').innerHTML = simChannels.filter(c => c.group === 'bus').map(buildCompactRow).join('');
 
-      // Automation Toggles
       const updateAutoPill = (id, label, on) => {
         const el = document.getElementById(id);
         el.textContent = `${on ? '●' : '○'} ${label}: ${on ? 'ON' : 'OFF'}`;
         el.className = on
-          ? 'px-2.5 py-2 sm:py-1.5 rounded bg-pillActive text-center text-[11px] font-bold text-cyanAccent transition cursor-pointer'
-          : 'px-2.5 py-2 sm:py-1.5 rounded bg-pillDark text-center text-[11px] font-bold text-textDim transition cursor-pointer';
+          ? 'px-2 py-2 sm:py-1.5 rounded bg-pillActive text-center text-[11px] font-bold text-cyanAccent transition cursor-pointer truncate'
+          : 'px-2 py-2 sm:py-1.5 rounded bg-pillDark text-center text-[11px] font-bold text-textDim transition cursor-pointer truncate';
       };
       updateAutoPill('simAutoResetPill', 'Auto-Reset', automationState.autoReset);
       updateAutoPill('simAntiHijackPill', 'Anti-Hijack', automationState.antiHijack);
       updateAutoPill('simAutoDuckPill', 'Auto-Duck', automationState.autoDuck);
+      updateAutoPill('simPttPill', 'PTT', automationState.ptt);
     }
 
-    // Keybind Reference Table
     const keybindData = [
       { action: 'Toggle Control Panel', keys: ['Ctrl', 'Alt', 'V'], cat: 'general', desc: 'Shows or hides the VoiceMeeter Potato Massah control window.' },
       { action: 'Target: Previous Channel', keys: ['Ctrl', 'Shift', 'Left'], cat: 'general', desc: 'Steps backward through all 16 I/O channels in Single-Target Mode.' },
@@ -1465,7 +1664,7 @@
       { action: 'Solo FX: Reset to 0', keys: ['Ctrl', 'Alt', '0'], cat: 'fx', desc: 'Resets the currently selected FX send, return, or EQ band back to 0.0.' },
       { action: 'Preset: VAIO3 (Strip[7])', keys: ['Shift', '1'], cat: 'presets', desc: 'Immediately focuses Single-Target Mode on VAIO3.' },
       { action: 'Preset: Hardware In 1 (Strip[0])', keys: ['Shift', '2'], cat: 'presets', desc: 'Immediately focuses Single-Target Mode on Hardware In 1.' },
-      { action: 'Snapshots P1–P3 & Automation', keys: ['Rebindable in Keybinds'], cat: 'presets', desc: 'Dedicated hotkey slots for all 16 I/O channels, Snapshots P1–P3, Auto-Ducking, and Anti-Hijack.' },
+      { action: 'Push-to-Talk, MIDI, Snaps & Locks', keys: ['Rebindable in Keybinds / PTT / MIDI'], cat: 'presets', desc: 'Dedicated slots for Push-to-Talk mic hold, MIDI Learn sliders/encoders/pads, Snapshots P1–P3, Auto-Ducking, and Anti-Hijack.' },
     ];
 
     let activeKbCat = 'all';
@@ -1488,7 +1687,7 @@
       const catBadges = {
         general: '<span class="px-2 py-0.5 rounded text-[11px] font-mono bg-pillActive text-cyanAccent">General &amp; Layers</span>',
         fx:      '<span class="px-2 py-0.5 rounded text-[11px] font-mono bg-purple-500/15 text-purple-300">Solo FX</span>',
-        presets: '<span class="px-2 py-0.5 rounded text-[11px] font-mono bg-emeraldOk/15 text-emeraldOk">Channels &amp; Snaps</span>'
+        presets: '<span class="px-2 py-0.5 rounded text-[11px] font-mono bg-emeraldOk/15 text-emeraldOk">Channels, PTT &amp; Snaps</span>'
       };
 
       const rows = keybindData.filter(item => {
@@ -1525,24 +1724,22 @@ InstallKeybdHook()
 ;@Ahk2Exe-SetMainIcon Potato.ico
 
 ; ==============================================================================
-; VoiceMeeter Potato Massah (v1.2.2) — Core Architecture Overview
+; VoiceMeeter Potato Massah (v1.4.4) — Core Architecture Overview
 ; ==============================================================================
-; 1. 64-Bit Native DLL Bridge (VoicemeeterRemote64.dll)
-;    Direct VBVMR_Login, VBVMR_GetParameterFloat, VBVMR_SetParameterFloat,
-;    and VBVMR_GetLevel calls with zero external dependencies.
+; 1. 64-Bit Native DLL Bridge (VoicemeeterRemote64.dll) & MIDI (winmm.dll)
+;    Direct VBVMR_* calls plus MIDI Learn with custom Min/Max bounds,
+;    Absolute/Relative (+/-) dials, Linear/Log curves, and Pad triggers.
 ;
-; 2. Exponential Wheel Acceleration & 20 ms Smooth Glide Engine
-;    - Single clicks adjust by 0.2 dB; fast wheel spins scale up to 4.5 dB/notch
-;    - 20 ms interpolation timer with instant direction-reversal braking
-;    - Spread-locked clamping (-60.0 to +12.0 dB) in Multi-Group Mode
+; 2. Push-to-Talk, Solo [S], Mono [M] & Debounced Clip Alerts
+;    - PTT keeps the selected mic strip muted until the PTT key is held
+;    - Strip[i].Solo [S], Bus[i].Mono [M], and 3-sample 0.0 dBFS clip alerts
 ;
 ; 3. Pro Drawer: Per-Bus Submix Layers, Routing Matrix & Snapshots
 ;    - Strip[i].GainLayer[0..7] independent submix faders for A1–A5 & B1–B3
 ;    - Live A1–B3 output routing toggles and P1–P3 full-mixer snapshots
 ;
 ; 4. Automation & Protection Suite
-;    - Sidechain Auto-Ducking with 5-stage envelope (Depth, Threshold, Attack,
-;      Hold, Release), mute guard, and real-time dBFS / Gain Reduction meters
+;    - Sidechain Auto-Ducking with 5-stage envelope & live dBFS / GR meters
 ;    - Windows Default Device Lock ("Anti-Hijack") via Core Audio COM API
 ;    - PnP WM_DEVICECHANGE watcher for automatic audio engine recovery`;
 
@@ -1586,7 +1783,7 @@ InstallKeybdHook()
         });
         if (!res.ok) return;
         const release = await res.json();
-        const tag = release.tag_name || 'v1.2.2';
+        const tag = release.tag_name || 'v1.4.4';
         const assets = Array.isArray(release.assets) ? release.assets : [];
         const exeAsset = assets.find(a => typeof a.name === 'string' && a.name.toLowerCase().endsWith('.exe'));
 
