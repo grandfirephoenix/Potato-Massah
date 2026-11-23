@@ -129,7 +129,7 @@
         <div class="flex items-center gap-2 min-w-0">
           <span class="font-bold text-base sm:text-lg tracking-tight text-textPrimary truncate">Potato Massah</span>
           <span class="hidden sm:inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-mono font-medium bg-elevated border border-borderSubtle text-cyanAccent shrink-0">
-            v1.4.4 • Win64 / AHK v2
+            v1.4.5 • Win64 / AHK v2
           </span>
         </div>
       </a>
@@ -183,7 +183,7 @@
           <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 pt-1">
             <a data-exe-download="true" href="https://github.com/grandfirephoenix/Potato-Massah/releases/latest" target="_blank" rel="noopener noreferrer" class="inline-flex items-center justify-center gap-2 px-5 py-3.5 sm:py-3 rounded-xl text-sm font-bold bg-cyanAccent hover:bg-sky-300 text-canvas transition-all shadow-cyanGlow">
               <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
-              <span data-exe-label="hero">Download Potato Massah.exe (v1.4.4)</span>
+              <span data-exe-label="hero">Download Potato Massah.exe (v1.4.5)</span>
             </a>
 
             <a href="https://github.com/grandfirephoenix/Potato-Massah/blob/main/PotatoMassah.ahk" target="_blank" rel="noopener noreferrer" class="inline-flex items-center justify-center gap-2 px-5 py-3.5 sm:py-3 rounded-xl text-sm font-semibold bg-elevated hover:bg-pillHover text-textPrimary border border-borderSubtle hover:border-cyanAccent/40 transition-all">
@@ -193,7 +193,7 @@
           </div>
           <div id="releaseMetaRow" class="hidden text-xs font-mono text-textMuted flex items-center gap-2">
             <span class="w-1.5 h-1.5 rounded-full bg-emeraldOk"></span>
-            <span id="releaseMetaText">Latest Release: v1.4.4</span>
+            <span id="releaseMetaText">Latest Release: v1.4.5</span>
           </div>
 
           <!-- Key Technical Specs Grid -->
@@ -670,7 +670,7 @@
           <div class="space-y-4">
             <div class="flex items-center justify-between">
               <span class="px-2.5 py-1 rounded-md bg-pillActive border border-cyanAccent/30 text-xs font-mono font-bold text-cyanAccent">Option A • End Users</span>
-              <span id="installReleaseBadge" class="text-xs font-mono text-textDim">v1.4.4 • Standalone</span>
+              <span id="installReleaseBadge" class="text-xs font-mono text-textDim">v1.4.5 • Standalone</span>
             </div>
 
             <h3 class="text-xl font-bold text-textPrimary">Standalone <code class="font-mono text-cyanAccent">.EXE</code> Release</h3>
@@ -697,7 +697,7 @@
             <div class="pt-2">
               <a data-exe-download="true" href="https://github.com/grandfirephoenix/Potato-Massah/releases/latest" target="_blank" rel="noopener noreferrer" class="w-full inline-flex items-center justify-center gap-2 px-5 py-3.5 sm:py-3 rounded-xl text-sm font-bold bg-cyanAccent hover:bg-sky-300 text-canvas transition-all shadow-cyanGlow">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
-                <span data-exe-label="bottom">Download Potato Massah.exe (v1.4.4)</span>
+                <span data-exe-label="bottom">Download Potato Massah.exe (v1.4.5)</span>
               </a>
             </div>
           </div>
@@ -859,7 +859,7 @@
       <div class="h-[2px] w-full bg-cyanAccent"></div>
       <div class="px-5 py-3.5 bg-elevated border-b border-borderSubtle flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h3 class="text-sm font-bold text-textPrimary">PotatoMassah.ahk — Core Engine Architecture (v1.4.4)</h3>
+          <h3 class="text-sm font-bold text-textPrimary">PotatoMassah.ahk — Core Engine Architecture (v1.4.5)</h3>
           <p class="text-xs text-textMuted mt-0.5">Compile with Ahk2Exe using Base File: v2.0.x U64 AutoHotkey64.exe</p>
         </div>
         <div class="flex items-center gap-2">
@@ -1773,7 +1773,7 @@ InstallKeybdHook()
 ;@Ahk2Exe-SetMainIcon Potato.ico
 
 ; ==============================================================================
-; VoiceMeeter Potato Massah (v1.4.4) — Core Architecture Overview
+; VoiceMeeter Potato Massah (v1.4.5) — Core Architecture Overview
 ; ==============================================================================
 ; 1. 64-Bit Native DLL Bridge (VoicemeeterRemote64.dll) & MIDI (winmm.dll)
 ;    Direct VBVMR_* calls plus MIDI Learn with custom Min/Max bounds,
@@ -1833,7 +1833,7 @@ InstallKeybdHook()
         });
         if (!res.ok) return;
         const release = await res.json();
-        const tag = release.tag_name || 'v1.4.4';
+        const tag = release.tag_name || 'v1.4.5';
         const assets = Array.isArray(release.assets) ? release.assets : [];
         const exeAsset = assets.find(a => typeof a.name === 'string' && a.name.toLowerCase().endsWith('.exe'));
 
