@@ -6,7 +6,7 @@ InstallKeybdHook()
 ; ==============================================================================
 ; 1. VERSION, VOICEMEETER REMOTE API, DARK THEME & ICON INITIALIZATION
 ; ==============================================================================
-APP_VERSION    := "v1.4.4"
+APP_VERSION    := "v1.4.5"
 GITHUB_REPO    := "grandfirephoenix/Potato-Massah"
 customIconPath := A_ScriptDir "\Potato.ico"
 mutedIconPath  := A_ScriptDir "\icon_muted.ico"
@@ -41,6 +41,7 @@ CleanupVM(*) {
     SetTimer(GuiLiveSyncTick, 0)
     SetTimer(ClearQuickTip, 0)
     SetTimer(HideHeadUnitOsd, 0)
+    SetTimer(ForceOsdTopmost, 0)
     SetTimer(HoverLeaveWatch, 0)
     SetTimer(AutoResetEngineCallback, 0)
     SetTimer(AutoDuckTick, 0)
@@ -446,6 +447,28 @@ RegisterButtonHover(ctrl, baseBg, hoverBg, tipText := "", isMainPanel := true) {
         hoverHintMap[key] := tipText
 }
 
+RegisterSoloMonoHover(btn, param, isSolo, tipText) {
+    key := (isSolo ? "solo_" : "mono_") param
+    hoverStyleMap[btn.Hwnd] := {
+        key: key,
+        ctrls: [btn],
+        isMain: true,
+        getBg: (*) => isSolo ? (IsStripSoloed(param) ? "423114" : "1C1C26") : (IsBusMono(param) ? "193B4D" : "1C1C26"),
+        hoverBg: (*) => isSolo ? (IsStripSoloed(param) ? "57401B" : "2E2614") : (IsBusMono(param) ? "214F66" : "152E38")
+    }
+    hoverHintMap[key] := tipText
+}
+
+CleanupSubGuiHovers() {
+    toDelete := []
+    for h, item in hoverStyleMap {
+        if !item.isMain
+            toDelete.Push(h)
+    }
+    for h in toDelete
+        hoverStyleMap.Delete(h)
+}
+
 GetChannelRowBg(param, isHover := false) {
     if (clippingChannels.Has(param) && clippingChannels[param])
         return isHover ? "7A1920" : "5C1218"
@@ -494,8 +517,9 @@ RegisterSnapshotButtonHover(sBtn, snapIdx) {
 
 UpdateSmartFooterHint(hoverKey) {
     static lastHint := ""
-    nextText := (hoverKey != "" && hoverHintMap.Has(hoverKey)) ? hoverHintMap[hoverKey] : defaultFooterHint
-    nextCol  := (hoverKey != "" && hoverHintMap.Has(hoverKey)) ? "38BDF8" : "71717A"
+    rawHint  := (hoverKey != "" && hoverHintMap.Has(hoverKey)) ? hoverHintMap[hoverKey] : ""
+    nextText := IsObject(rawHint) ? rawHint.Call() : ((rawHint != "") ? rawHint : defaultFooterHint)
+    nextCol  := (rawHint != "") ? "38BDF8" : "71717A"
     sig := nextText "|" nextCol
     if (sig = lastHint)
         return
@@ -519,8 +543,10 @@ OnGuiMouseMove(wParam, lParam, msg, hwnd) {
             ResetLastHover()
             lastHoverKey := newKey
             hv := IsObject(item.hoverBg) ? item.hoverBg.Call() : item.hoverBg
-            for c in item.ctrls {
-                try c.Opt("Background" hv)
+            if (hv != "") {
+                for c in item.ctrls {
+                    try c.Opt("Background" hv)
+                }
             }
             if item.isMain {
                 UpdateSmartFooterHint(newKey)
@@ -542,8 +568,10 @@ ResetLastHover() {
     for _, item in hoverStyleMap {
         if (item.key = lastHoverKey) {
             bg := item.getBg.Call()
-            for c in item.ctrls {
-                try c.Opt("Background" bg)
+            if (bg != "") {
+                for c in item.ctrls {
+                    try c.Opt("Background" bg)
+                }
             }
             break
         }
@@ -656,7 +684,7 @@ hoverStyleMap[proTogglePill.Hwnd] := {
 hoverHintMap["proTogglePill"] := "Toggle Submix Layers, A1–B3 Routing && Snapshots"
 
 settingsGui.SetFont("s10 Bold c38BDF8", "Segoe UI")
-statusText := settingsGui.AddText("x28 y42 w436 h20 +0x200 Background15151C", "")
+statusText := settingsGui.AddText("x28 y42 w436 h20 Background15151C", "")
 
 settingsGui.SetFont("s8 Norm cA1A1AA", "Segoe UI")
 heroSubText := settingsGui.AddText("x28 y64 w436 h18 +0x200 Background15151C", "")
@@ -682,16 +710,16 @@ RegisterButtonHover(rstMixerBtn, "261E12", "382B19", "Reset all 16 faders, submi
 
 settingsGui.SetFont("s8 Bold cF59E0B", "Segoe UI")
 layerPill := settingsGui.AddText("x28 y116 w436 h22 +0x200 Background221B11", "  ↳  Layer: Master Gain")
-layerPill.OnEvent("Click", (*) => CycleGainLayer(1))
-layerPill.OnEvent("ContextMenu", (*) => CycleGainLayer(-1))
+layerPill.OnEvent("Click", OnLayerPillClick)
+layerPill.OnEvent("ContextMenu", OnLayerPillContextMenu)
 hoverStyleMap[layerPill.Hwnd] := {
     key: "layerPill",
     ctrls: [layerPill],
     isMain: true,
-    getBg: (*) => (GetActiveGainLayerIndex() > 0) ? "332614" : "221B11",
-    hoverBg: (*) => (GetActiveGainLayerIndex() > 0) ? "42311A" : "2E2416"
+    getBg: (*) => IsLayerPillHighlighted() ? "332614" : "221B11",
+    hoverBg: (*) => IsLayerPillHighlighted() ? "42311A" : "2E2416"
 }
-hoverHintMap["layerPill"] := "Cycle bus submix layer (L-Click: Next, R-Click: Prev)"
+hoverHintMap["layerPill"] := (*) => GetLayerPillHoverHint()
 
 advControls.Push(advDivider, advWarnLbl, rstLayersBtn, rstRoutesBtn, rstMixerBtn, layerPill)
 
@@ -805,7 +833,7 @@ for idx, item in hardwareInputs {
 
     rowVisualMap[item.param] := { bg: pillBg, dot: dotCtrl, lbl: lblCtrl, tag: "", db: dbCtrl, actBtn: soloRowBtn, actType: "solo" }
     RegisterPillHover(item.param, pillBg, dotCtrl, lblCtrl, dbCtrl)
-    RegisterButtonHover(soloRowBtn, "1C1C26", "2E2614", "Solo (PFL) " nameMap[item.param])
+    RegisterSoloMonoHover(soloRowBtn, item.param, true, "Solo (PFL) " nameMap[item.param])
     RegisterButtonHover(renBtn, "1C1C26", "282836", "Rename " nameMap[item.param])
     RegisterButtonHover(rstBtn, "1C1C26", "282836", "Reset " nameMap[item.param] " to 0.0 dB")
     RegisterHoverRow(item.param, xCol, relY - 1, xCol + 144, relY + 27, pillBg, dotCtrl, lblCtrl, dbCtrl)
@@ -854,7 +882,7 @@ for idx, item in outputBuses {
 
     rowVisualMap[item.param] := { bg: pillBg, dot: dotCtrl, lbl: lblCtrl, tag: "", db: dbCtrl, actBtn: monoRowBtn, actType: "mono" }
     RegisterPillHover(item.param, pillBg, dotCtrl, lblCtrl, dbCtrl)
-    RegisterButtonHover(monoRowBtn, "1C1C26", "152E38", "Mono sum on " nameMap[item.param])
+    RegisterSoloMonoHover(monoRowBtn, item.param, false, "Mono sum on " nameMap[item.param])
     RegisterButtonHover(renBtn, "1C1C26", "282836", "Rename " nameMap[item.param])
     RegisterButtonHover(rstBtn, "1C1C26", "282836", "Reset " nameMap[item.param] " to 0.0 dB")
     RegisterHoverRow(item.param, xCol, relY - 1, xCol + 144, relY + 27, pillBg, dotCtrl, lblCtrl, dbCtrl)
@@ -986,6 +1014,14 @@ osdGui.SetFont("s9 Bold cF4F4F5", "Segoe UI")
 osdFxValText := osdGui.AddText("x286 y37 w88 h18 Right +0x200 Background0D0D11", "")
 
 osdMeter := osdGui.AddProgress("x16 y62 w358 h7 Range0-100 Background1E1E28 c38BDF8", 50)
+
+ForceOsdTopmost() {
+    global osdVisible
+    if (!osdVisible || !IsGuiAlive(osdGui))
+        return
+    ; HWND_TOPMOST (-1) | SWP_NOSIZE (0x1) | SWP_NOMOVE (0x2) | SWP_NOACTIVATE (0x10) | SWP_SHOWWINDOW (0x40)
+    DllCall("SetWindowPos", "Ptr", osdGui.Hwnd, "Ptr", -1, "Int", 0, "Int", 0, "Int", 0, "Int", 0, "UInt", 0x0053)
+}
 
 ShowHeadUnitOsd(mode := "volume", midiInfo := "") {
     global osdVisible
@@ -1198,15 +1234,19 @@ ShowHeadUnitOsd(mode := "volume", midiInfo := "") {
         osdH := 80
         xPos := mLeft + ((mRight - mLeft - osdW) // 2)
         yPos := mBottom - osdH - 22
+        osdGui.Opt("+AlwaysOnTop")
         osdGui.Show("x" xPos " y" yPos " w" osdW " h" osdH " NoActivate")
         osdVisible := true
     }
 
+    ForceOsdTopmost()
+    SetTimer(ForceOsdTopmost, 100)
     SetTimer(HideHeadUnitOsd, -1500)
 }
 
 HideHeadUnitOsd() {
     global osdVisible
+    SetTimer(ForceOsdTopmost, 0)
     osdGui.Hide()
     osdVisible := false
 }
@@ -1239,6 +1279,7 @@ CloseDuckingGui(*) {
     global duckGui
     SetTimer(UpdateDuckLiveMeter, 0)
     ResetLastHover()
+    CleanupSubGuiHovers()
     if IsObject(duckGui) {
         try duckGui.Destroy()
     }
@@ -1647,6 +1688,7 @@ ClosePttGui(*) {
     }
     Suspend(0)
     ResetLastHover()
+    CleanupSubGuiHovers()
     if IsObject(pttGui) {
         try pttGui.Destroy()
     }
@@ -1795,6 +1837,7 @@ enumRecDevices  := []
 CloseAntiHijackGui(*) {
     global antiHijackGui
     ResetLastHover()
+    CleanupSubGuiHovers()
     if IsObject(antiHijackGui) {
         try antiHijackGui.Destroy()
     }
@@ -1952,6 +1995,7 @@ CloseMidiGui(*) {
     global midiGui, midiLearnArmed
     midiLearnArmed := false
     ResetLastHover()
+    CleanupSubGuiHovers()
     if IsObject(midiGui) {
         try midiGui.Destroy()
     }
@@ -2027,13 +2071,13 @@ OpenMidiGui() {
     midiGui.AddText("x28 y196 w42 h20 +0x200 Background15151C", "Dial:")
     midiGui.SetFont("s9 Norm cF4F4F5", "Segoe UI")
     midiModeDDL := midiGui.AddDropDownList("x72 y194 w112 Background1C1C26 cF4F4F5 Choose1", ["Absolute", "Relative (+/-)"])
-    RegisterButtonHover(midiModeDDL, "1C1C26", "282836", "Absolute = direct 0–127 sweep  •  Relative (+/-) = step from current value on endless dials", false)
+    RegisterButtonHover(midiModeDDL, "", "", "Absolute = direct 0–127 sweep  •  Relative (+/-) = step from current value on endless dials", false)
 
     midiGui.SetFont("s8 Bold cA1A1AA", "Segoe UI")
     midiGui.AddText("x194 y196 w46 h20 +0x200 Background15151C", "Curve:")
     midiGui.SetFont("s9 Norm cF4F4F5", "Segoe UI")
     midiCurveDDL := midiGui.AddDropDownList("x242 y194 w112 Background1C1C26 cF4F4F5 Choose1", ["Linear dB", "Log Taper"])
-    RegisterButtonHover(midiCurveDDL, "1C1C26", "282836", "Linear = straight dB sweep  •  Log Taper = finer resolution near -15 dB to 0 dB", false)
+    RegisterButtonHover(midiCurveDDL, "", "", "Linear = straight dB sweep  •  Log Taper = finer resolution near -15 dB to 0 dB", false)
 
     rngUnityBtn := midiGui.AddText("x362 y194 w68 h24 Center +0x200 Background1C1C26", "-60..0dB")
     rngUnityBtn.SetFont("s8 Bold cD4D4D8")
@@ -2054,6 +2098,7 @@ OpenMidiGui() {
     midiGui.AddText("x148 y228 w36 h20 +0x200 Background15151C", "Max:")
     midiGui.SetFont("s9 Bold cF4F4F5", "Segoe UI")
     midiMaxEdit := midiGui.AddEdit("x186 y225 w76 h23 Center Background1C1C26 cF4F4F5", "0.0")
+    PopulateMidiParamChoices()
 
     midiGui.SetFont("s9 Bold c38BDF8", "Segoe UI")
     midiLearnPill := midiGui.AddText("x28 y255 w476 h32 Center +0x200 Background152433", "Learn Next Input  (Click, then twist a knob/slider or hit a drum pad)")
@@ -2069,6 +2114,7 @@ OpenMidiGui() {
 
     midiGui.SetFont("s9 Norm cF4F4F5", "Segoe UI")
     midiMapLV := midiGui.AddListView("x16 y306 w500 h130 -Multi Background15151C cF4F4F5", ["MIDI Input", "Target", "Action / Control", "Mode / Curve", "Range"])
+    try DllCall("uxtheme\SetWindowTheme", "Ptr", midiMapLV.Hwnd, "Str", "DarkMode_Explorer", "Ptr", 0)
     midiMapLV.ModifyCol(1, 102)
     midiMapLV.ModifyCol(2, 132)
     midiMapLV.ModifyCol(3, 118)
@@ -2252,6 +2298,7 @@ updateStatusTxt := ""
 CloseStartupGui(*) {
     global startupGui
     ResetLastHover()
+    CleanupSubGuiHovers()
     if IsObject(startupGui) {
         try startupGui.Destroy()
     }
@@ -2354,6 +2401,7 @@ featGui := ""
 CloseFeaturesGui(*) {
     global featGui
     ResetLastHover()
+    CleanupSubGuiHovers()
     if IsObject(featGui) {
         try featGui.Destroy()
     }
@@ -2415,8 +2463,9 @@ OpenFeaturesGui() {
         . "5. PLUG-AND-PLAY MIDI LEARN (FADERS, ENCODERS, LOG CURVES & PADS)`r`n"
         . "• Faders, Submix Layers & FX/EQ: Map any knob or slider with custom Min/Max dB bounds, choose Absolute (0–127) or Relative (+/-) for endless encoders, and pick Linear dB or Log Taper for smoother throw.`r`n"
         . "• Drum Pads & Buttons: Bind Note On/Off or button CCs to Toggle Mute, fire Snapshots P1–P3, or act as a MIDI Push-to-Talk button with live Floating HUD feedback.`r`n`r`n"
-        . "6. PRO DRAWER: PER-BUS GAIN LAYERS, ROUTING MATRIX & SNAPSHOTS (AMBER)`r`n"
+        . "6. PRO DRAWER: PER-BUS GAIN LAYERS, SYNC DELAY, ROUTING & SNAPSHOTS (AMBER)`r`n"
         . "• Per-Bus Submix Gain Layers: Press " lyPrev " / " lyNext " (or left/right-click the Layer pill) while an Input Strip is selected to switch between Master Gain and individual output bus submixes (A1–A5, B1–B3).`r`n"
+        . "• Monitoring Synchro Delay (A1–A5): Select any hardware output bus (A1–A5) to turn the Pro Layer bar into a live Sync Delay bar (0–500 ms). Hold Shift + Scroll (±1 ms), Ctrl + Shift + Scroll (±10 ms), or Shift + Right-Click to reset to 0 ms.`r`n"
         . "• Strip Output Routing Matrix (A1–B3): Click any A1–B3 badge to toggle where the selected input strip sends audio.`r`n"
         . "• 3 Quick Mixer Snapshots (P1, P2, P3): Right-click P1–P3 to save all 16 fader levels and A1–B3 routes; left-click (or press " sn1 " / " sn2 " / " sn3 ") to recall them instantly.`r`n`r`n"
         . "7. CHANNEL CYCLING, SOLO FX & AUTOMATION SUITE`r`n"
@@ -2595,6 +2644,7 @@ RefreshShortcutLabels() {
 CloseKeybindGui(*) {
     global kbGui, activeInputHook
     ResetLastHover()
+    CleanupSubGuiHovers()
     if (activeInputHook != "") {
         try activeInputHook.Stop()
         activeInputHook := ""
@@ -2877,6 +2927,15 @@ WheelUp::HoverWheelStep(1, 1.0)
 WheelDown::HoverWheelStep(-1, 1.0)
 +WheelUp::HoverWheelStep(1, 0.2)
 +WheelDown::HoverWheelStep(-1, 0.2)
+#HotIf
+
+#HotIf IsHoveringSyncDelayPill()
+WheelUp::
+WheelDown::ShowQuickTip("Safety Lock: Hold Shift + Scroll to adjust Sync Delay", 1100)
++WheelUp::AdjustHoveredBusSyncDelay(1)
++WheelDown::AdjustHoveredBusSyncDelay(-1)
+^+WheelUp::AdjustHoveredBusSyncDelay(10)
+^+WheelDown::AdjustHoveredBusSyncDelay(-10)
 #HotIf
 
 IsStripSoloed(param) {
@@ -3382,6 +3441,95 @@ OnMidiData(wParam, lParam, msg, hwnd) {
         }
         ShowHeadUnitOsd("volume", { target: m.target, type: m.type, val: val, curVal: newBase, minVal: minB, maxVal: maxB, mode: m.mode, curve: m.curve, mapKey: mapKey })
     }
+}
+
+IsActiveHardwareBus() {
+    soloParam := GetSoloTarget()
+    if (soloParam = "" || SubStr(soloParam, 1, 4) != "Bus[")
+        return false
+    idx := Integer(RegExReplace(soloParam, "\D"))
+    return (idx >= 0 && idx <= 4)
+}
+
+GetActiveBusSyncDelay() {
+    if (!vm.connected || !IsActiveHardwareBus())
+        return 0
+    idx := Integer(RegExReplace(GetSoloTarget(), "\D"))
+    dVal := 0.0
+    DllCall(pGetFloat, "AStr", "Option.delay[" idx "]", "Float*", &dVal)
+    return Round(Max(0, Min(500, dVal)))
+}
+
+IsLayerPillHighlighted() {
+    if (GetActiveGainLayerIndex() > 0)
+        return true
+    return (IsActiveHardwareBus() && GetActiveBusSyncDelay() > 0)
+}
+
+GetLayerPillHoverHint() {
+    if IsActiveHardwareBus()
+        return "Safety Lock: Hold Shift + Scroll (±1 ms)  •  Ctrl+Shift (±10 ms)  •  Shift+R-Click: 0 ms"
+    soloParam := GetSoloTarget()
+    if (soloParam != "" && IsInputStrip(soloParam))
+        return "Cycle bus submix layer (L-Click: Next, R-Click: Prev)"
+    return "Select an Input Strip for submix layers or A1–A5 for Sync Delay"
+}
+
+IsHoveringSyncDelayPill() {
+    if (!DllCall("IsWindowVisible", "Ptr", settingsGui.Hwnd) || showAdvancedPanel != 1 || !IsActiveHardwareBus())
+        return false
+    MouseGetPos(, , &hoverWin, &hoverCtrl, 2)
+    return (hoverWin = settingsGui.Hwnd && hoverCtrl = layerPill.Hwnd)
+}
+
+OnLayerPillClick(*) {
+    if IsActiveHardwareBus() {
+        ShowQuickTip("Safety Lock: Hold Shift + Scroll over this bar to adjust Sync Delay", 1200)
+        return
+    }
+    CycleGainLayer(1)
+}
+
+OnLayerPillContextMenu(*) {
+    if IsActiveHardwareBus() {
+        if GetKeyState("Shift", "P") {
+            soloParam := GetSoloTarget()
+            idx := Integer(RegExReplace(soloParam, "\D"))
+            DllCall(pSetFloat, "AStr", "Option.delay[" idx "]", "Float", 0.0)
+            vm.lastWriteTick := A_TickCount
+            SetTimer(FlushOwnDirtyFlag, -350)
+            UpdateStatusBanner()
+            if (lastHoverKey = "layerPill")
+                layerPill.Opt("Background2E2416")
+            busLabel := outputBuses[idx + 1].name
+            ShowQuickTip("Reset " busLabel " Sync Delay to 0 ms", 1100)
+        } else {
+            ShowQuickTip("Safety Lock: Hold Shift + Right-Click to reset Sync Delay to 0 ms", 1300)
+        }
+        return
+    }
+    CycleGainLayer(-1)
+}
+
+AdjustHoveredBusSyncDelay(deltaMs) {
+    Critical
+    if (!vm.connected || !IsActiveHardwareBus())
+        return
+    soloParam := GetSoloTarget()
+    idx := Integer(RegExReplace(soloParam, "\D"))
+    paramStr := "Option.delay[" idx "]"
+
+    cur := 0.0
+    DllCall(pGetFloat, "AStr", paramStr, "Float*", &cur)
+    nextMs := Round(Max(0, Min(500, Round(cur) + deltaMs)))
+
+    DllCall(pSetFloat, "AStr", paramStr, "Float", Float(nextMs))
+    vm.lastWriteTick := A_TickCount
+    SetTimer(FlushOwnDirtyFlag, -350)
+
+    UpdateStatusBanner()
+    if (lastHoverKey = "layerPill")
+        layerPill.Opt("Background" (nextMs > 0 ? "42311A" : "2E2416"))
 }
 
 GetActiveGainLayerIndex() {
@@ -4385,6 +4533,8 @@ GuiLiveSyncTick() {
         RefreshAllChannelReadouts(false)
         RefreshHeroSoloMonoPills()
         RefreshRowSoloMonoButtons()
+        if (showAdvancedPanel = 1 && IsActiveHardwareBus())
+            UpdateStatusBanner()
     }
 }
 
@@ -4419,7 +4569,9 @@ RefreshModePillVisual() {
 }
 
 RefreshChannelVisuals(forceAll := false) {
-    global lastHoverKey := ""
+    global lastHoverKey
+    if (SubStr(lastHoverKey, 1, 5) = "pill_")
+        lastHoverKey := ""
     rowBadgeCache.Clear()
     for param, vis in rowVisualMap {
         active   := IsTargetActive(param)
@@ -4842,6 +4994,11 @@ UpdateStatusBanner() {
                     bName := nameMap.Has(bObj.param) ? nameMap[bObj.param] : bObj.name
                     layerLine := "  " Chr(0x21B3) "  Layer:  " bObj.name " (" bName ") Submix Only"
                 }
+            } else if IsActiveHardwareBus() {
+                bIdx := Integer(RegExReplace(soloParam, "\D"))
+                bTag := outputBuses[bIdx + 1].name
+                dMs  := GetActiveBusSyncDelay()
+                layerLine := "  " Chr(0x21B3) "  Sync Delay (" bTag "):  " dMs " ms   •   Hold Shift + Scroll"
             } else {
                 layerLine := "  " Chr(0x21B3) "  Output Bus Master Fader"
             }
@@ -4894,11 +5051,12 @@ UpdateStatusBanner() {
         layerPill.Value := layerLine
     }
 
-    layerState := (layerIdx > 0) ? 1 : 0
+    layerState := IsLayerPillHighlighted() ? 1 : 0
     if (layerState != lastLayerState) {
         lastLayerState := layerState
         layerPill.SetFont(layerState ? "s8 Bold cF59E0B" : "s8 Bold cD4D4D8")
-        layerPill.Opt(layerState ? "Background332614" : "Background221B11")
+        if (lastHoverKey != "layerPill")
+            layerPill.Opt(layerState ? "Background332614" : "Background221B11")
     }
 
     if (lineCount != lastLineCount) {
