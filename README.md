@@ -1,6 +1,6 @@
-# Potato Massah (`v1.4.5`)
+# Potato Massah (`v1.4.6`)
 
-[![Version](https://img.shields.io/badge/version-v1.4.5-38BDF8?style=flat-square)](https://github.com/grandfirephoenix/Potato-Massah/releases/latest)
+[![Version](https://img.shields.io/badge/version-v1.4.6-38BDF8?style=flat-square)](https://github.com/grandfirephoenix/Potato-Massah/releases/latest)
 [![Platform](https://img.shields.io/badge/platform-Windows%2010%2F11%20(64--bit)-152433?style=flat-square)](#installation--compilation)
 [![Engine](https://img.shields.io/badge/AutoHotkey-v2.0%20U64-F59E0B?style=flat-square)](#running-or-compiling-from-source)
 [![License](https://img.shields.io/badge/license-PolyForm%20Noncommercial%201.0.0-34D399?style=flat-square)](License.md)
