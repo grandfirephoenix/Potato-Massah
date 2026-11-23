@@ -322,7 +322,7 @@
                         </div>
                       </div>
 
-                      <div id="layerPillSim" onclick="simCycleLayer(1)" class="px-2.5 py-1.5 rounded bg-[#221B11] hover:bg-[#2E2416] text-[11px] font-bold text-textSecondary cursor-pointer transition">
+                      <div id="layerPillSim" onclick="simOnLayerPillClick()" oncontextmenu="simOnLayerPillContext(event)" class="px-2.5 py-1.5 rounded bg-[#221B11] hover:bg-[#2E2416] text-[11px] font-bold text-textSecondary cursor-pointer transition">
                         ↳ Layer: Master Gain (All Routed Buses)
                       </div>
 
@@ -516,13 +516,13 @@
             <div class="w-10 h-10 rounded-xl bg-[#261E12] border border-amberAccent/30 flex items-center justify-center text-amberAccent mb-4">
               <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/></svg>
             </div>
-            <h3 class="text-base font-bold text-textPrimary">Pro Drawer: Layers &amp; Snapshots</h3>
+            <h3 class="text-base font-bold text-textPrimary">Pro Drawer: Layers, Delay &amp; Snaps</h3>
             <p class="text-xs text-textMuted mt-2 leading-relaxed">
-              Switch input strips between <strong class="text-textPrimary">Master Gain</strong> and <code class="font-mono text-amberAccent">GainLayer[0..7]</code> submixes, toggle <strong class="text-textPrimary">A1–B3</strong> routes live, and save/load <strong class="text-textPrimary">P1–P3</strong> mixer snapshots.
+              Switch input strips between <strong class="text-textPrimary">Master Gain</strong> and <code class="font-mono text-amberAccent">GainLayer[0..7]</code> submixes, dial in Shift-locked <strong class="text-textPrimary">Sync Delay (0–500&nbsp;ms)</strong> on <strong class="text-textPrimary">A1–A5</strong>, toggle <strong class="text-textPrimary">A1–B3</strong> routes, and load <strong class="text-textPrimary">P1–P3</strong> snapshots.
             </p>
           </div>
           <div class="mt-4 pt-3 border-t border-borderSubtle/80 text-[11px] font-mono text-textDim flex justify-between">
-            <span>A1–B3 Submixes</span>
+            <span>Submixes • Sync Delay</span>
             <span class="text-amberAccent">P1–P3 Snaps</span>
           </div>
         </div>
@@ -584,9 +584,9 @@
             <div class="w-10 h-10 rounded-xl bg-pillActive border border-cyanAccent/25 flex items-center justify-center text-cyanAccent mb-4">
               <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
             </div>
-            <h3 class="text-base font-bold text-textPrimary">Floating HUD &amp; Mouse Ergonomics</h3>
+            <h3 class="text-base font-bold text-textPrimary">Always-Topmost HUD &amp; Mouse Control</h3>
             <p class="text-xs text-textMuted mt-2 leading-relaxed">
-              A beautiful bottom-center HUD tracks wheel, layer, FX, and MIDI changes when the menu is unfocused. When in the menu; hover-scroll (<span class="kbd-key">Shift</span> fine), middle-click mute, and rename any strip (<span class="kbd-key">✎</span>). Now with a hints/tips box.
+              An always-topmost bottom-center HUD (<code class="font-mono text-cyanAccent">HWND_TOPMOST</code>) stays above File Explorer and active windows while tracking wheel, layer, FX, and MIDI changes. Inside the panel: hover-scroll (<span class="kbd-key">Shift</span> fine), middle-click mute, inline rename (<span class="kbd-key">✎</span>), and a live smart hints bar.
             </p>
           </div>
           <div class="mt-4 pt-3 border-t border-borderSubtle/80 text-[11px] font-mono text-textDim flex justify-between">
@@ -894,11 +894,11 @@
       { param: 'Strip[2]', name: 'Hardware In 3',    defName: 'Hardware In 3',    group: 'hardware', gain:   0.0, muted: false, solo: false, mono: false, fxIdx: 0, fxVals: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], routes: {A1:true, A2:false, A3:false, A4:false, A5:false, B1:false, B2:false, B3:false} },
       { param: 'Strip[3]', name: 'Hardware In 4',    defName: 'Hardware In 4',    group: 'hardware', gain:   0.0, muted: false, solo: false, mono: false, fxIdx: 0, fxVals: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], routes: {A1:true, A2:false, A3:false, A4:false, A5:false, B1:false, B2:false, B3:false} },
       { param: 'Strip[4]', name: 'Hardware In 5',    defName: 'Hardware In 5',    group: 'hardware', gain:   0.0, muted: false, solo: false, mono: false, fxIdx: 0, fxVals: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], routes: {A1:true, A2:false, A3:false, A4:false, A5:false, B1:false, B2:false, B3:false} },
-      { param: 'Bus[0]',   name: 'Side Speakers',    defName: 'A1',               group: 'bus',      gain:   0.0, muted: false, solo: false, mono: false, fxIdx: 0, fxVals: [0.0, 0.0, 0.0, 0.0], routes: {} },
-      { param: 'Bus[1]',   name: 'Rear Speaker',     defName: 'A2',               group: 'bus',      gain:  -1.0, muted: false, solo: false, mono: false, fxIdx: 0, fxVals: [0.0, 0.0, 0.0, 0.0], routes: {} },
-      { param: 'Bus[2]',   name: 'Center Speaker',   defName: 'A3',               group: 'bus',      gain:   0.0, muted: false, solo: false, mono: false, fxIdx: 0, fxVals: [0.0, 0.0, 0.0, 0.0], routes: {} },
-      { param: 'Bus[3]',   name: 'A4',               defName: 'A4',               group: 'bus',      gain:   0.0, muted: false, solo: false, mono: false, fxIdx: 0, fxVals: [0.0, 0.0, 0.0, 0.0], routes: {} },
-      { param: 'Bus[4]',   name: 'A5',               defName: 'A5',               group: 'bus',      gain:   0.0, muted: false, solo: false, mono: false, fxIdx: 0, fxVals: [0.0, 0.0, 0.0, 0.0], routes: {} },
+      { param: 'Bus[0]',   name: 'Side Speakers',    defName: 'A1',               group: 'bus',      gain:   0.0, delayMs: 0,  muted: false, solo: false, mono: false, fxIdx: 0, fxVals: [0.0, 0.0, 0.0, 0.0], routes: {} },
+      { param: 'Bus[1]',   name: 'Rear Speaker',     defName: 'A2',               group: 'bus',      gain:  -1.0, delayMs: 14, muted: false, solo: false, mono: false, fxIdx: 0, fxVals: [0.0, 0.0, 0.0, 0.0], routes: {} },
+      { param: 'Bus[2]',   name: 'Center Speaker',   defName: 'A3',               group: 'bus',      gain:   0.0, delayMs: 0,  muted: false, solo: false, mono: false, fxIdx: 0, fxVals: [0.0, 0.0, 0.0, 0.0], routes: {} },
+      { param: 'Bus[3]',   name: 'A4',               defName: 'A4',               group: 'bus',      gain:   0.0, delayMs: 0,  muted: false, solo: false, mono: false, fxIdx: 0, fxVals: [0.0, 0.0, 0.0, 0.0], routes: {} },
+      { param: 'Bus[4]',   name: 'A5',               defName: 'A5',               group: 'bus',      gain:   0.0, delayMs: 0,  muted: false, solo: false, mono: false, fxIdx: 0, fxVals: [0.0, 0.0, 0.0, 0.0], routes: {} },
       { param: 'Bus[5]',   name: 'B1',               defName: 'B1',               group: 'bus',      gain:   0.0, muted: false, solo: false, mono: false, fxIdx: 0, fxVals: [0.0, 0.0, 0.0, 0.0], routes: {} },
       { param: 'Bus[6]',   name: 'B2',               defName: 'B2',               group: 'bus',      gain:   0.0, muted: false, solo: false, mono: false, fxIdx: 0, fxVals: [0.0, 0.0, 0.0, 0.0], routes: {} },
       { param: 'Bus[7]',   name: 'B3',               defName: 'B3',               group: 'bus',      gain:  -8.0, muted: false, solo: false, mono: false, fxIdx: 0, fxVals: [0.0, 0.0, 0.0, 0.0], routes: {} },
@@ -1067,6 +1067,19 @@
     simStage.addEventListener('wheel', (e) => {
       e.preventDefault();
       const dir = e.deltaY < 0 ? 1 : -1;
+      const delayBar = e.target.closest('#layerPillSim');
+      if (delayBar && isPanelVisible && simIsHardwareBus()) {
+        if (!e.shiftKey) {
+          showToast('Safety Lock: Hold Shift + Scroll to adjust Sync Delay');
+          return;
+        }
+        const primary = getChannelObj(activeTargets[0]);
+        const stepMs = e.ctrlKey ? 10 : 1;
+        primary.delayMs = Math.max(0, Math.min(500, (primary.delayMs || 0) + dir * stepMs));
+        renderSimulator();
+        showToast(`${primary.defName} (${primary.name}) Sync Delay: ${primary.delayMs} ms`);
+        return;
+      }
       const pill = e.target.closest('[data-sim-param]');
       if (pill && isPanelVisible) {
         const param = pill.dataset.simParam;
@@ -1123,6 +1136,35 @@
     function simToggleProDrawer() {
       showAdvancedPanel = !showAdvancedPanel;
       renderSimulator();
+    }
+
+    function simIsHardwareBus() {
+      if (!isSingleTargetMode || activeTargets.length !== 1) return false;
+      return ['Bus[0]', 'Bus[1]', 'Bus[2]', 'Bus[3]', 'Bus[4]'].includes(activeTargets[0]);
+    }
+
+    function simOnLayerPillClick() {
+      if (simIsHardwareBus()) {
+        showToast('Safety Lock: Hold Shift + Scroll over this bar to adjust Sync Delay');
+        return;
+      }
+      simCycleLayer(1);
+    }
+
+    function simOnLayerPillContext(e) {
+      e.preventDefault();
+      if (simIsHardwareBus()) {
+        const primary = getChannelObj(activeTargets[0]);
+        if (e.shiftKey) {
+          primary.delayMs = 0;
+          renderSimulator();
+          showToast(`Reset ${primary.defName} Sync Delay to 0 ms`);
+        } else {
+          showToast('Safety Lock: Hold Shift + Right-Click to reset Sync Delay to 0 ms');
+        }
+        return;
+      }
+      simCycleLayer(-1);
     }
 
     function simCycleLayer(dir) {
@@ -1571,6 +1613,12 @@
           layerPill.className = isLayerActive
             ? 'px-2.5 py-1.5 rounded bg-[#332614] hover:bg-[#42311A] text-[11px] font-bold text-amberAccent cursor-pointer transition'
             : 'px-2.5 py-1.5 rounded bg-[#221B11] hover:bg-[#2E2416] text-[11px] font-bold text-textSecondary cursor-pointer transition';
+        } else if (simIsHardwareBus()) {
+          const dMs = primary.delayMs || 0;
+          layerPill.textContent = `↳  Sync Delay (${primary.defName}):  ${dMs} ms   •   Hold Shift + Scroll`;
+          layerPill.className = dMs > 0
+            ? 'px-2.5 py-1.5 rounded bg-[#332614] hover:bg-[#42311A] text-[11px] font-bold text-amberAccent cursor-pointer transition'
+            : 'px-2.5 py-1.5 rounded bg-[#221B11] hover:bg-[#2E2416] text-[11px] font-bold text-textSecondary cursor-pointer transition';
         } else {
           layerPill.textContent = '↳  Output Bus Master Fader';
           layerPill.className = 'px-2.5 py-1.5 rounded bg-[#221B11] text-[11px] font-bold text-textMuted';
@@ -1655,6 +1703,7 @@
       { action: 'Target: Previous Channel', keys: ['Ctrl', 'Shift', 'Left'], cat: 'general', desc: 'Steps backward through all 16 I/O channels in Single-Target Mode.' },
       { action: 'Target: Next Channel', keys: ['Ctrl', 'Shift', 'Right'], cat: 'general', desc: 'Steps forward through all 16 I/O channels in Single-Target Mode.' },
       { action: 'Bus Layer: Previous / Next', keys: ['Ctrl', 'Shift', 'Up / Down'], cat: 'general', desc: 'Switches selected input strip between Master Gain and A1–B3 submix layers.' },
+      { action: 'Monitoring Synchro Delay (A1–A5)', keys: ['Shift + Wheel', 'Ctrl + Shift + Wheel', 'Shift + R-Click'], cat: 'general', desc: 'Hover the Pro Drawer Sync Delay bar with A1–A5 selected: Shift+Scroll (±1 ms), Ctrl+Shift+Scroll (±10 ms), Shift+R-Click (0 ms).' },
       { action: 'Hardware Volume Wheel', keys: ['Volume_Up', 'Volume_Down'], cat: 'general', desc: 'Intercepts OS media volume keys for 0.2–4.5 dB exponential 20 ms smooth glide.' },
       { action: 'Hardware Mute Toggle', keys: ['Volume_Mute'], cat: 'general', desc: 'Toggles mute on active target(s), sets coral-red header bar, and updates tray icon.' },
       { action: 'GUI Row Hover-Scroll & Mute', keys: ['Wheel', 'Shift + Wheel', 'Middle-Click'], cat: 'general', desc: 'Trims any hovered channel row (±1.0 dB, or ±0.2 dB with Shift) or mutes via middle-click.' },
@@ -1734,8 +1783,9 @@ InstallKeybdHook()
 ;    - PTT keeps the selected mic strip muted until the PTT key is held
 ;    - Strip[i].Solo [S], Bus[i].Mono [M], and 3-sample 0.0 dBFS clip alerts
 ;
-; 3. Pro Drawer: Per-Bus Submix Layers, Routing Matrix & Snapshots
+; 3. Pro Drawer: Per-Bus Submix Layers, Sync Delay, Routing & Snapshots
 ;    - Strip[i].GainLayer[0..7] independent submix faders for A1–A5 & B1–B3
+;    - Shift-locked Option.delay[0..4] (0–500 ms) speaker phase sync on A1–A5
 ;    - Live A1–B3 output routing toggles and P1–P3 full-mixer snapshots
 ;
 ; 4. Automation & Protection Suite
