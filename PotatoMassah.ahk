@@ -6,7 +6,7 @@ InstallKeybdHook()
 ; ==============================================================================
 ; 1. VERSION, VOICEMEETER REMOTE API, DARK THEME & ICON INITIALIZATION
 ; ==============================================================================
-APP_VERSION    := "v1.4.5"
+APP_VERSION    := "v1.4.6"
 GITHUB_REPO    := "grandfirephoenix/Potato-Massah"
 customIconPath := A_ScriptDir "\Potato.ico"
 mutedIconPath  := A_ScriptDir "\icon_muted.ico"
@@ -235,7 +235,8 @@ hotkeyDefs := [
     { id: "toggleLock",  group: "general", param: "", label: "Toggle Device Anti-Hijack", def: "",        fn: (*) => ToggleDeviceLock() },
     { id: "snap1",       group: "general", param: "", label: "Load Snapshot P1",          def: "",        fn: (*) => LoadMixerSnapshot(1) },
     { id: "snap2",       group: "general", param: "", label: "Load Snapshot P2",          def: "",        fn: (*) => LoadMixerSnapshot(2) },
-    { id: "snap3",       group: "general", param: "", label: "Load Snapshot P3",          def: "",        fn: (*) => LoadMixerSnapshot(3) }
+    { id: "snap3",       group: "general", param: "", label: "Load Snapshot P3",          def: "",        fn: (*) => LoadMixerSnapshot(3) },
+    { id: "snap4",       group: "general", param: "", label: "Load Snapshot P4",          def: "",        fn: (*) => LoadMixerSnapshot(4) }
 ]
 
 for item in virtualInputs {
@@ -734,14 +735,17 @@ for idx, b in outputBuses {
 }
 
 settingsGui.SetFont("s8 Bold cA1A1AA", "Segoe UI")
-snapLbl := settingsGui.AddText("x28 y168 w82 h22 +0x200 Background15151C", "SNAPSHOTS:")
+snapLbl := settingsGui.AddText("x28 y168 w82 h44 +0x200 Background15151C", "SNAPSHOTS:`n(P1–P4)")
 advControls.Push(snapLbl)
 
-Loop 3 {
+Loop 4 {
     sIdx := A_Index
-    xS := 114 + ((sIdx - 1) * 118)
+    col := Mod(sIdx - 1, 2)
+    row := (sIdx - 1) // 2
+    xS := 114 + (col * 176)
+    yS := 168 + (row * 24)
     settingsGui.SetFont("s8 Bold cD4D4D8", "Segoe UI")
-    sBtn := settingsGui.AddText("x" xS " y168 w114 h22 Center +0x200 Background1E1E28", "P" sIdx ": Empty")
+    sBtn := settingsGui.AddText("x" xS " y" yS " w170 h21 Center +0x200 Background1E1E28", "P" sIdx ": Empty")
     sBtn.OnEvent("Click", LoadMixerSnapshot.Bind(sIdx))
     sBtn.OnEvent("ContextMenu", SaveMixerSnapshot.Bind(sIdx))
     snapBtnMap[sIdx] := sBtn
@@ -2177,6 +2181,9 @@ PopulateMidiParamChoices() {
     midiParamItems.Push({ type: "pad_snap", val: "3", desc: "Pad: Snapshot P3", min: -60.0, max: 0.0 })
     labels.Push("Pad Trigger: Load Snapshot P3")
 
+    midiParamItems.Push({ type: "pad_snap", val: "4", desc: "Pad: Snapshot P4", min: -60.0, max: 0.0 })
+    labels.Push("Pad Trigger: Load Snapshot P4")
+
     midiParamItems.Push({ type: "pad_ptt", val: "0", desc: "Pad: Push-to-Talk", min: -60.0, max: 0.0 })
     labels.Push("Pad Trigger: Push-to-Talk (Hold)")
 
@@ -2462,12 +2469,12 @@ OpenFeaturesGui() {
         . "• Click the 'PTT' pill in Automation & Protection (right-click to choose your microphone strip and bind your Push-to-Talk key [" pttKey "]). When enabled, Potato Massah keeps your mic muted and unmutes it ONLY while you hold the PTT key.`r`n`r`n"
         . "5. PLUG-AND-PLAY MIDI LEARN (FADERS, ENCODERS, LOG CURVES & PADS)`r`n"
         . "• Faders, Submix Layers & FX/EQ: Map any knob or slider with custom Min/Max dB bounds, choose Absolute (0–127) or Relative (+/-) for endless encoders, and pick Linear dB or Log Taper for smoother throw.`r`n"
-        . "• Drum Pads & Buttons: Bind Note On/Off or button CCs to Toggle Mute, fire Snapshots P1–P3, or act as a MIDI Push-to-Talk button with live Floating HUD feedback.`r`n`r`n"
+        . "• Drum Pads & Buttons: Bind Note On/Off or button CCs to Toggle Mute, fire Snapshots P1–P4, or act as a MIDI Push-to-Talk button with live Floating HUD feedback.`r`n`r`n"
         . "6. PRO DRAWER: PER-BUS GAIN LAYERS, SYNC DELAY, ROUTING & SNAPSHOTS (AMBER)`r`n"
         . "• Per-Bus Submix Gain Layers: Press " lyPrev " / " lyNext " (or left/right-click the Layer pill) while an Input Strip is selected to switch between Master Gain and individual output bus submixes (A1–A5, B1–B3).`r`n"
         . "• Monitoring Synchro Delay (A1–A5): Select any hardware output bus (A1–A5) to turn the Pro Layer bar into a live Sync Delay bar (0–500 ms). Hold Shift + Scroll (±1 ms), Ctrl + Shift + Scroll (±10 ms), or Shift + Right-Click to reset to 0 ms.`r`n"
         . "• Strip Output Routing Matrix (A1–B3): Click any A1–B3 badge to toggle where the selected input strip sends audio.`r`n"
-        . "• 3 Quick Mixer Snapshots (P1, P2, P3): Right-click P1–P3 to save all 16 fader levels and A1–B3 routes; left-click (or press " sn1 " / " sn2 " / " sn3 ") to recall them instantly.`r`n`r`n"
+        . "• 3 Quick Mixer Snapshots (P1, P2, P3): Right-click P1–P3 to save all 16 fader levels, A1–A5 sync delays, and A1–B3 routes; left-click (or press " sn1 " / " sn2 " / " sn3 ") to recall them instantly.`r`n`r`n"
         . "7. CHANNEL CYCLING, SOLO FX & AUTOMATION SUITE`r`n"
         . "• Step Through All 16 Channels: " chPrev " / " chNext "  •  Solo FX: " fxPrev " / " fxNext " (" fxUp " / " fxDown ", fine " fxFUp " / " fxFDn ", reset " fxRst ").`r`n"
         . "• Auto-Reset on Device Reconnect  •  Windows Default Device Lock [" lkTog "]  •  Sidechain Auto-Ducking [" dkTog "].`r`n`r`n"
@@ -4381,9 +4388,15 @@ SaveMixerSnapshot(idx, *) {
             IniWrite((rVal >= 0.5) ? 1 : 0, iniPath, sec, st.param "_" b.name)
         }
     }
+    Loop 5 {
+        dIdx := A_Index - 1
+        dVal := 0.0
+        DllCall(pGetFloat, "AStr", "Option.delay[" dIdx "]", "Float*", &dVal)
+        IniWrite(Round(Max(0.0, Min(500.0, dVal))), iniPath, sec, "Delay_A" A_Index)
+    }
 
     RefreshSnapshotPills()
-    ShowQuickTip("Saved current mixer faders & routes to Snapshot P" idx "!", 1400)
+    ShowQuickTip("Saved faders, routes & A1–A5 sync delays to Snapshot P" idx "!", 1400)
 }
 
 LoadMixerSnapshot(idx, *) {
@@ -4419,6 +4432,12 @@ LoadMixerSnapshot(idx, *) {
         }
     }
 
+    Loop 5 {
+        dIdx := A_Index - 1
+        savedDelay := Round(Max(0.0, Min(500.0, ParseFloatOrDefault(IniRead(iniPath, sec, "Delay_A" A_Index, "0"), 0.0))))
+        DllCall(pSetFloat, "AStr", "Option.delay[" dIdx "]", "Float", Float(savedDelay))
+    }
+
     vm.gains.Clear()
     SyncAllActiveTargets(true)
     vm.lastWriteTick := A_TickCount
@@ -4429,11 +4448,11 @@ LoadMixerSnapshot(idx, *) {
         UpdateStatusBanner()
         RefreshAllChannelReadouts(true)
     }
-    ShowQuickTip("Loaded Mixer Snapshot P" idx "!", 1300)
+    ShowQuickTip("Loaded Mixer Snapshot P" idx " (faders, routes & sync delay)!", 1400)
 }
 
 RefreshSnapshotPills() {
-    Loop 3 {
+    Loop 4 {
         sIdx := A_Index
         btn := snapBtnMap[sIdx]
         isSaved := (IniRead(iniPath, "Snapshot" sIdx, "Saved", "0") = "1")
@@ -4660,17 +4679,20 @@ RecalculateMainLayout(resizeWindow := true) {
             routeBtnMap[b.name].Move(xR, advY + 56, 51, 22)
         }
 
-        snapLbl.Move(28, advY + 82, 82, 22)
-        Loop 3 {
+        snapLbl.Move(28, advY + 80, 82, 44)
+        Loop 4 {
             sIdx := A_Index
-            xS := 114 + ((sIdx - 1) * 118)
-            snapBtnMap[sIdx].Move(xS, advY + 82, 114, 22)
+            col := Mod(sIdx - 1, 2)
+            row := (sIdx - 1) // 2
+            xS := 114 + (col * 176)
+            yS := advY + 80 + (row * 24)
+            snapBtnMap[sIdx].Move(xS, yS, 170, 21)
         }
 
         for c in advControls
             c.Visible := true
 
-        heroBodyH := 166 + statusH
+        heroBodyH := 188 + statusH
     } else {
         for c in advControls
             c.Visible := false
