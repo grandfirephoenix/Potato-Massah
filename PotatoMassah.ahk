@@ -6,7 +6,7 @@ InstallKeybdHook()
 ; ==============================================================================
 ; 1. VERSION, VOICEMEETER REMOTE API, DARK THEME & ICON INITIALIZATION
 ; ==============================================================================
-APP_VERSION    := "v1.4.6"
+APP_VERSION    := "v1.4.7"
 GITHUB_REPO    := "grandfirephoenix/Potato-Massah"
 customIconPath := A_ScriptDir "\Potato.ico"
 mutedIconPath  := A_ScriptDir "\icon_muted.ico"
@@ -4547,8 +4547,10 @@ RefreshAllChannelReadouts(forceRead := false) {
 }
 
 GuiLiveSyncTick() {
-    PollPeakClipping()
-    if DllCall("IsWindowVisible", "Ptr", settingsGui.Hwnd) {
+    isVis := DllCall("IsWindowVisible", "Ptr", settingsGui.Hwnd)
+    if (isVis || duckEnabled = 1)
+        PollPeakClipping()
+    if isVis {
         RefreshAllChannelReadouts(false)
         RefreshHeroSoloMonoPills()
         RefreshRowSoloMonoButtons()
@@ -5118,8 +5120,32 @@ ClearQuickTip() {
 ; 10. WATCHDOG, SPREAD-LOCKED ACCELERATION & SMOOTH GLIDE ENGINE
 ; ==============================================================================
 WatchdogCheck() {
+    static lastMidiHealTick := 0
     if deviceLockEnabled
         EnforceDefaultDevices(true)
+
+    if (midiDeviceIdx >= 0 && !midiHandle && !midiLearnArmed && (A_TickCount - lastMidiHealTick >= 10000)) {
+        lastMidiHealTick := A_TickCount
+        InitMidiDevice()
+    }
+
+    ; Trim stale entries in transient caches (>10s old) so long sessions stay lean
+    now := A_TickCount
+    staleHover := []
+    for k, entry in hoverCache {
+        if ((now - entry.tick) > 10000)
+            staleHover.Push(k)
+    }
+    for k in staleHover
+        hoverCache.Delete(k)
+
+    staleFx := []
+    for k, entry in vm.fxValues {
+        if ((now - entry.tick) > 10000)
+            staleFx.Push(k)
+    }
+    for k in staleFx
+        vm.fxValues.Delete(k)
 
     if (pttEnabled = 1 && !pttHeldActive && vm.connected && pttMicStrip != "") {
         curM := 0.0
@@ -5360,7 +5386,7 @@ RefreshAutomationPills()
 RefreshStripRoutingPills()
 RefreshSnapshotPills()
 SetTimer(WatchdogCheck, 2000)
-SetTimer(GuiLiveSyncTick, 120)
+SetTimer(GuiLiveSyncTick, 180)
 if (duckEnabled = 1)
     SetTimer(AutoDuckTick, 25)
 if (deviceLockEnabled = 1)
